@@ -10,6 +10,6 @@ track_github/target
 track_github-hook/Cargo.lock
 track_github/.env
 
-backend/target
-backend/Cargo.lock
-backend/.env
+backend_hook/target
+backend_hook/Cargo.lock
+backend_hook/.env

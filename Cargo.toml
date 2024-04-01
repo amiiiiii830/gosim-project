@@ -11,7 +11,7 @@ crate-type = [ "lib"]
 
 
 [workspace]
-members = ["register_hook", "track_github"]
+members = ["register_hook", "track_github", "backend_hook"]
 
 [dependencies]
 tokio_wasi = { version = "1", features = ["macros", "rt"] }

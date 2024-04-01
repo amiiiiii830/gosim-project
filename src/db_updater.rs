@@ -375,3 +375,68 @@ pub async fn table_open_comment_master(pool: &Pool) -> Result<()> {
 
     Ok(())
 }
+
+/* pub async fn list_issues(
+    pool: &Pool,
+    page: usize,
+    page_size: usize,
+) -> Result<Vec<(String, String, String, String)>> {
+    let mut conn = pool.get_conn().await?;
+    let offset = (page - 1) * page_size;
+    let issues: Vec<(String, String, String, String)> = conn
+        .query_map(
+            format!(
+                "SELECT issue_id, project_id, issue_title, issue_description FROM issues_master ORDER BY issue_id LIMIT {} OFFSET {}",
+                page_size, offset
+            ),
+            |(issue_id, project_id, issue_title, issue_description): (String, String, String, String)| {
+                (issue_id, project_id, issue_title, issue_description)
+            },
+        )
+        .await?;
+
+    Ok(issues)
+} */
+
+pub async fn approve_issue_budget_in_db(
+    pool: &mysql_async::Pool,
+    issue_id: &str,
+    issue_budget: i64,
+) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"UPDATE issues_master 
+                  SET issue_budget = :issue_budget, 
+                      review_status = 'approve'
+                  WHERE issue_id = :issue_id";
+
+    conn.exec_drop(
+        query,
+        params! {
+            "issue_id" => issue_id,
+            "issue_budget" => issue_budget,
+        },
+    )
+    .await?;
+
+    Ok(())
+}
+
+pub async fn conclude_issue_in_db(pool: &mysql_async::Pool, issue_id: &str) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"UPDATE issues_master 
+                  SET issue_budget_approved = True
+                  WHERE issue_id = :issue_id";
+
+    let result = conn
+        .exec_drop(
+            query,
+            params! {
+                "issue_id" => issue_id,
+            },
+        )
+        .await;
+
+    Ok(())
+}
