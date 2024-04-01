@@ -239,7 +239,7 @@ pub async fn consolidate_issues(pool: &mysql_async::Pool) -> Result<()> {
 pub async fn add_mock_user(pool: &Pool, login_id: &str, email: &str) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    let query = r"INSERT INTO participants (login_id, email  )
+    let query = r"INSERT INTO participants (login_id, email)
                   VALUES (:login_id, :email)";
 
     conn.exec_drop(

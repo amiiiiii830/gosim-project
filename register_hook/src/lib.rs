@@ -63,16 +63,16 @@ async fn register_user(
             token = m;
             log::info!("Token: {:?}", token);
 
-            send_response(200, vec![], b"You've successfully registered.".to_vec());
+            // send_response(200, vec![], b"You've successfully registered.".to_vec());
         }
 
         Err(e) => {
             log::error!("Error: {:?}", e);
-            send_response(
-                500,
-                vec![],
-                b"Something went wrong with the registration, please try again.".to_vec(),
-            );
+            // send_response(
+            //     500,
+            //     vec![],
+            //     b"Something went wrong with the registration, please try again.".to_vec(),
+            // );
             return;
         }
     };
@@ -101,8 +101,8 @@ async fn exchange_token_w_output(code: &str) -> anyhow::Result<String> {
     // "redirect_uri": "https://code.flows.network/webhook/jKRuADFii4naC7ANMFtL/register"
 
     let writer = github_http_post(url, &params).await?;
-    let stuff_in_writer = String::from_utf8_lossy(&writer);
-    log::info!("Exchange token Response: {:?}", stuff_in_writer);
+    // let stuff_in_writer = String::from_utf8_lossy(&writer);
+    // log::info!("Exchange token Response: {:?}", stuff_in_writer);
 
     let load: Load = serde_json::from_slice(&writer)?;
 
