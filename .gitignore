@@ -5,3 +5,11 @@ Cargo.lock
 register-hook/target
 register-hook/Cargo.lock
 register-hook/.env
+
+track_github/target
+track_github-hook/Cargo.lock
+track_github/.env
+
+backend/target
+backend/Cargo.lock
+backend/.env

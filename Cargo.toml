@@ -5,14 +5,13 @@ edition = "2021"
 resolver = "2"
 
 [lib]
-name = "gosim"
 path = "src/lib.rs"
-crate-type = ["cdylib"]
+crate-type = [ "lib"]
+# crate-type = ["cdylib", "lib"]
 
 
 [workspace]
-exclude = ["register_hook"]
-
+members = ["register_hook", "track_github"]
 
 [dependencies]
 tokio_wasi = { version = "1", features = ["macros", "rt"] }

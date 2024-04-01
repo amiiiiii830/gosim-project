@@ -1,13 +1,12 @@
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
-use gosim::db_updater::*;
-use gosim::issue_tracker::*;
+use gosim_project::db_updater::*;
+use gosim_project::issue_tracker::*;
 
 use http_req::{
     request::{Method, Request},
     uri::Uri,
 };
-use mysql_async::prelude::Queryable;
 use mysql_async::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -201,44 +200,3 @@ pub async fn get_user_profile_with_his_token(
     Ok((name, login, twitter_username, email))
 }
 
-/* pub async fn add_mock_user(pool: &Pool, login_id: &str, email: &str) -> Result<()> {
-    let mut conn = pool.get_conn().await?;
-
-    let query = r"INSERT INTO participants (login_id, email  )
-                  VALUES (:login_id, :email)";
-
-    conn.exec_drop(
-        query,
-        params! {
-            "login_id" => login_id,
-            "email" => email,
-        },
-    )
-    .await?;
-
-    Ok(())
-} */
-
-/* pub async fn get_pool() -> Pool {
-    dotenv().ok();
-    let url = std::env::var("DATABASE_URL").expect("not url db url found");
-
-    let opts = Opts::from_url(&url).unwrap();
-    let builder = OptsBuilder::from_opts(opts);
-    // The connection pool will have a min of 5 and max of 10 connections.
-    let constraints = PoolConstraints::new(5, 10).unwrap();
-    let pool_opts = PoolOpts::default().with_constraints(constraints);
-
-    Pool::new(builder.pool_opts(pool_opts))
-} */
-
-/* pub async fn project_exists(pool: &mysql_async::Pool, project_id: &str) -> Result<bool> {
-    let mut conn = pool.get_conn().await?;
-    let result: Option<(i32,)> = conn
-        .query_first(format!(
-            "SELECT 1 FROM projects WHERE project_id = '{}'",
-            project_id
-        ))
-        .await?;
-    Ok(result.is_some())
-} */
