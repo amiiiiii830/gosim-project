@@ -1,0 +1,15 @@
+{
+  repositoryOwner(login: "jaykchen") {
+    ... on User {
+      name
+      login
+      url
+      twitterUsername
+      bio
+      company
+      location
+      createdAt
+      email
+    }
+  }
+}

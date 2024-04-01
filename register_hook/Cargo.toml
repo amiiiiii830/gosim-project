@@ -1,0 +1,33 @@
+[package]
+name = "register_hook"
+version = "0.1.0"
+edition = "2021"
+resolver = "2"
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib"]
+
+
+[dependencies]
+gosim_project = { path = "../" }
+tokio_wasi = { version = "1", features = ["macros", "rt"] }
+anyhow = "1"
+dotenv = "0.15.0"
+mysql_async_wasi = "0.31.5"
+# hyper_wasi = { version = "0.15", features = ["full"] }
+# tokio_wasi = { version = "1", features = ["io-util", "fs", "net", "time", "rt", "macros"] }
+
+serde_json = "1.0.97"
+serde = { version = "1", features = ["derive"] }
+flowsnet-platform-sdk = "0.1.3"
+log = "0.4.14"
+chrono = "0.4.31"
+base64 = "0.21.5"
+http_req_wasi = { version = "0.11.1", features = ["wasmedge_rustls"] }
+urlencoding = "2.1.3"
+wasmedge_wasi_socket = "0.4.3"
+webhook-flows = "0.4.4"
+rand = "0.8.5"
+sha2 = "0.10.8"
+form_urlencoded = "1.2.1"

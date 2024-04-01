@@ -1,0 +1,5121 @@
+{
+  "data": {
+    "search": {
+      "issueCount": 10765,
+      "edges": [
+        {
+          "node": {
+            "title": "feat: updated ep71 to line 167",
+            "url": "https://github.com/mgreiler/se-unlocked/pull/199",
+            "repository": {
+              "url": "https://github.com/mgreiler/se-unlocked"
+            },
+            "author": {
+              "login": "123HelloBob"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "mgreiler"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "mgreiler"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Issue-104: Map each schema property suchthat it's camel case",
+            "url": "https://github.com/chrispinkney/cinesync/pull/117",
+            "repository": {
+              "url": "https://github.com/chrispinkney/cinesync"
+            },
+            "author": {
+              "login": "chrispinkney"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/chrispinkney/cinesync/issues/124",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "bug"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "frontend"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "PullRequest"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "backend"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "Thinbishop"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "chrispinkney"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Create upload gif feature",
+            "url": "https://github.com/lcrojano/Giphy_Explorer/pull/46",
+            "repository": {
+              "url": "https://github.com/lcrojano/Giphy_Explorer"
+            },
+            "author": {
+              "login": "dabhitapan"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/lcrojano/Giphy_Explorer/issues/11",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "enhancement"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "good first issue"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "hacktoberfest-accepted"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "node": {
+                    "__typename": "ConnectedEvent",
+                    "subject": {
+                      "url": "https://github.com/lcrojano/Giphy_Explorer/issues/11"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "good first issue"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "lcrojano"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "lcrojano"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Added initial Chef+Vagrant setup",
+            "url": "https://github.com/RevianLabs/devops-webapp-sample/pull/12",
+            "repository": {
+              "url": "https://github.com/RevianLabs/devops-webapp-sample"
+            },
+            "author": {
+              "login": "SCBbestof"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "HACKTOBERFEST-ACCEPTED"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "mischha"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "SCBbestof"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "feat(quickstart): fix broker InconsistentClusterIdException issues",
+            "url": "https://github.com/datahub-project/datahub/pull/9148",
+            "repository": {
+              "url": "https://github.com/datahub-project/datahub"
+            },
+            "author": {
+              "login": "hsheth2"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/datahub-project/datahub/issues/9047",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "bug"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/datahub-project/datahub/issues/9166",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "bug"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "PullRequest"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "devops"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "shirshanka"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "shirshanka"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Fix for a test that passed on Oss and failed on Saas",
+            "url": "https://github.com/datahub-project/datahub/pull/9147",
+            "repository": {
+              "url": "https://github.com/datahub-project/datahub"
+            },
+            "author": {
+              "login": "kkorchak"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "smoke_test"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "jjoyce0510"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "jjoyce0510"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "fix(ingest/mongodb): fix schema inference for lists of values",
+            "url": "https://github.com/datahub-project/datahub/pull/9145",
+            "repository": {
+              "url": "https://github.com/datahub-project/datahub"
+            },
+            "author": {
+              "login": "hsheth2"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/datahub-project/datahub/issues/9081",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "bug"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "ingestion"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "merge-pending-ci"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "asikowitz"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "hsheth2"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Feature: azure SMS provider added",
+            "url": "https://github.com/novuhq/novu/pull/4715",
+            "repository": {
+              "url": "https://github.com/novuhq/novu"
+            },
+            "author": {
+              "login": "parveshsaini"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "PullRequest"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "Hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "@novu/web"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "@novu/shared"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "providers"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "community"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "Cliftonz"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "BiswaViraj"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "BiswaViraj"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Get rid of CopyOnWriteArrayList",
+            "url": "https://github.com/streetcomplete/StreetComplete/pull/5346",
+            "repository": {
+              "url": "https://github.com/streetcomplete/StreetComplete"
+            },
+            "author": {
+              "login": "neonowy"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/streetcomplete/StreetComplete/issues/1892",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "help wanted"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "code cleanup"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "westnordost"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "westnordost"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "added elastic potential energy calculator",
+            "url": "https://github.com/SarthakKeshari/calc_for_everything/pull/622",
+            "repository": {
+              "url": "https://github.com/SarthakKeshari/calc_for_everything"
+            },
+            "author": {
+              "login": "ShashWorks"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "ConnectedEvent",
+                    "subject": {
+                      "url": "https://github.com/SarthakKeshari/calc_for_everything/issues/575"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "easy"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest2023"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "🎉ranked"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "SarthakKeshari"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "SarthakKeshari"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Kotlin tan",
+            "url": "https://github.com/Codecademy/docs/pull/3823",
+            "repository": {
+              "url": "https://github.com/Codecademy/docs"
+            },
+            "author": {
+              "login": "Anudhyan"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "new entry"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "status: review 1️⃣ completed"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "status: review 2️⃣ completed"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "kotlin"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "dakshdeepHERE"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "SSwiniarski"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "SSwiniarski"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "created cross  product calculator",
+            "url": "https://github.com/SarthakKeshari/calc_for_everything/pull/621",
+            "repository": {
+              "url": "https://github.com/SarthakKeshari/calc_for_everything"
+            },
+            "author": {
+              "login": "syash7202"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "ConnectedEvent",
+                    "subject": {
+                      "url": "https://github.com/SarthakKeshari/calc_for_everything/issues/584"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "easy"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest2023"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "🎉ranked"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "SarthakKeshari"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "Vedansh-Keshari"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "Vedansh-Keshari"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Police Tonfa - Sec Stun Baton alternative",
+            "url": "https://github.com/BeeStation/BeeStation-Hornet/pull/10112",
+            "repository": {
+              "url": "https://github.com/BeeStation/BeeStation-Hornet"
+            },
+            "author": {
+              "login": "Nakalon"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "PullRequest"
+                    }
+                  }
+                },
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "PullRequest"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "Sprites"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "JixS4v"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "Rukofamicom"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "Rukofamicom"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Feat new push notifications methods",
+            "url": "https://github.com/andregasser/bigbone/pull/316",
+            "repository": {
+              "url": "https://github.com/andregasser/bigbone"
+            },
+            "author": {
+              "login": "G10xy"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "ConnectedEvent",
+                    "subject": {
+                      "url": "https://github.com/andregasser/bigbone/issues/296"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "enhancement"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "andregasser"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "andregasser"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "j'ai ajouter un cheat sheet qui resume les explication sur git et git…",
+            "url": "https://github.com/GalsenDev221/galsendev.first.contributions/pull/44",
+            "repository": {
+              "url": "https://github.com/GalsenDev221/galsendev.first.contributions"
+            },
+            "author": {
+              "login": "mouhamedhanne"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "ManuSquall"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "ManuSquall"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "update readme",
+            "url": "https://github.com/AyushShahh/Ultimate-Excuses/pull/6",
+            "repository": {
+              "url": "https://github.com/AyushShahh/Ultimate-Excuses"
+            },
+            "author": {
+              "login": "Kavyaa22"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "AyushShahh"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "AyushShahh"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "triangular_number_sequence",
+            "url": "https://github.com/JenilGajjar20/Competitive-Programming_problems/pull/145",
+            "repository": {
+              "url": "https://github.com/JenilGajjar20/Competitive-Programming_problems"
+            },
+            "author": {
+              "login": "lupefu"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "JenilGajjar20"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "JenilGajjar20"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Added code for kth smallest element ",
+            "url": "https://github.com/anuragverma108/DSA-Placement-Probems/pull/105",
+            "repository": {
+              "url": "https://github.com/anuragverma108/DSA-Placement-Probems"
+            },
+            "author": {
+              "login": "Sohajawdekar"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "anuragverma108"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "anuragverma108"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Spanish translation finished",
+            "url": "https://github.com/sumn2u/learn-javascript/pull/191",
+            "repository": {
+              "url": "https://github.com/sumn2u/learn-javascript"
+            },
+            "author": {
+              "login": "hamfree"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "sumn2u"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "sumn2u"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Prime no checking in java",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/130",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "Harshal17S"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Created dot product calculator",
+            "url": "https://github.com/SarthakKeshari/calc_for_everything/pull/620",
+            "repository": {
+              "url": "https://github.com/SarthakKeshari/calc_for_everything"
+            },
+            "author": {
+              "login": "syash7202"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "ConnectedEvent",
+                    "subject": {
+                      "url": "https://github.com/SarthakKeshari/calc_for_everything/issues/585"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "easy"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest2023"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "🎉ranked"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "SarthakKeshari"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "SarthakKeshari"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Added a JAVA code for next greater element in array",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/129",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "sohamt-21"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Solve Zero Division Crash issue",
+            "url": "https://github.com/GitSentinel/CalculatorApp/pull/17",
+            "repository": {
+              "url": "https://github.com/GitSentinel/CalculatorApp"
+            },
+            "author": {
+              "login": "Amit-guha"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "GitSentinel"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "GitSentinel"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "[Docs] Updating helm README file for issue #1545",
+            "url": "https://github.com/chainguard-images/images/pull/1792",
+            "repository": {
+              "url": "https://github.com/chainguard-images/images"
+            },
+            "author": {
+              "login": "gnewson"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "erikaheidi"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "erikaheidi"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "GH4244: Update sign tool to 0.9.1-beta.23530.1",
+            "url": "https://github.com/cake-build/cake/pull/4245",
+            "repository": {
+              "url": "https://github.com/cake-build/cake"
+            },
+            "author": {
+              "login": "devlead"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "pascalberger"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "devlead"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Added a new frequently asked question",
+            "url": "https://github.com/JenilGajjar20/Competitive-Programming_problems/pull/144",
+            "repository": {
+              "url": "https://github.com/JenilGajjar20/Competitive-Programming_problems"
+            },
+            "author": {
+              "login": "yash206"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "JenilGajjar20"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "JenilGajjar20"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Adding bubble sort code for CPP",
+            "url": "https://github.com/ShubhKotnala/Data_Structures_And_Algorithms/pull/90",
+            "repository": {
+              "url": "https://github.com/ShubhKotnala/Data_Structures_And_Algorithms"
+            },
+            "author": {
+              "login": "sdixit37"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "PullRequest"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "ShubhKotnala"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "ShubhKotnala"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Adding Game: Saboteur",
+            "url": "https://github.com/edm00se/awesome-board-games/pull/456",
+            "repository": {
+              "url": "https://github.com/edm00se/awesome-board-games"
+            },
+            "author": {
+              "login": "rayoloo"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "edm00se"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "edm00se"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Add jump search algorithm in C",
+            "url": "https://github.com/Abishethvarman/programming-resources/pull/134",
+            "repository": {
+              "url": "https://github.com/Abishethvarman/programming-resources"
+            },
+            "author": {
+              "login": "manisacharya"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "ConnectedEvent",
+                    "subject": {
+                      "url": "https://github.com/Abishethvarman/programming-resources/issues/129"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "C Program"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "Abishethvarman"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "Thevapriyan07"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "Thevapriyan07"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Add jump search algorithm for Java",
+            "url": "https://github.com/Abishethvarman/programming-resources/pull/133",
+            "repository": {
+              "url": "https://github.com/Abishethvarman/programming-resources"
+            },
+            "author": {
+              "login": "manisacharya"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "PullRequest"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "Java"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "Abishethvarman"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "Thevapriyan07"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "Thevapriyan07"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "Thevapriyan07"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Temporary file/directory creation",
+            "url": "https://github.com/SFTtech/openage/pull/1594",
+            "repository": {
+              "url": "https://github.com/SFTtech/openage"
+            },
+            "author": {
+              "login": "Ashhar-24"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "heinezen"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "heinezen"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Hacktoberfest",
+            "url": "https://github.com/weaviate-tutorials/DEMO-semantic-search-podcast/pull/6",
+            "repository": {
+              "url": "https://github.com/weaviate-tutorials/DEMO-semantic-search-podcast"
+            },
+            "author": {
+              "login": "miniMaddy"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "iamleonie"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "iamleonie"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Adding alternative text in the pictures to the contribution file",
+            "url": "https://github.com/OWASP/wrongsecrets/pull/1066",
+            "repository": {
+              "url": "https://github.com/OWASP/wrongsecrets"
+            },
+            "author": {
+              "login": "CaduRoriz"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "commjoen"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "commjoen"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "IMPROVE - Update the design of MaitenanceEvent list element in DashboardView #174",
+            "url": "https://github.com/mikaelacaron/Basic-Car-Maintenance/pull/254",
+            "repository": {
+              "url": "https://github.com/mikaelacaron/Basic-Car-Maintenance"
+            },
+            "author": {
+              "login": "mitaligondaliya"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "mikaelacaron"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "mikaelacaron"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Update EventsAPI.json",
+            "url": "https://github.com/WomenWhoCode/WWCodeGreenville/pull/120",
+            "repository": {
+              "url": "https://github.com/WomenWhoCode/WWCodeGreenville"
+            },
+            "author": {
+              "login": "pksuperduper"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "Hacktoberfest-Accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "Hacktoberfest"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "JenBauer"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "JenBauer"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "GH4242: Update GitReleaseManager.Tool to 0.15.0",
+            "url": "https://github.com/cake-build/cake/pull/4243",
+            "repository": {
+              "url": "https://github.com/cake-build/cake"
+            },
+            "author": {
+              "login": "devlead"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "pascalberger"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "devlead"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Requirements Fix Plus Examples",
+            "url": "https://github.com/linjmeyer/tilt-pitch/pull/38",
+            "repository": {
+              "url": "https://github.com/linjmeyer/tilt-pitch"
+            },
+            "author": {
+              "login": "robweber"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "linjmeyer"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "linjmeyer"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Bookmark page UI redesigned.",
+            "url": "https://github.com/IEEE-VIT/hackfest-flutter/pull/91",
+            "repository": {
+              "url": "https://github.com/IEEE-VIT/hackfest-flutter"
+            },
+            "author": {
+              "login": "Yash-Waghmare"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "dk-a-dev"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "dk-a-dev"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Add chroot Linux question",
+            "url": "https://github.com/freeCodeCamp/Developer_Quiz_Site/pull/910",
+            "repository": {
+              "url": "https://github.com/freeCodeCamp/Developer_Quiz_Site"
+            },
+            "author": {
+              "login": "kristenking"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "jdwilkin4"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "jdwilkin4"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Lexiographically Greater String in Java",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/128",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "Harshal17S"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Fix typos and grammar",
+            "url": "https://github.com/TBD54566975/developer.tbd.website/pull/948",
+            "repository": {
+              "url": "https://github.com/TBD54566975/developer.tbd.website"
+            },
+            "author": {
+              "login": "ArpitPandey29"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "PullRequest"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "angiejones"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "angiejones"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Added JAVA code for finding next smaller element Using Stack",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/127",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "sohamt-21"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "feat: Text to speech converter in React.js",
+            "url": "https://github.com/ianshulx/React-projects-for-beginners/pull/58",
+            "repository": {
+              "url": "https://github.com/ianshulx/React-projects-for-beginners"
+            },
+            "author": {
+              "login": "ojasggg"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest2023"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "ianshulx"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "ianshulx"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "UX Improvements",
+            "url": "https://github.com/india-ultimate/hub/pull/164",
+            "repository": {
+              "url": "https://github.com/india-ultimate/hub"
+            },
+            "author": {
+              "login": "Joe2k"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "SibiAkkash"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "punchagan"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "ADDED next smaller element in array in JAVA",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/126",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "sohamt-21"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Union and Intersection of arrays Using HashSet in Java",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/125",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "Harshal17S"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Fix misalignment of copy failure retry CTA",
+            "url": "https://github.com/learningequality/studio/pull/4319",
+            "repository": {
+              "url": "https://github.com/learningequality/studio"
+            },
+            "author": {
+              "login": "KshitijThareja"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/learningequality/studio/issues/4272",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "good first issue"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "DEV: frontend"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "help wanted"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "bjester"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "bjester"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Netflix clone using html and css",
+            "url": "https://github.com/mohitkadwe19/hacktoberfest2023/pull/6",
+            "repository": {
+              "url": "https://github.com/mohitkadwe19/hacktoberfest2023"
+            },
+            "author": {
+              "login": "jobs-code"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "mohitkadwe19"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "mohitkadwe19"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "added word counter",
+            "url": "https://github.com/SarthakKeshari/calc_for_everything/pull/619",
+            "repository": {
+              "url": "https://github.com/SarthakKeshari/calc_for_everything"
+            },
+            "author": {
+              "login": "ShashWorks"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "ConnectedEvent",
+                    "subject": {
+                      "url": "https://github.com/SarthakKeshari/calc_for_everything/issues/579"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "easy"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest2023"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "🎉ranked"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "SarthakKeshari"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "SarthakKeshari"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Checking Valid Anagram",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/123",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "Harshal17S"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "feat: increase code coverage for retryHandlerFactory",
+            "url": "https://github.com/intuit/RWebPulse/pull/35",
+            "repository": {
+              "url": "https://github.com/intuit/RWebPulse"
+            },
+            "author": {
+              "login": "REETI-SARUP"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "Tests"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "aditi2205"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "aditi2205"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Number of digit in a number in java",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/122",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "Harshal17S"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "feat: add splash screen for android and ios",
+            "url": "https://github.com/fz3hra/vaultify/pull/11",
+            "repository": {
+              "url": "https://github.com/fz3hra/vaultify"
+            },
+            "author": {
+              "login": "baimamboukar"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "flutter"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "dart"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "mdnazisharman2803"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "mdnazisharman2803"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Power of numbers",
+            "url": "https://github.com/anuragverma108/DSA-Placement-Probems/pull/103",
+            "repository": {
+              "url": "https://github.com/anuragverma108/DSA-Placement-Probems"
+            },
+            "author": {
+              "login": "extint"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "anuragverma108"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "anuragverma108"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Initial commit scaffolding with Sveltekit",
+            "url": "https://github.com/ncef-nepal/ncef-nepal.github.io/pull/6",
+            "repository": {
+              "url": "https://github.com/ncef-nepal/ncef-nepal.github.io"
+            },
+            "author": {
+              "login": "Shrest4647"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/ncef-nepal/ncef-nepal.github.io/issues/1",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "help wanted"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "hacktoberfest"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "hacktoberfest-accepted"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "enhancement"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "ncef-nepal"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "ncef-nepal"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Submit text_on_image_139",
+            "url": "https://github.com/KwickerHub/WebCraftifyAI/pull/676",
+            "repository": {
+              "url": "https://github.com/KwickerHub/WebCraftifyAI"
+            },
+            "author": {
+              "login": "Subrato-oid"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest2023"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "NtemKenyor"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "NtemKenyor"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "docs: add missing docstrings to data_sources/curl_source.py #3464",
+            "url": "https://github.com/intel/cve-bin-tool/pull/3489",
+            "repository": {
+              "url": "https://github.com/intel/cve-bin-tool"
+            },
+            "author": {
+              "login": "shivam200446"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/intel/cve-bin-tool/issues/3464",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "good first issue"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "documentation"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "hacktoberfest"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "awaiting maintainer"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "HACKTOBERFEST-ACCEPTED"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "terriko"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "terriko"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "removing react-scripts library",
+            "url": "https://github.com/DhananjayThomble/URL-Shortener-App/pull/177",
+            "repository": {
+              "url": "https://github.com/DhananjayThomble/URL-Shortener-App"
+            },
+            "author": {
+              "login": "keshav-nischal"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "DhananjayThomble"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "DhananjayThomble"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "created partial fraction calculator",
+            "url": "https://github.com/SarthakKeshari/calc_for_everything/pull/618",
+            "repository": {
+              "url": "https://github.com/SarthakKeshari/calc_for_everything"
+            },
+            "author": {
+              "login": "syash7202"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/SarthakKeshari/calc_for_everything/issues/338",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "question"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "hard"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "hacktoberfest2023"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hard"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest2023"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "🎉ranked"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "SarthakKeshari"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "SarthakKeshari"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "SarthakKeshari"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "fix(ingest/clickhouse): pin version to solve column reflection regression",
+            "url": "https://github.com/datahub-project/datahub/pull/9143",
+            "repository": {
+              "url": "https://github.com/datahub-project/datahub"
+            },
+            "author": {
+              "login": "hsheth2"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "PullRequest"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "ingestion"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "asikowitz"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "hsheth2"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "feat: Added Support for Notification API",
+            "url": "https://github.com/crowdin/crowdin-api-client-ruby/pull/56",
+            "repository": {
+              "url": "https://github.com/crowdin/crowdin-api-client-ruby"
+            },
+            "author": {
+              "login": "MohanThanigaivelan"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/crowdin/crowdin-api-client-ruby/issues/50",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "enhancement"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "good first issue"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "hacktoberfest"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "andrii-bodnar"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "andrii-bodnar"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Editing profile",
+            "url": "https://github.com/swciitg/college_cupid/pull/35",
+            "repository": {
+              "url": "https://github.com/swciitg/college_cupid"
+            },
+            "author": {
+              "login": "venkylm10"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "hardikroongta8"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "hardikroongta8"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Grammatical Updates to Faqs.jsx",
+            "url": "https://github.com/Genesis-ISE-DSCE/Catalysis2.0/pull/47",
+            "repository": {
+              "url": "https://github.com/Genesis-ISE-DSCE/Catalysis2.0"
+            },
+            "author": {
+              "login": "Orange-Tofu"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "HACKTOBERFEST"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "HACKTOBERFEST-ACCEPTED"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "Astraxx04"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "Astraxx04"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "added complex number calculator #103",
+            "url": "https://github.com/RuanAragao/calculator/pull/115",
+            "repository": {
+              "url": "https://github.com/RuanAragao/calculator"
+            },
+            "author": {
+              "login": "Dhandeep10"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "RuanAragao"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "RuanAragao"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Feat/Implement custom back links",
+            "url": "https://github.com/DhananjayThomble/URL-Shortener-App/pull/175",
+            "repository": {
+              "url": "https://github.com/DhananjayThomble/URL-Shortener-App"
+            },
+            "author": {
+              "login": "SamirMishra27"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/DhananjayThomble/URL-Shortener-App/issues/48",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "documentation"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "hacktoberfest"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/DhananjayThomble/URL-Shortener-App/issues/54",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "documentation"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "hacktoberfest"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "DhananjayThomble"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "DhananjayThomble"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Checking Number is Palindrome or Not using recursive method in Java",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/120",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "Harshal17S"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "fix typos and grammatical mistake in README.md file",
+            "url": "https://github.com/build-trust/ockam/pull/6811",
+            "repository": {
+              "url": "https://github.com/build-trust/ockam"
+            },
+            "author": {
+              "login": "THEFZNKHAN"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "HACKTOBERFEST-ACCEPTED"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "nazmulidris"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "etorreborre"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "nazmulidris"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Added Rotation of 2d Matrix Using JAVA",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/119",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "sohamt-21"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "904 add custom proplabel to select and dropdown",
+            "url": "https://github.com/Brisanet/ion/pull/907",
+            "repository": {
+              "url": "https://github.com/Brisanet/ion"
+            },
+            "author": {
+              "login": "iurynogueira"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "deeved-hiuston-brisa"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "danilo-moreira-brisa"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "iurynogueira"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "refactor(combo): implementa animaliaDS",
+            "url": "https://github.com/po-ui/po-style/pull/465",
+            "repository": {
+              "url": "https://github.com/po-ui/po-style"
+            },
+            "author": {
+              "login": "jcorrea97"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "jnrpalma"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "felipepetuco"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "rafaellmarques"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "rafaellmarques"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "add nth root calculator",
+            "url": "https://github.com/SarthakKeshari/calc_for_everything/pull/617",
+            "repository": {
+              "url": "https://github.com/SarthakKeshari/calc_for_everything"
+            },
+            "author": {
+              "login": "ShashWorks"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "ConnectedEvent",
+                    "subject": {
+                      "url": "https://github.com/SarthakKeshari/calc_for_everything/issues/581"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "easy"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest2023"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "🎉ranked"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "SarthakKeshari"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "SarthakKeshari"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "fix(deps): Remove showdown as dependency",
+            "url": "https://github.com/patternfly/patternfly-quickstarts/pull/274",
+            "repository": {
+              "url": "https://github.com/patternfly/patternfly-quickstarts"
+            },
+            "author": {
+              "login": "jschuler"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "released on @prerelease"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "jessiehuff"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "jschuler"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "docs: add missing docstrings to data_sources/gad_source.py #3466",
+            "url": "https://github.com/intel/cve-bin-tool/pull/3488",
+            "repository": {
+              "url": "https://github.com/intel/cve-bin-tool"
+            },
+            "author": {
+              "login": "shivam200446"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "awaiting maintainer"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "HACKTOBERFEST-ACCEPTED"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "terriko"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "terriko"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Bubble sort using Recursion in JAVA",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/118",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "Harshal17S"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "[Feature]: Add sandbox support for chimoney js",
+            "url": "https://github.com/Chimoney/chimoney-community-projects/pull/331",
+            "repository": {
+              "url": "https://github.com/Chimoney/chimoney-community-projects"
+            },
+            "author": {
+              "login": "Ayo-Awe"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "uchibeke"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "uchibeke"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Fix file exist ruby32",
+            "url": "https://github.com/mxenabled/protobuf-nats/pull/3",
+            "repository": {
+              "url": "https://github.com/mxenabled/protobuf-nats"
+            },
+            "author": {
+              "login": "skunkworker"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "film42"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "skunkworker"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "buy and sell stock problem solution",
+            "url": "https://github.com/iShayann/DSA_sorcery/pull/15",
+            "repository": {
+              "url": "https://github.com/iShayann/DSA_sorcery"
+            },
+            "author": {
+              "login": "AbhirupDey18"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "iShayann"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "iShayann"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Other: Improve UX for website footer",
+            "url": "https://github.com/uptane/uptane.github.io/pull/118",
+            "repository": {
+              "url": "https://github.com/uptane/uptane.github.io"
+            },
+            "author": {
+              "login": "shubhusion"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "hexsecs"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "jhdalek55"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "hexsecs"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Kiranrokkam09/feature/mergesort.py",
+            "url": "https://github.com/MrB141107/Python_Projects/pull/75",
+            "repository": {
+              "url": "https://github.com/MrB141107/Python_Projects"
+            },
+            "author": {
+              "login": "kiranrokkam09"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "good first issue"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "valid"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "python"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "MrB141107"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "MrB141107"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Created calendar using Kotlin/Java SDK",
+            "url": "https://github.com/nylas-samples/nylas-hacktoberfest-2023/pull/104",
+            "repository": {
+              "url": "https://github.com/nylas-samples/nylas-hacktoberfest-2023"
+            },
+            "author": {
+              "login": "NikhilTaneja98"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/nylas-samples/nylas-hacktoberfest-2023/issues/62",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "Java"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "Kotlin"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "hacktoberfest"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "Calendar-Event"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "atejada"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "atejada"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Fixed a bug in the causing yarn playwright test to fail due to an error in the screenshot.css path.",
+            "url": "https://github.com/uptane/uptane.github.io/pull/117",
+            "repository": {
+              "url": "https://github.com/uptane/uptane.github.io"
+            },
+            "author": {
+              "login": "devilkiller-ag"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "hexsecs"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "hexsecs"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "First iteration of a new similar image search demo",
+            "url": "https://github.com/weaviate-tutorials/DEMO-image-search-dishes/pull/1",
+            "repository": {
+              "url": "https://github.com/weaviate-tutorials/DEMO-image-search-dishes"
+            },
+            "author": {
+              "login": "aaalexlit"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "iamleonie"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "iamleonie"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Includes reason invoice is excluded in exclusion email",
+            "url": "https://github.com/sul-dlss/libsys-airflow/pull/796",
+            "repository": {
+              "url": "https://github.com/sul-dlss/libsys-airflow"
+            },
+            "author": {
+              "login": "shelleydoljack"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/sul-dlss/libsys-airflow/issues/779",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "payments"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "payments"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "jermnelson"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "jermnelson"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Add strain exercise (#297)",
+            "url": "https://github.com/exercism/racket/pull/306",
+            "repository": {
+              "url": "https://github.com/exercism/racket"
+            },
+            "author": {
+              "login": "Adrien-LUDWIG"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "x:module/practice-exercise"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "BNAndras"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "BNAndras"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "EOL Debian 10",
+            "url": "https://github.com/PowerShell/PowerShell-Docker/pull/776",
+            "repository": {
+              "url": "https://github.com/PowerShell/PowerShell-Docker"
+            },
+            "author": {
+              "login": "TravisEz13"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "anamnavi"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "TravisEz13"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Added segregateEvenOddLinkedList",
+            "url": "https://github.com/d-coder111/DSAmplify/pull/116",
+            "repository": {
+              "url": "https://github.com/d-coder111/DSAmplify"
+            },
+            "author": {
+              "login": "Mukund964"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "d-coder111"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "d-coder111"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Feature/make new layout",
+            "url": "https://github.com/vaishnavi-3969/Web-Componentify/pull/71",
+            "repository": {
+              "url": "https://github.com/vaishnavi-3969/Web-Componentify"
+            },
+            "author": {
+              "login": "mahendrameghwal"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-2023"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "vaishnavi-3969"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "vaishnavi-3969"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "feat: add posters and video files as placeholders for testing scripts",
+            "url": "https://github.com/cdacgroup16/streameo/pull/97",
+            "repository": {
+              "url": "https://github.com/cdacgroup16/streameo"
+            },
+            "author": {
+              "login": "aadarshp31"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "HACKTOBERFEST"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "HACKTOBERFEST-ACCEPTED"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "cdacgroup16"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "cdacgroup16"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "EOL Alpine 3.15",
+            "url": "https://github.com/PowerShell/PowerShell-Docker/pull/775",
+            "repository": {
+              "url": "https://github.com/PowerShell/PowerShell-Docker"
+            },
+            "author": {
+              "login": "TravisEz13"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "anamnavi"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "TravisEz13"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "grpc-bom dependency doesn't properly generate in pom.xml",
+            "url": "https://github.com/wiremock/wiremock-grpc-extension/pull/9",
+            "repository": {
+              "url": "https://github.com/wiremock/wiremock-grpc-extension"
+            },
+            "author": {
+              "login": "edeandrea"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "bug"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "oleg-nenashev"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "tomakehurst"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Fix broken links in cloud documentation",
+            "url": "https://github.com/umbraco/UmbracoDocs/pull/5593",
+            "repository": {
+              "url": "https://github.com/umbraco/UmbracoDocs"
+            },
+            "author": {
+              "login": "ArpitPandey29"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "category/umbraco-cloud"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest/contrib-2023"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "jonat123"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "jonat123"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Update example deprecation code in `CONTRIBUTING.rst`",
+            "url": "https://github.com/pyvista/pyvista/pull/5150",
+            "repository": {
+              "url": "https://github.com/pyvista/pyvista"
+            },
+            "author": {
+              "login": "user27182"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "maintenance"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "Hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "tkoyama010"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "banesullivan"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "banesullivan"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Add sudo to container",
+            "url": "https://github.com/aidancrowther/Milk-V-Duo-Docker-Compile/pull/7",
+            "repository": {
+              "url": "https://github.com/aidancrowther/Milk-V-Duo-Docker-Compile"
+            },
+            "author": {
+              "login": "AngelOnFira"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "aidancrowther"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "aidancrowther"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "feat(rust): add `plain` and `json` outputs to `ockam node logs` (issu…",
+            "url": "https://github.com/build-trust/ockam/pull/6810",
+            "repository": {
+              "url": "https://github.com/build-trust/ockam"
+            },
+            "author": {
+              "login": "axd99"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "CrossReferencedEvent",
+                    "source": {
+                      "__typename": "Issue",
+                      "url": "https://github.com/build-trust/ockam/issues/6658",
+                      "labels": {
+                        "edges": [
+                          {
+                            "node": {
+                              "name": "help wanted"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "Implementation: Rust"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "Component: Command"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "hacktoberfest"
+                            }
+                          },
+                          {
+                            "node": {
+                              "name": "Type: User Experience"
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "HACKTOBERFEST-ACCEPTED"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "adrianbenavides"
+                    },
+                    "state": "APPROVED"
+                  }
+                },
+                {
+                  "node": {
+                    "author": {
+                      "login": "etorreborre"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "adrianbenavides"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "goegraphy checkout code in python",
+            "url": "https://github.com/Fork-N-Forge/Python-Sala/pull/56",
+            "repository": {
+              "url": "https://github.com/Fork-N-Forge/Python-Sala"
+            },
+            "author": {
+              "login": "aanyachauhan9"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "Ayush7614"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "Ayush7614"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "email slicer code in python",
+            "url": "https://github.com/Fork-N-Forge/Python-Sala/pull/55",
+            "repository": {
+              "url": "https://github.com/Fork-N-Forge/Python-Sala"
+            },
+            "author": {
+              "login": "aanyachauhan9"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "Ayush7614"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "Ayush7614"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Added Frontend Projects folder",
+            "url": "https://github.com/UjjwalSharma01/checklist/pull/116",
+            "repository": {
+              "url": "https://github.com/UjjwalSharma01/checklist"
+            },
+            "author": {
+              "login": "Vanraj8169"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "UjjwalSharma01"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "UjjwalSharma01"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "Color game in python ",
+            "url": "https://github.com/Fork-N-Forge/Python-Sala/pull/54",
+            "repository": {
+              "url": "https://github.com/Fork-N-Forge/Python-Sala"
+            },
+            "author": {
+              "login": "aanyachauhan9"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "Ayush7614"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "Ayush7614"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "test: add test for heading and tag component",
+            "url": "https://github.com/vczb/sagu-ui/pull/123",
+            "repository": {
+              "url": "https://github.com/vczb/sagu-ui"
+            },
+            "author": {
+              "login": "KiruthikaJeyashankar"
+            },
+            "timelineItems": {
+              "edges": []
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "vczb"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "vczb"
+            }
+          }
+        },
+        {
+          "node": {
+            "title": "[233,76] Added java solution for problem 233 and 76 (Hard)",
+            "url": "https://github.com/godkingjay/LeetCode/pull/211",
+            "repository": {
+              "url": "https://github.com/godkingjay/LeetCode"
+            },
+            "author": {
+              "login": "Bharathlax-2005"
+            },
+            "timelineItems": {
+              "edges": [
+                {
+                  "node": {
+                    "__typename": "ConnectedEvent",
+                    "subject": {
+                      "url": "https://github.com/godkingjay/LeetCode/issues/183"
+                    }
+                  }
+                },
+                {
+                  "node": {
+                    "__typename": "ConnectedEvent",
+                    "subject": {
+                      "url": "https://github.com/godkingjay/LeetCode/issues/212"
+                    }
+                  }
+                }
+              ]
+            },
+            "labels": {
+              "edges": [
+                {
+                  "node": {
+                    "name": "hacktoberfest-accepted"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "hacktoberfest"
+                  }
+                },
+                {
+                  "node": {
+                    "name": "solution"
+                  }
+                }
+              ]
+            },
+            "hasApprovedReview": {
+              "edges": [
+                {
+                  "node": {
+                    "author": {
+                      "login": "godkingjay"
+                    },
+                    "state": "APPROVED"
+                  }
+                }
+              ]
+            },
+            "mergedBy": {
+              "login": "godkingjay"
+            }
+          }
+        }
+      ],
+      "pageInfo": {
+        "endCursor": "Y3Vyc29yOjEwMw==",
+        "hasNextPage": true
+      }
+    }
+  }
+}

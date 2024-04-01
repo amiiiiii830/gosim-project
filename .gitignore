@@ -1,0 +1,7 @@
+/target
+Cargo.lock
+.env
+
+register-hook/target
+register-hook/Cargo.lock
+register-hook/.env
