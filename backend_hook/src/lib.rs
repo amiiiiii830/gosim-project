@@ -35,9 +35,9 @@ async fn handler(
     logger::init();
 
     let mut router = Router::new();
-    // router
-    //     .insert("/issues", vec![get(list_issues_handler)])
-    //     .unwrap();
+    router
+        .insert("/issues", vec![get(list_issues_handler)])
+        .unwrap();
     router
         .insert("/projects", vec![get(list_projects_handler)])
         .unwrap();
