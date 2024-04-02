@@ -81,6 +81,7 @@ async fn register_user(
         .await
         .expect("failed to get user profile");
 
+        log::info!("profiled user: {:?}, {}", login, email);
     let pool: Pool = get_pool().await;
 
     let _ = add_mock_user(&pool, &login, &email).await;
@@ -115,10 +116,7 @@ async fn exchange_token_w_output(code: &str) -> anyhow::Result<String> {
 
     match load.access_token {
         Some(m) => Ok(m),
-        None => {
-            log::error!("failed to get token");
-            anyhow::bail!("failed to get token")
-        }
+        None => anyhow::bail!("failed to get token"),
     }
 }
 
@@ -199,4 +197,3 @@ pub async fn get_user_profile_with_his_token(
     let email = user.email.unwrap_or_default();
     Ok((name, login, twitter_username, email))
 }
-
