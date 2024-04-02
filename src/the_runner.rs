@@ -129,20 +129,20 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
         true,
     );
     log::error!("query_open: {:?}", query_open);
-    let mock_user_obj: Vec<(String, String, String)> = search_mock_user(&query_open).await?;
+    // let mock_user_obj: Vec<(String, String, String)> = search_mock_user(&query_open).await?;
 
-    let len = mock_user_obj.len();
-    log::error!("mock_user_obj: {:?}", len);
-    for (login, _, email) in mock_user_obj {
-        let _ = add_mock_user(pool, &login, &email).await;
-    }
+    // let len = mock_user_obj.len();
+    // log::error!("mock_user_obj: {:?}", len);
+    // for (login, _, email) in mock_user_obj {
+    //     let _ = add_mock_user(pool, &login, &email).await;
+    // }
 
-    let open_issue_obj: Vec<IssueOpen> = search_issues_open(&query_open).await?;
-    let len = open_issue_obj.len();
-    log::error!("open_issue_obj: {:?}", len);
-    for issue in open_issue_obj {
-        let _ = add_issues_open(pool, issue).await;
-    }
+    // let open_issue_obj: Vec<IssueOpen> = search_issues_open(&query_open).await?;
+    // let len = open_issue_obj.len();
+    // log::error!("open_issue_obj: {:?}", len);
+    // for issue in open_issue_obj {
+    //     let _ = add_issues_open(pool, issue).await;
+    // }
 
     // let query ="label:hacktoberfest is:issue is:open created:>=2023-10-01 updated:2023-10-03..2023-10-04 -label:spam -label:invalid";
     let query_comment = inner_query_1_hour(
@@ -155,14 +155,14 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
         true,
         false,
     );
-    log::error!("query_comment: {:?}", query_comment);
-    let issues_comment_obj: Vec<IssueComments> =
-        search_issues_w_update_comments(&query_comment).await?;
-    let len = issues_comment_obj.len();
-    log::error!("issues_comment_obj: {:?}", len);
-    for issue in issues_comment_obj {
-        let _ = add_issues_comments(pool, issue).await;
-    }
+    // log::error!("query_comment: {:?}", query_comment);
+    // let issues_comment_obj: Vec<IssueComments> =
+    //     search_issues_w_update_comments(&query_comment).await?;
+    // let len = issues_comment_obj.len();
+    // log::error!("issues_comment_obj: {:?}", len);
+    // for issue in issues_comment_obj {
+    //     let _ = add_issues_comments(pool, issue).await;
+    // }
 
     // let query_closed =
     //     "label:hacktoberfest is:issue is:closed updated:>=2023-10-01 -label:spam -label:invalid";
@@ -177,33 +177,37 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
         false,
     );
     println!("query_closed: {:?}", query_closed);
-    let close_issue_obj = search_issues_closed(&query_closed).await?;
-    let len = close_issue_obj.len();
-    log::error!("close_issue_obj: {:?}", len);
-    for issue in close_issue_obj {
-        let _ = add_issues_closed(pool, issue).await;
-    }
+    // let close_issue_obj = search_issues_closed(&query_closed).await?;
+    // let len = close_issue_obj.len();
+    // log::error!("close_issue_obj: {:?}", len);
+    // for issue in close_issue_obj {
+    //     let _ = add_issues_closed(pool, issue).await;
+    // }
 
     // let query_pr_overall ="label:hacktoberfest-accepted is:pr is:merged updated:2023-10-01..2023-10-02 review:approved -label:spam -label:invalid";
-    let query_pull_request = inner_query_1_hour(
-        &START_DATE,
-        &THIS_HOUR,
-        &NEXT_HOUR,
-        ISSUE_LABEL,
-        PR_LABEL,
-        false,
-        false,
-        false,
-    );
-    log::error!("query_pull_request: {:?}", query_pull_request);
-    let pull_request_obj: Vec<OuterPull> = search_pull_requests(&query_pull_request).await?;
-    let len = pull_request_obj.len();
-    log::error!("pull_request_obj: {:?}", len);
-    for pull in pull_request_obj {
-        let _ = add_pull_request(&pool, pull).await;
-    }
+    // let query_pull_request = inner_query_1_hour(
+    //     &START_DATE,
+    //     &THIS_HOUR,
+    //     &NEXT_HOUR,
+    //     ISSUE_LABEL,
+    //     PR_LABEL,
+    //     false,
+    //     false,
+    //     false,
+    // );
+    // log::error!("query_pull_request: {:?}", query_pull_request);
+    // let pull_request_obj: Vec<OuterPull> = search_pull_requests(&query_pull_request).await?;
+    // let len = pull_request_obj.len();
+    // log::error!("pull_request_obj: {:?}", len);
+    // for pull in pull_request_obj {
+    //     let _ = add_pull_request(&pool, pull).await;
+    // }
 
-    let _ = table_open_comment_master(pool).await;
+    let _ = open_comment_master(&pool).await?;
+
+    let _ = close_pull_master(&pool).await?;
+
+    let _ = open_master_project(&pool).await?;
 
     Ok(())
 }

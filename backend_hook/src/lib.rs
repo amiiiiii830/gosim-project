@@ -39,6 +39,9 @@ async fn handler(
         .insert("/issues", vec![get(list_issues_handler)])
         .unwrap();
     router
+        .insert("/projects", vec![get(list_projects_handler)])
+        .unwrap();
+    router
         .insert("/budget", vec![post(approve_issue_budget_handler)])
         .unwrap();
 
@@ -141,22 +144,47 @@ async fn list_issues_handler(
     );
 }
 
-async fn projects_list(
+async fn list_projects_handler(
     _headers: Vec<(String, String)>,
     _qry: HashMap<String, Value>,
     _body: Vec<u8>,
 ) {
-    // match _qry.get("file_name") {
-    //     Some(m) => match serde_json::from_value::<String>(m.clone()) {
-    //         Ok(key) => "file_name".to_string(),
-    //         Err(_e) => {
-    //             log::error!("failed to parse file_name: {}", _e);
-    //             return;
-    //         }
-    //     },
-    //     _ => {
-    //         log::error!("missing file_name");
-    //         return;
-    //     }
-    // }
+    log::info!("Received query parameters: {:?}", _qry);
+
+    let page = match _qry
+        .get("page")
+        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
+    {
+        Some(m) if m > 0 => m,
+        _ => {
+            log::error!("Invalid or missing 'page' parameter");
+            return;
+        }
+    };
+
+    let page_size = match _qry
+        .get("page_size")
+        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
+    {
+        Some(m) if m > 0 => m,
+        _ => {
+            log::error!("Invalid or missing 'page_size' parameter");
+            return;
+        }
+    };
+    log::error!("page: {}, page_size: {}", page, page_size);
+    let pool = get_pool().await;
+
+    let projects_obj = list_projects(&pool, page, page_size).await.expect("msg");
+
+    let projects_str = format!("{:?}", projects_obj);
+    log::error!("projects_str: {}", projects_str);
+
+    send_response(
+        200,
+        vec![(String::from("content-type"), String::from("text/html"))],
+        projects_str.as_bytes().to_vec(),
+    );
 }
+
+
