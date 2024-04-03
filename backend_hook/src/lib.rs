@@ -139,10 +139,12 @@ async fn list_issues_handler(
 
     send_response(
         200,
-        vec![(String::from("content-type"), String::from("text/html"))],
+        vec![
+            (String::from("content-type"), String::from("text/html")),
+            (String::from("Access-Control-Allow-Origin"), String::from("*")),
+        ],
         issues_str.as_bytes().to_vec(),
-    );
-}
+    );}
 
 async fn list_projects_handler(
     _headers: Vec<(String, String)>,
