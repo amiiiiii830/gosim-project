@@ -1,22 +1,19 @@
 query ($query: String!) {
-  search(query: $query, type: ISSUE, first: 10, after: null) {
+  search(query: $query, type: ISSUE, first: 100, after: null) {
     issueCount
     nodes {
       ... on Issue {
         url
-        title
-        body
-        assignees(first: 5) {
+        timelineItems(first: 1, itemTypes: [ASSIGNED_EVENT]) {
           nodes {
-            login
-          }
-        }
-        comments(first: 50) {
-          nodes {
-            author {
-              login
+            ... on AssignedEvent {
+              assignee {
+                ... on User {
+                  login
+                }
+              }
+              createdAt
             }
-            body
           }
         }
       }
@@ -29,8 +26,9 @@ query ($query: String!) {
 }
 
 {
-  "query": "label:hacktoberfest is:issue is:open created:>=2023-10-01 updated:>=2023-10-02T00:10:00 -label:spam -label:invalid"
+  "query": "label:hacktoberfest is:issue is:assigned created:>2023-10-01 updated:2023-10-03T05:00:00..2023-10-03T06:00:00 -label:spam -label:invalid"
 }
+
 {
   "query": "label:hacktoberfest is:issue is:open no:assignee created:2023-10-01..2023-10-03 -label:spam -label:invalid",
   "firstComments": 10,

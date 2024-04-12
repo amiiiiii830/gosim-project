@@ -4,11 +4,6 @@ query ($query: String!) {
     nodes {
       ... on Issue {
         url
-        labels(first: 10) {
-          nodes {
-            name
-          }
-        }
         assignees(first: 5) {
           nodes {
             name
@@ -38,10 +33,11 @@ query ($query: String!) {
     }
   }
 }
-
 {
-  "query": "label:hacktoberfest is:issue is:closed created:>=2023-10-01 updated:>=2023-10-02T00:10:00 -label:spam -label:invalid"
+  "query": "label:hacktoberfest is:issue is:closed created:>2023-10-01 closed:2023-10-03T05:00:00..2023-10-03T06:00:00 -label:spam -label:invalid"
 }
+
+
 {
   "query": "label:hacktoberfest is:issue is:open no:assignee created:2023-10-01..2023-10-03 -label:spam -label:invalid",
   "firstComments": 10,

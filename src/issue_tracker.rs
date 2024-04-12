@@ -1,11 +1,16 @@
 use anyhow::anyhow;
+use chrono::{DateTime, ParseError, Utc};
 use http_req::{
     request::{Method, Request},
     uri::Uri,
 };
-
 use serde::{Deserialize, Serialize};
 use std::env;
+
+fn convert_datetime(merged_at: &str) -> Result<String, ParseError> {
+    let datetime: DateTime<Utc> = merged_at.parse()?;
+    Ok(datetime.format("%Y-%m-%d %H:%M:%S").to_string())
+}
 
 pub async fn github_http_post_gql(query: &str) -> anyhow::Result<Vec<u8>> {
     let token = env::var("GITHUB_TOKEN").expect("github_token is required");
@@ -37,18 +42,122 @@ pub async fn github_http_post_gql(query: &str) -> anyhow::Result<Vec<u8>> {
     }
 }
 
-#[allow(non_snake_case)]
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct IssueComments {
-    pub issue_id: String, // url of an issue
-    pub issue_title: String,
-    pub issue_body: Option<String>,
-    pub issue_assignees: Option<Vec<String>>,
-    pub issue_comments: Option<Vec<String>>,
+pub struct RepoData {
+    pub project_id: String,
+    pub repo_description: String,
+    pub repo_readme: String,
+    pub repo_stars: i64,
+    pub project_logo: String,
 }
 
-#[allow(non_snake_case)]
-pub async fn search_issues_w_update_comments(query: &str) -> anyhow::Result<Vec<IssueComments>> {
+pub async fn search_repos_in_batch(query: &str) -> anyhow::Result<Vec<RepoData>> {
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct GraphQLResponse {
+        data: Option<Data>,
+    }
+
+    #[allow(non_snake_case)]
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Data {
+        search: Option<Search>,
+    }
+
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Search {
+        nodes: Option<Vec<Repo>>,
+    }
+
+    #[allow(non_snake_case)]
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Owner {
+        avatarUrl: Option<String>,
+    }
+
+    #[allow(non_snake_case)]
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Stargazers {
+        totalCount: Option<i64>,
+    }
+
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Repo {
+        url: String,
+        description: Option<String>,
+        readme: Option<Readme>,
+        stargazers: Option<Stargazers>,
+        owner: Option<Owner>,
+    }
+
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Readme {
+        text: Option<String>,
+    }
+
+    let mut all_repos = Vec::new();
+
+    let query_str = format!(
+        r#"
+            query {{
+                search(query: "{}", type: REPOSITORY, first: 100) {{
+                    repositoryCount
+                    nodes {{
+                        ... on Repository {{
+                            url
+                            description
+                            stargazers {{
+                                totalCount
+                            }}
+                            owner {{
+                                avatarUrl
+                            }}
+                            readme: object(expression: "HEAD:README.md") {{
+                                ... on Blob {{
+                                    text
+                                }}
+                            }}
+                        }}
+                    }}
+                }}
+            }}
+        "#,
+        query.replace("\"", "\\\""),
+    );
+
+    let response_body = github_http_post_gql(&query_str)
+        .await
+        .map_err(|e| anyhow!("Failed to post GraphQL query: {}", e))?;
+
+    let response: GraphQLResponse = serde_json::from_slice(&response_body)
+        .map_err(|e| anyhow!("Failed to deserialize response: {}", e))?;
+
+    if let Some(data) = response.data {
+        if let Some(search) = data.search {
+            if let Some(nodes) = search.nodes {
+                for repo in nodes {
+                    all_repos.push(RepoData {
+                        project_id: repo.url.clone(),
+                        repo_description: repo.description.clone().unwrap_or_default(),
+                        repo_readme: repo.readme.and_then(|r| r.text).unwrap_or_default(),
+                        repo_stars: repo.stargazers.and_then(|s| s.totalCount).unwrap_or(0),
+                        project_logo: repo.owner.and_then(|o| o.avatarUrl).unwrap_or_default(),
+                    });
+                }
+            }
+        }
+    }
+
+    Ok(all_repos)
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct IssueAssigned {
+    pub issue_id: String, // url of an issue
+    pub issue_assignee: String,
+    pub date_assigned: String,
+}
+
+pub async fn search_issues_assigned(query: &str) -> anyhow::Result<Vec<IssueAssigned>> {
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct GraphQLResponse {
         data: Option<Data>,
@@ -77,36 +186,24 @@ pub async fn search_issues_w_update_comments(query: &str) -> anyhow::Result<Vec<
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct IssueNode {
         url: Option<String>,
-        title: Option<String>,
-        body: Option<String>,
-        assignees: Option<AssigneeNodes>,
-        comments: Option<Comments>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct AssigneeNodes {
-        nodes: Option<Vec<Assignee>>,
+        timelineItems: Option<TimelineItems>,
     }
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct Assignee {
-        name: Option<String>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Comments {
-        nodes: Option<Vec<Comment>>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Comment {
-        author: Option<Author>,
-        body: Option<String>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Author {
         login: Option<String>,
+    }
+
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct TimelineItems {
+        nodes: Option<Vec<AssignedEvent>>,
+    }
+
+    #[allow(non_snake_case)]
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct AssignedEvent {
+        assignee: Option<Assignee>,
+        createdAt: Option<String>,
     }
 
     let mut all_issues = Vec::new();
@@ -121,20 +218,18 @@ pub async fn search_issues_w_update_comments(query: &str) -> anyhow::Result<Vec<
                         nodes {{
                             ... on Issue {{
                                 url
-                                body
-                                assignees(first: 5) {{
+                                timelineItems(first: 1, itemTypes: [ASSIGNED_EVENT]) {{
                                     nodes {{
-                                        name
+                                      ... on AssignedEvent {{
+                                        assignee {{
+                                          ... on User {{
+                                            login
+                                          }}
+                                        }}
+                                        createdAt
+                                      }}
                                     }}
-                                }}
-                                comments(first: 50) {{
-                                nodes {{
-                                    author {{
-                                        login
-                                    }}
-                                    body
-                                }}
-                                }}
+                                }}   
                             }}
                         }}
                         pageInfo {{
@@ -161,43 +256,26 @@ pub async fn search_issues_w_update_comments(query: &str) -> anyhow::Result<Vec<
             if let Some(search) = data.search {
                 if let Some(nodes) = search.nodes {
                     for issue in nodes {
-                        let temp_str = String::from("");
-                        let comments = issue.comments.map_or(Vec::new(), |comments| {
-                            comments.nodes.map_or(Vec::new(), |nodes| {
-                                nodes
-                                    .iter()
-                                    .filter_map(|comment| {
-                                        Some(format!(
-                                            "{} commented: `{}`",
-                                            comment.author.as_ref().map_or("", |a| a
-                                                .login
-                                                .as_ref()
-                                                .unwrap_or(&temp_str)),
-                                            comment.body.as_ref().unwrap_or(&temp_str)
-                                        ))
-                                    })
-                                    .collect()
-                            })
-                        });
-                        let assignees = issue.assignees.as_ref().map_or(Vec::new(), |assignees| {
-                            assignees.nodes.as_ref().map_or(Vec::new(), |nodes| {
-                                nodes
-                                    .iter()
-                                    .filter_map(|assignee| assignee.name.clone())
-                                    .collect()
-                            })
-                        });
+                        if let Some(timeline_items) = issue.timelineItems {
+                            if let Some(nodes) = timeline_items.nodes {
+                                for node in nodes {
+                                    let assignee = node
+                                        .assignee
+                                        .as_ref()
+                                        .and_then(|a| a.login.clone())
+                                        .unwrap_or_default();
+                                    let created_at = node.createdAt.clone().unwrap_or_default();
 
-                        // let comments_summary = check_comments().await;
-                        let _comments_summary = String::from("placeholder");
-
-                        all_issues.push(IssueComments {
-                            issue_id: issue.url.unwrap_or_default(), // Assuming issue.url is the issue_id
-                            issue_title: issue.title.unwrap_or_default(),
-                            issue_assignees: Some(assignees),
-                            issue_body: issue.body.clone(),
-                            issue_comments: Some(comments),
-                        });
+                                    let date_assigned =
+                                        convert_datetime(&created_at).unwrap_or_default();
+                                    all_issues.push(IssueAssigned {
+                                        issue_id: issue.url.clone().unwrap_or_default(),
+                                        issue_assignee: assignee,
+                                        date_assigned,
+                                    });
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -215,32 +293,20 @@ pub async fn search_issues_w_update_comments(query: &str) -> anyhow::Result<Vec<
     Ok(all_issues)
 }
 
-pub async fn check_comments() -> String {
-    let mut _comment_summary = String::new();
-    todo!("Implement this function");
-
-    _comment_summary
-}
-
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct IssueOpen {
     pub issue_title: String,
     pub issue_id: String,          // url of an issue
     pub issue_description: String, // description of the issue, could be truncated body text
     pub project_id: String,        // url of the repo
-    pub repo_stars: i64,
-    pub project_logo: String, // repo owner avatar
 }
 
-#[allow(non_snake_case)]
 pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
-    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct GraphQLResponse {
         data: Option<Data>,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct Data {
         search: Option<Search>,
@@ -261,54 +327,19 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
         hasNextPage: bool,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct Issue {
         title: String,
         url: String,
         body: Option<String>,
         author: Option<Author>,
-        repository: Option<Repository>,
-        labels: Option<LabelNodes>,
     }
 
-    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct Author {
         login: Option<String>,
     }
 
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Repository {
-        url: Option<String>,
-        stargazers: Option<Stargazers>,
-        owner: Option<Owner>,
-    }
-
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Owner {
-        avatarUrl: Option<String>,
-    }
-
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Stargazers {
-        totalCount: Option<i64>,
-    }
-
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct LabelNodes {
-        nodes: Option<Vec<Label>>,
-    }
-
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Label {
-        name: Option<String>,
-    }
     let mut all_issues = Vec::new();
     let mut after_cursor: Option<String> = None;
 
@@ -319,28 +350,14 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
                 search(query: "{}", type: ISSUE, first: 100, after: {}) {{
                     issueCount
                     nodes {{
-                            ... on Issue {{
-                                title
-                                url
-                                body
-                                author {{
-                                    login
-                                }}
-                                repository {{
-                                    url
-                                    stargazers {{
-                                        totalCount
-                                    }}
-                                    owner {{
-                                        avatarUrl
-                                    }}
-                                }}
-                                labels(first: 10) {{
-                                    nodes {{
-                                        name
-                                    }}
-                                }}
+                        ... on Issue {{
+                            title
+                            url
+                            body
+                            author {{
+                                login
                             }}
+                        }}
                     }}
                     pageInfo {{
                         endCursor
@@ -366,50 +383,25 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
             if let Some(search) = data.search {
                 if let Some(nodes) = search.nodes {
                     for issue in nodes {
-                        let _labels = issue.labels.as_ref().map_or(Vec::new(), |labels| {
-                            labels.nodes.as_ref().map_or(Vec::new(), |nodes| {
-                                nodes
-                                    .iter()
-                                    .filter_map(|label| label.name.clone())
-                                    .collect()
-                            })
-                        });
-
-                        let body = issue
+                        let issue_description = issue
                             .body
                             .clone()
                             .unwrap_or_default()
                             .chars()
                             .take(240)
                             .collect();
+                        let project_id = issue
+                            .url
+                            .rsplitn(3, '/')
+                            .nth(2)
+                            .unwrap_or("wrong_project_id")
+                            .to_string();
+
                         all_issues.push(IssueOpen {
                             issue_title: issue.title,
                             issue_id: issue.url, // Assuming issue.url is the issue_id
-                            issue_description: body,
-                            project_id: issue
-                                .repository
-                                .as_ref()
-                                .and_then(|repo| repo.url.clone())
-                                .unwrap_or_default(),
-                            repo_stars: issue
-                                .repository
-                                .as_ref()
-                                .and_then(|repo| {
-                                    repo.stargazers
-                                        .as_ref()
-                                        .and_then(|star| star.totalCount.clone())
-                                })
-                                .unwrap_or_default(),
-
-                            project_logo: issue
-                                .repository
-                                .as_ref()
-                                .and_then(|repo| {
-                                    repo.owner
-                                        .as_ref()
-                                        .and_then(|owner| owner.avatarUrl.clone())
-                                })
-                                .unwrap_or_default(),
+                            issue_description,
+                            project_id,
                         });
                     }
                 }
@@ -440,7 +432,6 @@ pub struct IssueClosed {
     pub issue_status: Option<String>,
 }
 
-#[allow(non_snake_case)]
 pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<IssueClosed>> {
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct GraphQLResponse {
@@ -706,7 +697,7 @@ pub async fn issue_checker(
     close_pull_request: &str,
     close_author: &str,
 ) -> String {
-    let  potential_problems_summary = String::new();
+    let mut potential_problems_summary = String::new();
     let negative_labels = vec!["spam", "invalid"];
     if issue_labels
         .iter()
@@ -735,7 +726,7 @@ pub struct OuterPull {
     pub pull_title: String,
     pub pull_author: Option<String>,
     pub project_id: String,
-    pub merged_by: Option<String>, // This field can be empty if the PR is not merged
+    pub merged_at: String,
     pub connected_issues: Vec<String>, // JSON data format
 }
 
@@ -765,7 +756,6 @@ pub async fn pull_checker(
     potential_problems_summary
 }
 
-#[allow(non_snake_case)]
 pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>> {
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct GraphQLResponse {
@@ -794,7 +784,7 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
         timelineItems: Option<TimelineItems>,
         labels: Option<Labels>,
         reviews: Option<Reviews>,
-        mergedBy: Option<Author>,
+        mergedAt: Option<String>,
     }
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -885,9 +875,7 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
                                     state
                                 }}
                             }}
-                            mergedBy {{
-                                login
-                            }}
+                            mergedAt
                         }}
                     }}
                     pageInfo {{
@@ -928,7 +916,7 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
                             Vec::new()
                         };
 
-                        let _labels = if let Some(items) = node.labels {
+                        let labels = if let Some(items) = node.labels {
                             if let Some(nodes) = items.nodes {
                                 nodes
                                     .iter()
@@ -941,7 +929,7 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
                             Vec::new()
                         };
 
-                        let _reviews = if let Some(items) = node.reviews {
+                        let reviews = if let Some(items) = node.reviews {
                             if let Some(nodes) = items.nodes {
                                 nodes
                                     .iter()
@@ -970,10 +958,8 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
                         let pull_title = node.title.clone().unwrap_or_default();
                         let pull_author =
                             node.author.as_ref().and_then(|author| author.login.clone());
-                        let merged_by = node
-                            .mergedBy
-                            .as_ref()
-                            .and_then(|author| author.login.clone());
+                        let merged_at = node.mergedAt.unwrap_or_default();
+                        let merged_at = convert_datetime(&merged_at).unwrap_or_default();
 
                         // let potential_problems_summary = pull_checker(
                         //     &pull_id,
@@ -988,7 +974,7 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
                             pull_title,
                             pull_author,
                             project_id,
-                            merged_by,
+                            merged_at,
                             connected_issues,
                         });
                     }
@@ -1008,7 +994,6 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
     Ok(all_pulls)
 }
 
-#[allow(non_snake_case)]
 pub async fn search_mock_user(query: &str) -> anyhow::Result<Vec<(String, String, String)>> {
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct GraphQLResponse {
@@ -1124,4 +1109,52 @@ pub async fn search_mock_user(query: &str) -> anyhow::Result<Vec<(String, String
     }
 
     Ok(all_issues)
+}
+
+pub async fn get_rate_limit() -> anyhow::Result<i32> {
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct GraphQLResponse {
+        data: Option<Data>,
+    }
+
+    #[allow(non_snake_case)]
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Data {
+        rateLimit: Option<RateLimit>,
+    }
+
+    #[allow(non_snake_case)]
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct RateLimit {
+        limit: i32,
+        remaining: i32,
+        used: i32,
+        resetAt: String,
+    }
+
+    let query_str = r#"
+        query {
+            rateLimit {
+                limit
+                remaining
+                used
+                resetAt
+            }
+        }
+    "#;
+
+    let response_body = github_http_post_gql(&query_str)
+        .await
+        .map_err(|e| anyhow!("Failed to post GraphQL query: {}", e))?;
+
+    let response: GraphQLResponse = serde_json::from_slice(&response_body)
+        .map_err(|e| anyhow!("Failed to deserialize response: {}", e))?;
+
+    if let Some(data) = response.data {
+        if let Some(rate_limit) = data.rateLimit {
+            return Ok(rate_limit.remaining);
+        }
+    }
+
+    Err(anyhow!("Failed to get rate limit"))
 }

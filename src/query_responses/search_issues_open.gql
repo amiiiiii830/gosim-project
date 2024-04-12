@@ -9,20 +9,6 @@ query ($query: String!) {
         author {
           login
         }
-        repository {
-          url
-          stargazers {
-            totalCount
-          }
-          owner {
-            avatarUrl
-          }
-        }
-        labels(first: 10) {
-          nodes {
-            name
-          }
-        }
       }
     }
     pageInfo {
@@ -31,6 +17,11 @@ query ($query: String!) {
     }
   }
 }
+
+{
+  "query": "label:hacktoberfest is:issue created:2023-10-03T00:00:00..2023-10-03T01:00:00 -label:spam -label:invalid"
+}
+
 
 {
   "query": "label:hacktoberfest is:issue is:closed created:2023-10-01..2023-10-03 -label:spam -label:invalid",

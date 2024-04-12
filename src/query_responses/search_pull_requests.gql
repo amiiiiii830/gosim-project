@@ -50,10 +50,6 @@ query ($query: String!) {
   "query": "label:hacktoberfest-accepted is:pr is:merged merged:2023-10-01..2023-10-01 review:approved -label:spam -label:invalid"
 }
 
-{
-  "query": "label:hacktoberfest-accepted is:pr is:merged created:2023-10-01..2023-10-30 review:approved stars:>100 -label:spam -label:invalid"
-}
-
 query ($query: String!) {
   search(query: $query, type: ISSUE, first: 100, after: null) {
     issueCount

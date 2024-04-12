@@ -1,6 +1,6 @@
-use gosim_project::db_updater::*;
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
+use gosim_project::db_updater::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -141,10 +141,14 @@ async fn list_issues_handler(
         200,
         vec![
             (String::from("content-type"), String::from("text/html")),
-            (String::from("Access-Control-Allow-Origin"), String::from("*")),
+            (
+                String::from("Access-Control-Allow-Origin"),
+                String::from("*"),
+            ),
         ],
         issues_str.as_bytes().to_vec(),
-    );}
+    );
+}
 
 async fn list_projects_handler(
     _headers: Vec<(String, String)>,
@@ -188,5 +192,3 @@ async fn list_projects_handler(
         projects_str.as_bytes().to_vec(),
     );
 }
-
-

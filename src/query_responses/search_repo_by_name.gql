@@ -1,0 +1,26 @@
+query SearchReposWithQuery {
+  search(
+    query: "repo:jaykchen/the_tracker repo:jaykchen/gosim-project repo:jaykchen/on-flows-tester repo:jaykchen/sveltekit-boilerplate repo:jaykchen/the-backend-hook repo:jaykchen/the-tracker-flows repo:jaykchen/the-register-hook repo:jaykchen/which-template repo:jaykchen/stt repo:jaykchen/issue-labeler repo:jaykchen/training-on-issues repo:jaykchen/local-llm-tester repo:jaykchen/LlamaEdge repo:jaykchen/github-repo-watcher repo:jaykchen/terminal-reader repo:jaykchen/demo-RAG-chatbot-web repo:jaykchen/wasm-embed repo:jaykchen/text-embeddings-inference repo:jaykchen/demo-RAG-embeddings repo:jaykchen/gen-pair-local repo:jaykchen/discord-polybot repo:jaykchen/discord-bot-all-purpose repo:jaykchen/github-analyzer-2 repo:jaykchen/github-analyzer-2-local repo:jaykchen/github-analyzer repo:jaykchen/splitter repo:jaykchen/gen-pair-airtable repo:jaykchen/openai-assistant-discord"
+    type: REPOSITORY
+    first: 100
+  ) {
+    repositoryCount
+    nodes {
+      ... on Repository {
+        url
+        stargazers {
+          totalCount
+        }
+        owner {
+          avatarUrl
+        }
+        description
+        readme: object(expression: "HEAD:README.md") {
+          ... on Blob {
+            text
+          }
+        }
+      }
+    }
+  }
+}

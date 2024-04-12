@@ -81,7 +81,7 @@ async fn register_user(
         .await
         .expect("failed to get user profile");
 
-        log::info!("profiled user: {:?}, {}", login, email);
+    log::info!("profiled user: {:?}, {}", login, email);
     let pool: Pool = get_pool().await;
 
     let _ = add_mock_user(&pool, &login, &email).await;
