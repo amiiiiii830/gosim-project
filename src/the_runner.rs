@@ -67,7 +67,7 @@ pub fn inner_query_1_hour(
     query
 }
 
-pub fn inner_query_vec_by_date_range(
+/* pub fn inner_query_vec_by_date_range(
     start_date: &str,
     n_days: i64,
     _start_hour: &str,
@@ -114,7 +114,7 @@ pub fn inner_query_vec_by_date_range(
     }
 
     out
-}
+} */
 
 pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     logger::init();
