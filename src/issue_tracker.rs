@@ -407,9 +407,9 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
                     }
                 }
 
-                if let Some(pageInfo) = search.pageInfo {
-                    if pageInfo.hasNextPage {
-                        after_cursor = pageInfo.endCursor;
+                if let Some(page_info) = search.pageInfo {
+                    if page_info.hasNextPage {
+                        after_cursor = page_info.endCursor;
                     } else {
                         break;
                     }
@@ -677,9 +677,9 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<IssueClosed
                     }
                 }
 
-                if let Some(pageInfo) = search.pageInfo {
-                    if pageInfo.hasNextPage {
-                        after_cursor = pageInfo.endCursor;
+                if let Some(page_info) = search.pageInfo {
+                    if page_info.hasNextPage {
+                        after_cursor = page_info.endCursor;
                     } else {
                         break;
                     }
@@ -948,9 +948,9 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
                         });
                     }
 
-                    if let Some(pageInfo) = search.pageInfo {
-                        if pageInfo.hasNextPage {
-                            after_cursor = pageInfo.endCursor;
+                    if let Some(page_info) = search.pageInfo {
+                        if page_info.hasNextPage {
+                            after_cursor = page_info.endCursor;
                         } else {
                             break;
                         }
@@ -1066,9 +1066,9 @@ pub async fn search_mock_user(query: &str) -> anyhow::Result<Vec<(String, String
                     }
                 }
 
-                if let Some(pageInfo) = search.pageInfo {
-                    if pageInfo.hasNextPage {
-                        after_cursor = pageInfo.endCursor;
+                if let Some(page_info) = search.pageInfo {
+                    if page_info.hasNextPage {
+                        after_cursor = page_info.endCursor;
                     } else {
                         break;
                     }
