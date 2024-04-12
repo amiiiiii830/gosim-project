@@ -1,7 +1,4 @@
 use crate::db_join::*;
-use crate::db_manipulate::*;
-use crate::db_populate::*;
-use crate::issue_tracker::*;
 use flowsnet_platform_sdk::logger;
 use lazy_static::lazy_static;
 
@@ -9,7 +6,7 @@ pub static ISSUE_LABEL: &str = "hacktoberfest";
 pub static PR_LABEL: &str = "hacktoberfest-accepted";
 pub static START_DATE: &str = "2023-10-04";
 pub static END_DATE: &str = "2023-10-30";
-use chrono::{Duration, NaiveDate, NaiveDateTime, NaiveTime, Timelike, Utc};
+use chrono::{Duration, NaiveDate, Timelike, Utc};
 use mysql_async::Pool;
 
 lazy_static! {
@@ -54,8 +51,8 @@ pub fn inner_query_1_hour(
 pub fn inner_query_vec_by_date_range(
     start_date: &str,
     n_days: i64,
-    start_hour: &str,
-    end_hour: &str,
+    _start_hour: &str,
+    _end_hour: &str,
     issue_label: &str,
     pr_label: &str,
     is_issue: bool,
@@ -133,7 +130,7 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     // }
 
     // let query ="label:hacktoberfest is:issue is:open created:>=2023-10-01 updated:2023-10-03..2023-10-04 -label:spam -label:invalid";
-    let query_comment = inner_query_1_hour(
+    let _query_comment = inner_query_1_hour(
         &START_DATE,
         &THIS_HOUR,
         &NEXT_HOUR,

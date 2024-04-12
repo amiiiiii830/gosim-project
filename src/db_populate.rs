@@ -1,4 +1,3 @@
-use crate::db_manipulate::*;
 use crate::issue_tracker::*;
 use dotenv::dotenv;
 use mysql_async::prelude::*;

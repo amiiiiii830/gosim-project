@@ -1,10 +1,5 @@
-use crate::db_populate::*;
-use crate::issue_tracker::*;
-use dotenv::dotenv;
 use mysql_async::prelude::*;
 use mysql_async::*;
-use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 
 pub async fn open_master(pool: &mysql_async::Pool) -> Result<()> {
     let mut conn = pool.get_conn().await?;

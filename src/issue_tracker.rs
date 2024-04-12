@@ -183,6 +183,7 @@ pub async fn search_issues_assigned(query: &str) -> anyhow::Result<Vec<IssueAssi
         hasNextPage: bool,
     }
 
+    #[allow(non_snake_case)]
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct IssueNode {
         url: Option<String>,
@@ -690,14 +691,14 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<IssueClosed
 }
 
 pub async fn issue_checker(
-    issue_id: &str,
+    _issue_id: &str,
     issue_assignees: Vec<String>,
     issue_labels: Vec<String>,
     close_reason: &str,
-    close_pull_request: &str,
+    _close_pull_request: &str,
     close_author: &str,
 ) -> String {
-    let mut potential_problems_summary = String::new();
+    let  potential_problems_summary = String::new();
     let negative_labels = vec!["spam", "invalid"];
     if issue_labels
         .iter()
@@ -731,12 +732,12 @@ pub struct OuterPull {
 }
 
 pub async fn pull_checker(
-    pull_id: &str,
+    _pull_id: &str,
     pull_labels: Vec<String>,
     reviews: Vec<String>,      // authors whose review state is approved
     merged_by: Option<String>, // This field can be empty if the PR is not merged
 ) -> String {
-    let mut potential_problems_summary = String::new();
+    let potential_problems_summary = String::new();
     let negative_labels = vec!["spam", "invalid"];
     if pull_labels
         .iter()
@@ -908,38 +909,6 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
                                     .collect::<Vec<_>>()
                                     .into_iter()
                                     .flatten()
-                                    .collect::<Vec<String>>()
-                            } else {
-                                Vec::new()
-                            }
-                        } else {
-                            Vec::new()
-                        };
-
-                        let labels = if let Some(items) = node.labels {
-                            if let Some(nodes) = items.nodes {
-                                nodes
-                                    .iter()
-                                    .map(|label| label.name.clone().unwrap_or_default())
-                                    .collect::<Vec<String>>()
-                            } else {
-                                Vec::new()
-                            }
-                        } else {
-                            Vec::new()
-                        };
-
-                        let reviews = if let Some(items) = node.reviews {
-                            if let Some(nodes) = items.nodes {
-                                nodes
-                                    .iter()
-                                    .filter(|review| review.state.as_deref() == Some("APPROVED"))
-                                    .filter_map(|review| {
-                                        review
-                                            .author
-                                            .as_ref()
-                                            .and_then(|author| author.login.clone())
-                                    })
                                     .collect::<Vec<String>>()
                             } else {
                                 Vec::new()

@@ -1,10 +1,7 @@
 use crate::db_populate::*;
-use crate::issue_tracker::*;
-use dotenv::dotenv;
 use mysql_async::prelude::*;
 use mysql_async::*;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct IssueSubset {
