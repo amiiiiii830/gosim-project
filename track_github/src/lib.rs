@@ -11,7 +11,7 @@ pub async fn on_deploy() {
     let now = Utc::now();
     let now_minute = now.minute() + 2;
     let cron_time = format!("{:02} {:02} * * *", now_minute, now.hour());
-    let cron_time = String::from("54 * * * *");
+    let cron_time = String::from("59 * * * *");
     schedule_cron_job(cron_time, String::from("cron_job_evoked")).await;
 }
 
@@ -50,38 +50,6 @@ pub async fn inner(_body: Vec<u8>) -> anyhow::Result<()> {
 }
 
 pub async fn search_pulls() -> anyhow::Result<()> {
-    // let _ = upload_to_gist(&texts).await?;
-    Ok(())
-}
-pub async fn search_issue_init() -> anyhow::Result<()> {
-    let issue_label = "hacktoberfest";
-    let pr_label = "hacktoberfest-accepted";
-    let n_days = 2;
-    let is_issue = true;
-    let is_start = true;
-    let query_vec = inner_query_vec_by_date_range(
-        START_DATE,
-        n_days,
-        issue_label,
-        pr_label,
-        is_issue,
-        is_start,
-    );
-
-    let mut texts = String::new();
-    for query in query_vec {
-        //     let query =
-        //         format!("label:hacktoberfest-accepted is:pr is:merged created:{date_range} review:approved -label:spam -label:invalid");
-        //     let query ="label:hacktoberfest is:issue is:open no:assignee created:{date_range} review:approved -label:spam -label:invalid");
-        //     let label_to_watch = "hacktoberfest";
-        let pulls = search_issues_open(&query).await?;
-
-        for pull in pulls {
-            log::info!("pull: {:?}", pull.issue_id);
-            break;
-        }
-    }
-
     // let _ = upload_to_gist(&texts).await?;
     Ok(())
 }
