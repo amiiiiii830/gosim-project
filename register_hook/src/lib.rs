@@ -1,6 +1,8 @@
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
-use gosim_project::db_updater::*;
+use gosim_project::db_join::*;
+use gosim_project::db_manipulate::*;
+use gosim_project::db_populate::*;
 use gosim_project::issue_tracker::*;
 
 use http_req::{

@@ -11,7 +11,7 @@ pub static ISSUE_LABEL: &str = "hacktoberfest";
 pub static PR_LABEL: &str = "hacktoberfest-accepted";
 pub static START_DATE: &str = "2023-10-03";
 pub static END_DATE: &str = "2023-10-30";
-use chrono::{Duration, NaiveDate, Timelike, Utc};
+use chrono::{NaiveDate, Timelike, Utc};
 use mysql_async::Pool;
 
 lazy_static! {

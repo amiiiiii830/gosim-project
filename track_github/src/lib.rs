@@ -1,6 +1,8 @@
 use chrono::{Timelike, Utc};
 use dotenv::dotenv;
-use gosim_project::db_updater::*;
+use gosim_project::db_join::*;
+use gosim_project::db_manipulate::*;
+use gosim_project::db_populate::*;
 use gosim_project::issue_tracker::*;
 use gosim_project::the_runner::*;
 use schedule_flows::{schedule_cron_job, schedule_handler};
@@ -11,7 +13,7 @@ pub async fn on_deploy() {
     let now = Utc::now();
     let now_minute = now.minute() + 2;
     let cron_time = format!("{:02} {:02} * * *", now_minute, now.hour());
-    let cron_time = String::from("59 * * * *");
+    let cron_time = String::from("02 * * * *");
     schedule_cron_job(cron_time, String::from("cron_job_evoked")).await;
 }
 
