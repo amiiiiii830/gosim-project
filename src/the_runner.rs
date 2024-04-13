@@ -4,33 +4,10 @@ use crate::{
     db_populate::{add_issues_assigned, add_issues_closed, add_pull_request},
     issue_tracker::*,
 };
+use crate::{END_DATE, ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
+
 use flowsnet_platform_sdk::logger;
-use lazy_static::lazy_static;
-
-pub static ISSUE_LABEL: &str = "hacktoberfest";
-pub static PR_LABEL: &str = "hacktoberfest-accepted";
-pub static START_DATE: &str = "2023-10-01";
-pub static END_DATE: &str = "2023-10-30";
-use chrono::{NaiveDate, Timelike, Utc};
 use mysql_async::Pool;
-
-lazy_static! {
-    static ref THIS_HOUR: String = {
-        let date = NaiveDate::parse_from_str("2023-10-03", "%Y-%m-%d").unwrap();
-        let datetime = date
-            .and_hms_opt(Utc::now().hour(), 0, 0)
-            .expect("Invalid time");
-        datetime.format("%Y-%m-%dT%H:%M:%SZ").to_string()
-    };
-    static ref NEXT_HOUR: String = {
-        let date = NaiveDate::parse_from_str("2023-10-03", "%Y-%m-%d").unwrap();
-        let datetime = date
-            .and_hms_opt((Utc::now().hour() + 1) % 24, 0, 0)
-            .expect("Invalid time");
-        datetime.format("%Y-%m-%dT%H:%M:%SZ").to_string()
-    };
-    static ref TODAY_THIS_HOUR: u32 = Utc::now().hour();
-}
 
 pub fn inner_query_1_hour(
     start_date: &str,
@@ -198,6 +175,7 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let _ = closed_master(&pool).await?;
 
     let _ = pull_master(&pool).await?;
+    let _ = master_project(&pool).await?;
 
     Ok(())
 }

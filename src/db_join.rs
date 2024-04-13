@@ -33,9 +33,8 @@ pub async fn assigned_master(pool: &mysql_async::Pool) -> Result<()> {
     let query = r"
     UPDATE issues_master im
     JOIN issues_assigned ia ON im.issue_id = ia.issue_id
-    SET
-        im.issue_assignees = IFNULL(im.issue_assignees, JSON_ARRAY(ia.issue_assignee)),
-        im.date_issue_assigned = ia.date_assigned
+    SET im.issue_assignees = JSON_ARRAY(ia.issue_assignee)
+    WHERE im.issue_id = 'specific_issue_id' AND (im.issue_assignees IS NULL OR JSON_LENGTH(im.issue_assignees) = 0);
     ";
 
     match conn.query_drop(query).await {
@@ -54,7 +53,7 @@ pub async fn closed_master(pool: &mysql_async::Pool) -> Result<()> {
     JOIN issues_closed ic ON im.issue_id = ic.issue_id
     SET
         im.issue_assignees = ic.issue_assignees,
-        im.issue_linked_pr = ic.issue_linked_pr
+        im.issue_linked_pr = ic.issue_linked_pr;
     ";
 
     match conn.query_drop(query).await {
@@ -86,32 +85,35 @@ pub async fn pull_master(pool: &mysql_async::Pool) -> Result<()> {
     Ok(())
 }
 
-pub async fn open_master_project(pool: &mysql_async::Pool) -> Result<()> {
+pub async fn master_project(pool: &mysql_async::Pool) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"
-    INSERT INTO projects (
-        project_id,
-        project_logo,
-        repo_stars,
-        issues_list,
-        issues_flagged
-    )
+    INSERT INTO projects (project_id, issues_list, participants_list)
     SELECT 
-        im.project_id,
-        io.repo_avatar AS project_logo,
-        io.repo_stars,
-        JSON_ARRAYAGG(im.issue_id) AS issues_list, 
-        JSON_ARRAYAGG(CASE WHEN im.issue_status IS NOT NULL THEN im.issue_id ELSE NULL END) AS issues_flagged  
-    FROM 
-        issues_master im
-    JOIN 
-        issues_open io ON im.issue_id = io.issue_id
+        project_id,
+        JSON_ARRAYAGG(issue_id) AS issues_list,
+        (
+            SELECT JSON_ARRAYAGG(j.assignee)
+            FROM (
+                SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(ja.value, '$')) AS assignee
+                FROM issues_master, JSON_TABLE(issue_assignees, '$[*]' COLUMNS(value JSON PATH '$')) AS ja
+                WHERE issues_master.project_id = distinct_values.project_id
+            ) AS j
+        ) AS participants_list
+    FROM (
+        SELECT DISTINCT
+            im.project_id,
+            im.issue_id,
+            im.issue_assignees
+        FROM 
+            issues_master im
+    ) AS distinct_values
     GROUP BY 
-        im.project_id, io.repo_avatar, io.repo_stars
+        project_id
     ON DUPLICATE KEY UPDATE
-        issues_list = JSON_MERGE_PRESERVE(issues_list, VALUES(issues_list)),
-        issues_flagged = JSON_MERGE_PRESERVE(issues_flagged, VALUES(issues_flagged));";
+        issues_list = VALUES(issues_list),
+        participants_list = VALUES(participants_list);";
 
     match conn.query_drop(query).await {
         Ok(_) => (),
@@ -120,3 +122,25 @@ pub async fn open_master_project(pool: &mysql_async::Pool) -> Result<()> {
 
     Ok(())
 }
+/* pub async fn master_project(pool: &mysql_async::Pool) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"
+    INSERT INTO projects (project_id, issues_list)
+    SELECT 
+        project_id,
+        JSON_ARRAYAGG(issue_id) AS issues_list
+    FROM 
+        issues_master
+    GROUP BY 
+        project_id
+    ON DUPLICATE KEY UPDATE
+        issues_list = VALUES(issues_list);";
+
+    match conn.query_drop(query).await {
+        Ok(_) => (),
+        Err(e) => eprintln!("Error: {:?}", e),
+    };
+
+    Ok(())
+} */
