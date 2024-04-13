@@ -9,7 +9,7 @@ use lazy_static::lazy_static;
 
 pub static ISSUE_LABEL: &str = "hacktoberfest";
 pub static PR_LABEL: &str = "hacktoberfest-accepted";
-pub static START_DATE: &str = "2023-10-03";
+pub static START_DATE: &str = "2023-10-01";
 pub static END_DATE: &str = "2023-10-30";
 use chrono::{NaiveDate, Timelike, Utc};
 use mysql_async::Pool;
