@@ -1,12 +1,6 @@
-use crate::{
-    db_join::*,
-    db_populate::*,
-    db_populate::{add_issues_assigned, add_issues_closed, add_pull_request},
-    issue_tracker::*,
-};
-use crate::{END_DATE, ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
+use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_tracker::*};
+use crate::{ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
 
-use flowsnet_platform_sdk::logger;
 use mysql_async::Pool;
 
 pub fn inner_query_1_hour(
@@ -94,7 +88,11 @@ pub fn inner_query_1_hour(
 } */
 
 pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
-    logger::init();
+    let _ = popuate_dbs(pool).await?;
+    let _ = join_ops(pool).await?;
+    Ok(())
+}
+pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     let query_open = inner_query_1_hour(
         &START_DATE,
         &THIS_HOUR,
@@ -128,7 +126,7 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     log::info!("query_assigned: {:?}", _query_assigned);
     let issues_assigned_obj: Vec<IssueAssigned> = search_issues_assigned(&_query_assigned).await?;
     let len = issues_assigned_obj.len();
-    log::error!("Assigned issues recorded: {:?}", len);
+    log::info!("Assigned issues recorded: {:?}", len);
     for issue in issues_assigned_obj {
         let _ = add_issues_assigned(pool, issue).await;
     }
@@ -143,10 +141,10 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
         false,
         false,
     );
-    println!("query_closed: {:?}", query_closed);
+    log::info!("query_closed: {:?}", query_closed);
     let close_issue_obj = search_issues_closed(&query_closed).await?;
     let len = close_issue_obj.len();
-    log::error!("Closed issues recorded: {:?}", len);
+    log::info!("Closed issues recorded: {:?}", len);
     for issue in close_issue_obj {
         let _ = add_issues_closed(pool, issue).await;
     }
@@ -161,21 +159,32 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
         false,
         false,
     );
-    log::error!("query_pull_request: {:?}", query_pull_request);
+    log::info!("query_pull_request: {:?}", query_pull_request);
     let pull_request_obj: Vec<OuterPull> = search_pull_requests(&query_pull_request).await?;
     let len = pull_request_obj.len();
-    log::error!("Pull requests recorded: {:?}", len);
+    log::info!("Pull requests recorded: {:?}", len);
     for pull in pull_request_obj {
         let _ = add_pull_request(&pool, pull).await;
     }
 
+    Ok(())
+}
+
+pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
     let _ = open_master(&pool).await?;
     let _ = assigned_master(&pool).await?;
 
     let _ = closed_master(&pool).await?;
 
-    let _ = pull_master(&pool).await?;
+    // let _ = pull_master(&pool).await?;
     let _ = master_project(&pool).await?;
 
+    let query_repos: String = get_projects_as_repo_list(pool, 1).await?;
+
+    let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await?;
+
+    for repo_data in repo_data_vec {
+        let _ = fill_project_w_repo_data(&pool, repo_data).await?;
+    }
     Ok(())
 }

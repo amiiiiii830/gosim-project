@@ -4,7 +4,6 @@ CREATE TABLE projects (
     repo_stars INT,
     project_description TEXT,  -- description of the project, summary of its readme, etc.
     issues_list JSON,
-    participants_list JSON,
     total_budget_allocated INT,
     total_budget_used INT
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -52,19 +51,9 @@ CREATE TABLE pull_requests (
     pull_title VARCHAR(255) NOT NULL ,
     pull_author VARCHAR(50) ,
     project_id VARCHAR(255) NOT NULL,
-    connected_issues JSON,
     date_merged DATETIME
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-
-CREATE TABLE pull_requests (
-    pull_id VARCHAR(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci PRIMARY KEY,  -- url of pull_request
-    pull_title VARCHAR(255) NOT NULL,
-    pull_author VARCHAR(50),
-    project_id VARCHAR(255) NOT NULL,
-    connected_issues JSON,
-    date_merged DATETIME
-) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 
 ALTER DATABASE gosim CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
@@ -80,3 +69,17 @@ FROM
     information_schema.columns
 WHERE 
     table_schema = 'gosim2';
+
+
+SET SESSION group_concat_max_len = 10000; 
+
+    INSERT INTO projects (project_id, issues_list)
+    SELECT 
+        project_id,
+        JSON_ARRAYAGG(issue_id)
+    FROM 
+        issues_master
+    GROUP BY 
+        project_id
+    ON DUPLICATE KEY UPDATE
+        issues_list = merge_json_arrays(issues_list, VALUES(issues_list));

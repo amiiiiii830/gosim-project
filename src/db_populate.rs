@@ -34,7 +34,6 @@ pub struct Project {
     pub repo_stars: i32,
     pub project_description: Option<String>,
     pub issues_list: Option<Vec<String>>,
-    pub participants_list: Option<Vec<String>>,
     pub total_budget_allocated: Option<i32>,
     pub total_budget_used: Option<i32>,
 }

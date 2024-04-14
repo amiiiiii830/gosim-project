@@ -5,7 +5,7 @@ pub async fn open_master(pool: &mysql_async::Pool) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"
-    INSERT INTO issues_master (
+    INSERT IGNORE INTO issues_master (
         issue_id, 
         project_id, 
         issue_title, 
@@ -17,11 +17,12 @@ pub async fn open_master(pool: &mysql_async::Pool) -> Result<()> {
         io.issue_title, 
         io.issue_description
     FROM 
-        issues_open io";
+        issues_open io;
+    ";
 
     match conn.query_drop(query).await {
         Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        Err(e) => log::error!("Error: {:?}", e),
     };
 
     Ok(())
@@ -31,10 +32,10 @@ pub async fn assigned_master(pool: &mysql_async::Pool) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"
-    UPDATE issues_master im
-    JOIN issues_assigned ia ON im.issue_id = ia.issue_id
-    SET im.issue_assignees = JSON_ARRAY(ia.issue_assignee)
-    WHERE im.issue_id = 'specific_issue_id' AND (im.issue_assignees IS NULL OR JSON_LENGTH(im.issue_assignees) = 0);
+UPDATE issues_master im
+JOIN issues_assigned ia ON im.issue_id = ia.issue_id
+SET im.date_issue_assigned = ia.date_assigned,
+    im.issue_assignees = JSON_ARRAY(ia.issue_assignee);        
     ";
 
     match conn.query_drop(query).await {
@@ -89,6 +90,32 @@ pub async fn master_project(pool: &mysql_async::Pool) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"
+    INSERT INTO projects (project_id, issues_list)
+    SELECT 
+        project_id,
+        JSON_ARRAY(
+            GROUP_CONCAT(issue_id)
+        )
+    FROM 
+        issues_master
+    GROUP BY 
+        project_id
+    ON DUPLICATE KEY UPDATE
+        issues_list = VALUES(issues_list);
+    ";
+
+    match conn.query_drop(query).await {
+        Ok(_) => (),
+        Err(e) => eprintln!("Error: {:?}", e),
+    };
+
+    Ok(())
+}
+
+pub async fn master_project_incl_budget(pool: &mysql_async::Pool) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"
     INSERT INTO projects (project_id, issues_list, participants_list)
     SELECT 
         project_id,
@@ -127,12 +154,12 @@ pub async fn master_project(pool: &mysql_async::Pool) -> Result<()> {
 
     let query = r"
     INSERT INTO projects (project_id, issues_list)
-    SELECT 
+    SELECT
         project_id,
         JSON_ARRAYAGG(issue_id) AS issues_list
-    FROM 
+    FROM
         issues_master
-    GROUP BY 
+    GROUP BY
         project_id
     ON DUPLICATE KEY UPDATE
         issues_list = VALUES(issues_list);";

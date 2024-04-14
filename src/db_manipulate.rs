@@ -14,7 +14,11 @@ pub struct IssueSubset {
     pub issue_budget_approved: bool,
 }
 
-pub async fn list_issues(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<IssueSubset>> {
+pub async fn list_issues(
+    pool: &Pool,
+    page: usize,
+    page_size: usize,
+) -> Result<Vec<IssueSubset>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
     let issues: Vec<IssueSubset> = conn
@@ -73,23 +77,26 @@ pub async fn get_projects_as_repo_list(pool: &Pool, page: u32) -> Result<String>
     Ok(res.join(" "))
 }
 
-pub async fn list_projects(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<Project>> {
+pub async fn list_projects(
+    pool: &Pool,
+    page: usize,
+    page_size: usize,
+) -> Result<Vec<Project>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
     let projects: Vec<Project> = conn
         .query_map(
             format!(
-                "SELECT project_id, project_logo, repo_stars, project_description, issues_list, issues_flagged, participants_list, total_budget_allocated, total_budget_used FROM projects ORDER BY project_id LIMIT {} OFFSET {}",
+                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated, total_budget_used FROM projects ORDER BY project_id LIMIT {} OFFSET {}",
                 page_size, offset
             ),
-            |(project_id, project_logo, repo_stars, project_description, issues_list, participants_list, total_budget_allocated, total_budget_used): (String, Option<String>, i32, Option<String>, Option<String>, Option<String>,  Option<i32>, Option<i32>)| {
+            |(project_id, project_logo, repo_stars, project_description, issues_list,  total_budget_allocated, total_budget_used): (String, Option<String>, i32, Option<String>, Option<String>,Option<i32>, Option<i32>)| {
                 Project {
                     project_id,
                     project_logo,
                     repo_stars,
                     project_description,
                     issues_list: issues_list.map_or(Some(Vec::new()), |s| serde_json::from_str(&s).ok()),
-                    participants_list: participants_list.map_or(Some(Vec::new()), |s| serde_json::from_str(&s).ok()),
                     total_budget_allocated,
                     total_budget_used
                 }
@@ -129,7 +136,10 @@ pub async fn select_issue(
     Ok(())
 }
 
-pub async fn approve_issue(pool: &mysql_async::Pool, issue_id: &str) -> Result<()> {
+pub async fn approve_issue(
+    pool: &mysql_async::Pool,
+    issue_id: &str,
+) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"UPDATE issues 
