@@ -6,6 +6,10 @@ register-hook/target
 register-hook/Cargo.lock
 register-hook/.env
 
+tester-hook/target
+tester-hook/Cargo.lock
+tester-hook/.env
+
 track_github/target
 track_github-hook/Cargo.lock
 track_github/.env
