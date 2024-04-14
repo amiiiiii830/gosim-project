@@ -224,10 +224,9 @@ pub async fn add_issues_assigned(pool: &Pool, issue_assigned: IssueAssigned) -> 
 pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    let connected_issues_json: Value = json!(pull.connected_issues).into();
 
-    let query = r"INSERT INTO pull_requests (pull_id, pull_title, pull_author, project_id, connected_issues, date_merged)
-                  VALUES (:pull_id, :pull_title, :pull_author, :project_id, :connected_issues, :date_merged)";
+    let query = r"INSERT INTO pull_requests (pull_id, pull_title, pull_author, project_id, date_merged)
+                  VALUES (:pull_id, :pull_title, :pull_author, :project_id, :date_merged)";
 
     match conn
         .exec_drop(
@@ -237,7 +236,6 @@ pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
                 "pull_title" => &pull.pull_title,
                 "pull_author" => pull.pull_author.as_deref(),
                 "project_id" => &pull.project_id,
-                "connected_issues" => &connected_issues_json,
                 "date_merged" => pull.merged_at,
             },
         )

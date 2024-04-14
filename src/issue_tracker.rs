@@ -421,16 +421,11 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
     Ok(all_issues)
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct IssueClosed {
     pub issue_id: String, // url of an issue
-    pub issue_labels: Vec<String>,
     pub issue_assignees: Option<Vec<String>>,
     pub issue_linked_pr: Option<String>,
-    pub linked_pr_title: Option<String>,
-    pub close_reason: Option<String>,
-    pub closer_login: Option<String>,
-    pub issue_status: Option<String>,
 }
 
 pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<IssueClosed>> {
@@ -576,7 +571,7 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<IssueClosed
             if let Some(search) = data.search {
                 if let Some(nodes) = search.nodes {
                     for issue in nodes {
-                        let issue_labels = issue.labels.as_ref().map_or(Vec::new(), |labels| {
+                        let _issue_labels = issue.labels.as_ref().map_or(Vec::new(), |labels| {
                             labels.nodes.as_ref().map_or(Vec::new(), |nodes| {
                                 nodes
                                     .iter()
@@ -585,94 +580,61 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<IssueClosed
                             })
                         });
 
-                        let issue_assignees =
-                            issue.assignees.as_ref().map_or(Vec::new(), |assignees| {
-                                assignees.nodes.as_ref().map_or(Vec::new(), |nodes| {
-                                    nodes
-                                        .iter()
-                                        .filter_map(|assignee| assignee.name.clone())
-                                        .collect()
-                                })
-                            });
+                        let mut issue_assignees = issue.assignees.as_ref().and_then(|assignees| {
+                            assignees.nodes.as_ref().map(|nodes| {
+                                nodes
+                                    .iter()
+                                    .filter_map(|assignee| assignee.name.clone())
+                                    .collect::<Vec<_>>()
+                            })
+                        });
 
-                        let (close_reason, close_pull_request, close_pr_title, closer_login) =
+                        if let Some(assignees) = &issue_assignees {
+                            if assignees.is_empty() {
+                                issue_assignees = None;
+                            }
+                        }
+
+                        let (_close_reason, close_pull_request, _close_pr_title, _closer_login) =
                             issue.timelineItems.as_ref().map_or(
-                                (String::new(), String::new(), String::new(), String::new()),
+                                (None, None, None, None),
                                 |items| {
-                                    items.nodes.as_ref().map_or(
-                                        (
-                                            String::new(),
-                                            String::new(),
-                                            String::new(),
-                                            String::new(),
-                                        ),
-                                        |nodes| {
+                                    items
+                                        .nodes
+                                        .as_ref()
+                                        .map_or((None, None, None, None), |nodes| {
                                             nodes
                                                 .iter()
                                                 .filter_map(|event| {
                                                     if let Some(closer) = &event.closer {
                                                         Some((
-                                                            event
-                                                                .stateReason
-                                                                .clone()
-                                                                .unwrap_or_default(),
-                                                            closer.url.clone().unwrap_or_default(),
+                                                            event.stateReason.clone(),
+                                                            closer.url.clone(),
+                                                            closer.title.clone(),
                                                             closer
-                                                                .title
-                                                                .clone()
-                                                                .unwrap_or_default(),
-                                                            closer.author.as_ref().map_or(
-                                                                String::new(),
-                                                                |author| {
-                                                                    author
-                                                                        .login
-                                                                        .clone()
-                                                                        .unwrap_or_default()
-                                                                },
-                                                            ),
+                                                                .author
+                                                                .as_ref()
+                                                                .map(|author| author.login.clone()),
                                                         ))
                                                     } else {
-                                                        Some((
-                                                            String::new(),
-                                                            String::new(),
-                                                            String::new(),
-                                                            String::new(),
-                                                        ))
+                                                        Some((None, None, None, None))
                                                     }
                                                 })
                                                 .next()
-                                                .unwrap_or((
-                                                    String::new(),
-                                                    String::new(),
-                                                    String::new(),
-                                                    String::new(),
-                                                ))
-                                        },
-                                    )
+                                                .unwrap_or((None, None, None, None))
+                                        })
                                 },
                             );
 
-                        let issue_id = issue.url.clone().unwrap_or_default();
-
-                        let potential_problems_summary = issue_checker(
-                            &issue_id,
-                            issue_assignees.clone(),
-                            issue_labels.clone(),
-                            &close_reason,
-                            &close_pull_request.clone(),
-                            &closer_login.clone(),
-                        )
-                        .await;
+                        let issue_id = match issue.url {
+                            Some(u) => u.to_string(),
+                            None => continue,
+                        };
 
                         all_issues.push(IssueClosed {
                             issue_id: issue_id,
-                            issue_labels: issue_labels,
-                            issue_assignees: Some(issue_assignees),
-                            issue_linked_pr: Some(close_pull_request),
-                            linked_pr_title: Some(close_pr_title),
-                            close_reason: Some(close_reason),
-                            closer_login: Some(closer_login),
-                            issue_status: Some(potential_problems_summary),
+                            issue_assignees,
+                            issue_linked_pr: close_pull_request,
                         });
                     }
                 }
@@ -690,37 +652,6 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<IssueClosed
     Ok(all_issues)
 }
 
-pub async fn issue_checker(
-    _issue_id: &str,
-    issue_assignees: Vec<String>,
-    issue_labels: Vec<String>,
-    close_reason: &str,
-    _close_pull_request: &str,
-    close_author: &str,
-) -> String {
-    let  potential_problems_summary = String::new();
-    let negative_labels = vec!["spam", "invalid"];
-    if issue_labels
-        .iter()
-        .any(|label| negative_labels.contains(&label.as_str()))
-    {
-        // Do something
-    }
-
-    if close_author == "bot" {
-        // Do something
-    }
-
-    if close_reason == "some_strange" {
-        // Do something
-    }
-    if !issue_assignees.contains(&"intended_id".to_string()) {
-        // Do something
-    }
-
-    potential_problems_summary
-}
-
 #[derive(Serialize, Deserialize, Clone, Default, Debug)]
 pub struct OuterPull {
     pub pull_id: String, // url of pull_request
@@ -728,33 +659,6 @@ pub struct OuterPull {
     pub pull_author: Option<String>,
     pub project_id: String,
     pub merged_at: String,
-    pub connected_issues: Vec<String>, // JSON data format
-}
-
-pub async fn pull_checker(
-    _pull_id: &str,
-    pull_labels: Vec<String>,
-    reviews: Vec<String>,      // authors whose review state is approved
-    merged_by: Option<String>, // This field can be empty if the PR is not merged
-) -> String {
-    let potential_problems_summary = String::new();
-    let negative_labels = vec!["spam", "invalid"];
-    if pull_labels
-        .iter()
-        .any(|label| negative_labels.contains(&label.as_str()))
-    {
-        // Do something
-    }
-
-    if reviews.contains(&"some_bad".to_string()) {
-        // Do something
-    }
-
-    if merged_by == Some("bot".to_string()) {
-        // Do something
-    }
-
-    potential_problems_summary
 }
 
 pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>> {
@@ -782,7 +686,6 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
         title: Option<String>,
         url: Option<String>,
         author: Option<Author>,
-        timelineItems: Option<TimelineItems>,
         labels: Option<Labels>,
         reviews: Option<Reviews>,
         mergedAt: Option<String>,
@@ -791,21 +694,6 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct Author {
         login: Option<String>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct TimelineItems {
-        nodes: Option<Vec<TimelineEvent>>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct TimelineEvent {
-        subject: Option<Subject>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Subject {
-        url: Option<String>,
     }
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -852,17 +740,6 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
                             author {{
                                 login
                             }}
-                            timelineItems(first: 5, itemTypes: [CONNECTED_EVENT]) {{
-                                nodes {{
-                                    ... on ConnectedEvent {{
-                                        subject {{
-                                            ... on Issue {{
-                                                url
-                                            }}
-                                        }}
-                                    }}
-                                }}
-                            }}
                             labels(first: 10) {{
                                 nodes {{
                                     name
@@ -899,24 +776,6 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
             if let Some(search) = data.search {
                 if let Some(nodes) = search.nodes {
                     for node in nodes {
-                        let connected_issues = if let Some(items) = node.timelineItems {
-                            if let Some(nodes) = items.nodes {
-                                nodes
-                                    .iter()
-                                    .filter_map(|event| {
-                                        event.subject.as_ref().map(|subject| subject.url.clone())
-                                    })
-                                    .collect::<Vec<_>>()
-                                    .into_iter()
-                                    .flatten()
-                                    .collect::<Vec<String>>()
-                            } else {
-                                Vec::new()
-                            }
-                        } else {
-                            Vec::new()
-                        };
-
                         let pull_id = node.url.clone().unwrap_or_default();
                         let project_id = pull_id
                             .clone()
@@ -930,21 +789,12 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
                         let merged_at = node.mergedAt.unwrap_or_default();
                         let merged_at = convert_datetime(&merged_at).unwrap_or_default();
 
-                        // let potential_problems_summary = pull_checker(
-                        //     &pull_id,
-                        //     labels.clone(),
-                        //     reviews.clone(),
-                        //     merged_by.clone(),
-                        // )
-                        // .await;
-
                         all_pulls.push(OuterPull {
                             pull_id,
                             pull_title,
                             pull_author,
                             project_id,
                             merged_at,
-                            connected_issues,
                         });
                     }
 

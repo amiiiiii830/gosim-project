@@ -52,8 +52,8 @@ async fn handler(
 }
 
 async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>) {
-
     let pool: Pool = get_pool().await;
+    let _ = note_issues(&pool).await;
 
     let _ = pull_master(&pool).await;
     // let _ = run_hourly(&pool).await;

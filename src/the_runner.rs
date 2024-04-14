@@ -1,4 +1,4 @@
-use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_tracker::*};
+use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_bot::*, issue_tracker::*};
 use crate::{ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
 
 use mysql_async::Pool;
@@ -90,6 +90,7 @@ pub fn inner_query_1_hour(
 pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let _ = popuate_dbs(pool).await?;
     let _ = join_ops(pool).await?;
+    let _ = note_issues(pool).await?;
     Ok(())
 }
 pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
@@ -188,3 +189,36 @@ pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
     }
     Ok(())
 }
+
+pub async fn note_issues(pool: &Pool) -> anyhow::Result<()> {
+    let _ = note_budget_allocated(pool).await?;
+    // let _ = note_pr_merged(pool).await?;
+    // let _ = note_one_months_no_pr(pool).await?;
+    Ok(())
+}
+
+pub async fn note_budget_allocated(pool: &Pool) -> anyhow::Result<()> {
+    let issue_ids = get_issue_ids_with_budget(pool).await?;
+    for issue_id in issue_ids {
+        let comment = format!("{}/n Congratulations! GOSIM grant approved. Your proposal is approved to get $100 fund to fix the issue.", issue_id);
+
+        let _ = mock_comment_on_issue(&issue_id, &comment).await?;
+    }
+    Ok(())
+}
+
+// pub async fn note_pr_merged(pool: &Pool) -> anyhow::Result<()> {
+//     let pr_ids = get_pr_ids_with_review(pool)?;
+//     for pr_id in pr_ids {
+//         let _ = comment_on_pr(&pr_id, "This PR has been merged").await?;
+//     }
+//     Ok(())
+// }
+
+// pub async fn note_one_months_no_pr(pool: &Pool) -> anyhow::Result<()> {
+//     let pr_ids = get_pr_ids_with_review(pool)?;
+//     for pr_id in pr_ids {
+//         let _ = comment_on_pr(&pr_id, "This PR has been merged").await?;
+//     }
+//     Ok(())
+// }

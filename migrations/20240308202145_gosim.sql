@@ -83,3 +83,20 @@ SET SESSION group_concat_max_len = 10000;
         project_id
     ON DUPLICATE KEY UPDATE
         issues_list = merge_json_arrays(issues_list, VALUES(issues_list));
+
+
+UPDATE issues_master
+SET issue_linked_pr = NULL
+WHERE issue_linked_pr = '';
+
+-- randomly assign budgets to 20% of the issues
+SET @total_rows = (SELECT COUNT(*) FROM issues_master);
+SET @rows_to_update = ROUND(@total_rows * 0.2);
+SET @sql = CONCAT('UPDATE issues_master SET issue_budget = FLOOR(50 + RAND() * 51) ORDER BY RAND() LIMIT ', @rows_to_update);
+
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+
+select issue_id from issues_master where date_issue_assigned < '2023-10-04 13:04:00' AND issue_linked_pr IS NULL;

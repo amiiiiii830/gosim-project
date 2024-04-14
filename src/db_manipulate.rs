@@ -1,4 +1,5 @@
 use crate::db_populate::*;
+use chrono::{Duration, Utc};
 use mysql_async::prelude::*;
 use mysql_async::*;
 use serde::{Deserialize, Serialize};
@@ -14,11 +15,7 @@ pub struct IssueSubset {
     pub issue_budget_approved: bool,
 }
 
-pub async fn list_issues(
-    pool: &Pool,
-    page: usize,
-    page_size: usize,
-) -> Result<Vec<IssueSubset>> {
+pub async fn list_issues(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<IssueSubset>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
     let issues: Vec<IssueSubset> = conn
@@ -77,11 +74,7 @@ pub async fn get_projects_as_repo_list(pool: &Pool, page: u32) -> Result<String>
     Ok(res.join(" "))
 }
 
-pub async fn list_projects(
-    pool: &Pool,
-    page: usize,
-    page_size: usize,
-) -> Result<Vec<Project>> {
+pub async fn list_projects(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<Project>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
     let projects: Vec<Project> = conn
@@ -105,6 +98,33 @@ pub async fn list_projects(
         .await?;
 
     Ok(projects)
+}
+
+pub async fn get_issue_ids_with_budget(pool: &Pool) -> Result<Vec<String>> {
+    let mut conn = pool.get_conn().await?;
+    let selected_rows: Vec<String> = conn
+        .query_map(
+            "SELECT issue_id FROM issues_master WHERE issue_budget > 0",
+            |issue_id| issue_id,
+        )
+        .await?;
+    Ok(selected_rows)
+}
+
+pub async fn get_issue_ids_one_month_no_activity(pool: &Pool) -> Result<Vec<String>> {
+    let mut conn = pool.get_conn().await?;
+    let _one_month_ago = (Utc::now() - Duration::days(30).to_std().unwrap()).naive_utc();
+    let _formatted_one_month_ago = _one_month_ago.format("%Y-%m-%d %H:%M:%S").to_string();
+    let formatted_one_month_ago = "2023-10-04 13:04:00".to_string();
+
+    let selected_rows: Vec<String> = conn.exec_map(
+        "SELECT issue_id FROM issues_master WHERE date_issue_assigned < :formatted_one_month_ago AND issue_linked_pr IS NULL",
+        params! {
+            "one_month_ago" => formatted_one_month_ago,
+        },
+        |issue_id| issue_id,
+    ).await?;
+    Ok(selected_rows)
 }
 
 pub async fn select_issue(
@@ -136,10 +156,7 @@ pub async fn select_issue(
     Ok(())
 }
 
-pub async fn approve_issue(
-    pool: &mysql_async::Pool,
-    issue_id: &str,
-) -> Result<()> {
+pub async fn approve_issue(pool: &mysql_async::Pool, issue_id: &str) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"UPDATE issues 

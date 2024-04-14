@@ -3,6 +3,7 @@ pub mod db_manipulate;
 pub mod db_populate;
 pub mod issue_tracker;
 pub mod the_runner;
+pub mod issue_bot;
 
 use chrono::{NaiveDate, Timelike, Utc};
 use lazy_static::lazy_static;
