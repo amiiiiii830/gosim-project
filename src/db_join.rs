@@ -40,7 +40,7 @@ SET im.date_issue_assigned = ia.date_assigned,
 
     match conn.query_drop(query).await {
         Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        Err(e) => log::error!("Error: {:?}", e),
     };
 
     Ok(())
@@ -59,7 +59,7 @@ pub async fn closed_master(pool: &mysql_async::Pool) -> Result<()> {
 
     match conn.query_drop(query).await {
         Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        Err(e) => log::error!("Error: {:?}", e),
     };
 
     Ok(())
@@ -80,7 +80,7 @@ pub async fn pull_master(pool: &mysql_async::Pool) -> Result<()> {
 
     match conn.query_drop(query).await {
         Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        Err(e) => log::error!("Error: {:?}", e),
     };
 
     Ok(())
@@ -106,7 +106,7 @@ pub async fn master_project(pool: &mysql_async::Pool) -> Result<()> {
 
     match conn.query_drop(query).await {
         Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        Err(e) => log::error!("Error: {:?}", e),
     };
 
     Ok(())
@@ -144,7 +144,7 @@ pub async fn master_project_incl_budget(pool: &mysql_async::Pool) -> Result<()> 
 
     match conn.query_drop(query).await {
         Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        Err(e) => log::error!("Error: {:?}", e),
     };
 
     Ok(())
@@ -166,7 +166,7 @@ pub async fn master_project_incl_budget(pool: &mysql_async::Pool) -> Result<()> 
 
     match conn.query_drop(query).await {
         Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        Err(e) => log::error!("Error: {:?}", e),
     };
 
     Ok(())

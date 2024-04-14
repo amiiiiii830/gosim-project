@@ -52,33 +52,7 @@ async fn handler(
 }
 
 async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>) {
-    logger::init();
-    // let code = _qry.get("code").and_then(|m| m.as_str()).unwrap_or("");
-    // let mut token = String::new();
-    // match exchange_token_w_output(code).await {
-    //     Ok(m) => {
-    //         token = m;
-    //         log::info!("Token: {:?}", token);
 
-    //         // send_response(200, vec![], b"You've successfully registered.".to_vec());
-    //     }
-
-    //     Err(e) => {
-    //         log::error!("Error: {:?}", e);
-    //         // send_response(
-    //         //     500,
-    //         //     vec![],
-    //         //     b"Something went wrong with the registration, please try again.".to_vec(),
-    //         // );
-    //         return;
-    //     }
-    // };
-
-    // let (_, login, _, email) = get_user_profile_with_his_token(&token)
-    //     .await
-    //     .expect("failed to get user profile");
-
-    // log::info!("profiled user: {:?}, {}", login, email);
     let pool: Pool = get_pool().await;
 
     let _ = pull_master(&pool).await;
