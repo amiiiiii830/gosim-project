@@ -85,8 +85,8 @@ async fn register_user(
 
     log::info!("profiled user: {:?}, {}", login, email);
     let pool: Pool = get_pool().await;
-
-    let _ = add_mock_user(&pool, &login, &email).await;
+    log::info!("Login: {:?} email:{}", login, email);
+    // let _ = add_mock_user(&pool, &login, &email).await;
 }
 
 async fn exchange_token_w_output(code: &str) -> anyhow::Result<String> {
