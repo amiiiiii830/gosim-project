@@ -50,7 +50,6 @@ pub async fn github_http_post(url: &str, query: &str) -> anyhow::Result<Vec<u8>>
         .header("Content-Type", "application/json")
         .header("Accept", "application/json")
         .header("Authorization", &format!("Bearer {}", token))
-        .header("Content-Length", &query.to_string().len())
         .body(&query.to_string().into_bytes())
         .send(&mut writer)
     {
