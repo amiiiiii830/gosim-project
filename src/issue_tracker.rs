@@ -12,6 +12,62 @@ fn convert_datetime(merged_at: &str) -> Result<String, ParseError> {
     Ok(datetime.format("%Y-%m-%d %H:%M:%S").to_string())
 }
 
+pub async fn github_http_get(url: &str, token: &str) -> anyhow::Result<Vec<u8>> {
+    let mut writer = Vec::new();
+    let url = Uri::try_from(url).unwrap();
+
+    match Request::new(&url)
+        .method(Method::GET)
+        .header("User-Agent", "flows-network connector")
+        .header("Content-Type", "application/json")
+        .header("Authorization", &format!("Bearer {}", token))
+        .header("CONNECTION", "close")
+        .send(&mut writer)
+    {
+        Ok(res) => {
+            if !res.status_code().is_success() {
+                log::error!("Github http error {:?}", res.status_code());
+                return Err(anyhow::anyhow!("Github http error {:?}", res.status_code()));
+            }
+            Ok(writer)
+        }
+        Err(_e) => {
+            log::error!("Error getting response from Github: {:?}", _e);
+            Err(anyhow::anyhow!(_e))
+        }
+    }
+}
+
+pub async fn github_http_post(url: &str, query: &str) -> anyhow::Result<Vec<u8>> {
+    let token = env::var("GITHUB_TOKEN").expect("github_token is required");
+    let mut writer = Vec::new();
+
+    let uri = Uri::try_from(url).expect("failed to parse url");
+
+    match Request::new(&uri)
+        .method(Method::POST)
+        .header("User-Agent", "flows-network connector")
+        .header("Content-Type", "application/json")
+        .header("Accept", "application/json")
+        .header("Authorization", &format!("Bearer {}", token))
+        .header("Content-Length", &query.to_string().len())
+        .body(&query.to_string().into_bytes())
+        .send(&mut writer)
+    {
+        Ok(res) => {
+            if !res.status_code().is_success() {
+                log::error!("Github http error {:?}", res.status_code());
+                return Err(anyhow::anyhow!("Github http error {:?}", res.status_code()));
+            }
+            Ok(writer)
+        }
+        Err(_e) => {
+            log::error!("Error getting response from Github: {:?}", _e);
+            Err(anyhow::anyhow!(_e))
+        }
+    }
+}
+
 pub async fn github_http_post_gql(query: &str) -> anyhow::Result<Vec<u8>> {
     let token = env::var("GITHUB_TOKEN").expect("github_token is required");
     let base_url = "https://api.github.com/graphql";

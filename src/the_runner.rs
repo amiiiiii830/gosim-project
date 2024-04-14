@@ -199,6 +199,7 @@ pub async fn note_issues(pool: &Pool) -> anyhow::Result<()> {
 
 pub async fn note_budget_allocated(pool: &Pool) -> anyhow::Result<()> {
     let issue_ids = get_issue_ids_with_budget(pool).await?;
+    log::info!("Issue ids with budget: {:?}", issue_ids);
     for issue_id in issue_ids {
         let comment = format!("{}/n Congratulations! GOSIM grant approved. Your proposal is approved to get $100 fund to fix the issue.", issue_id);
 

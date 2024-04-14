@@ -68,20 +68,20 @@ pub async fn closed_master(pool: &mysql_async::Pool) -> Result<()> {
 pub async fn pull_master(pool: &mysql_async::Pool) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    let query = r#"UPDATE issues_master AS im
-    JOIN pull_requests AS pr
-    ON JSON_CONTAINS(pr.connected_issues, CONCAT('"', im.issue_id, '"'), '$')
-    SET
-        im.issue_assignees = COALESCE(im.issue_assignees, JSON_ARRAY(pr.pull_author)),
-        im.issue_linked_pr = COALESCE(im.issue_linked_pr, pr.pull_id)
-    WHERE
-        (im.issue_assignees IS NULL OR JSON_LENGTH(im.issue_assignees) = 0)  
-        OR im.issue_linked_pr IS NULL;"#;
+    // let query = r#"UPDATE issues_master AS im
+    // JOIN pull_requests AS pr
+    // ON JSON_CONTAINS(pr.connected_issues, CONCAT('"', im.issue_id, '"'), '$')
+    // SET
+    //     im.issue_assignees = COALESCE(im.issue_assignees, JSON_ARRAY(pr.pull_author)),
+    //     im.issue_linked_pr = COALESCE(im.issue_linked_pr, pr.pull_id)
+    // WHERE
+    //     (im.issue_assignees IS NULL OR JSON_LENGTH(im.issue_assignees) = 0)  
+    //     OR im.issue_linked_pr IS NULL;"#;
 
-    match conn.query_drop(query).await {
-        Ok(_) => (),
-        Err(e) => log::error!("Error: {:?}", e),
-    };
+    // match conn.query_drop(query).await {
+    //     Ok(_) => (),
+    //     Err(e) => log::error!("Error: {:?}", e),
+    // };
 
     Ok(())
 }
