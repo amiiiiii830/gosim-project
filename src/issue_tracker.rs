@@ -44,6 +44,8 @@ pub async fn github_http_post(url: &str, query: &str) -> anyhow::Result<Vec<u8>>
 
     let uri = Uri::try_from(url).expect("failed to parse url");
 
+    let query = serde_json::json!({"body": query});
+    
     match Request::new(&uri)
         .method(Method::POST)
         .header("User-Agent", "flows-network connector")
