@@ -9,7 +9,6 @@ pub async fn comment_on_issue(
     comment: &str,
 ) -> anyhow::Result<()> {
     dotenv().ok();
-    logger::init();
     // let issue_id = "https://github.com/alabulei1/a-test/issues/87";
     // let project_id = "https://github.com/KwickerHub/WebCraftifyAI";
     let parts: Vec<&str> = project_id.rsplitn(3, '/').collect();
@@ -37,7 +36,6 @@ pub async fn comment_on_issue(
 }
 pub async fn mock_comment_on_issue(issue_id: &str, comment: &str) -> anyhow::Result<()> {
     dotenv().ok();
-    logger::init();
     // let issue_id = "https://github.com/alabulei1/a-test/issues/87";
     // let project_id = "https://github.com/KwickerHub/WebCraftifyAI";
     let (owner, repo) = ("alabulei1", "a-test");
