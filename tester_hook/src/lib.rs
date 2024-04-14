@@ -34,7 +34,7 @@ async fn handler(
     _body: Vec<u8>,
 ) {
     dotenv().ok();
-    logger::init();
+    // logger::init();
 
     let mut router = Router::new();
     router.insert("/run", vec![get(trigger)]).unwrap();
