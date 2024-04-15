@@ -41,6 +41,9 @@ async fn handler(
         .insert("/issues", vec![get(list_issues_handler)])
         .unwrap();
     router
+        .insert("/issue", vec![get(get_issue_handler)])
+        .unwrap();
+    router
         .insert("/projects", vec![get(list_projects_handler)])
         .unwrap();
     router
@@ -101,6 +104,47 @@ async fn conclude_issue_handler(
     if approve {
         let _ = conclude_issue_in_db(&pool, &issue_id).await;
     }
+}
+
+async fn get_issue_handler(
+    _headers: Vec<(String, String)>,
+    _qry: HashMap<String, Value>,
+    _body: Vec<u8>,
+) {
+    log::info!("Received query parameters: {:?}", _qry);
+
+    let issue_id = match _qry
+        .get("issue_id")
+        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
+    {
+        Some(m) if m > 0 => m,
+        _ => {
+            log::error!("Invalid or missing 'issue_id' parameter");
+            return;
+        }
+    };
+
+
+    log::info!("Issue_id: {}", issue_id);
+    let pool = get_pool().await;
+
+    let issue = todo!();
+    // let issue = get_issue_by_id(&pool, issue_id).await.expect("msg");
+
+    let issues_str = format!("{:?}", issue);
+    log::error!("issues_str: {}", issues_str);
+
+    send_response(
+        200,
+        vec![
+            (String::from("content-type"), String::from("text/html")),
+            (
+                String::from("Access-Control-Allow-Origin"),
+                String::from("*"),
+            ),
+        ],
+        issues_str.as_bytes().to_vec(),
+    );
 }
 
 async fn list_issues_handler(

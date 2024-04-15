@@ -15,6 +15,36 @@ pub struct IssueSubset {
     pub issue_budget_approved: bool,
 }
 
+/* pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> Result<IssueSubset, mysql_async::Error> {
+    let conn = pool.get_conn().await?;
+    match conn
+        .exec_first::<(String, String, String, Option<i32>, Option<String>, Option<String>, Option<bool>), _, _>(
+            "SELECT issue_id, project_id, issue_title, issue_budget, issue_status, review_status, issue_budget_approved FROM issues_master WHERE issue_id = :issue_id",
+            params! {
+                "issue_id" => issue_id
+            },
+        )
+        .await
+        {
+            Ok(Some((issue_id, project_id, issue_title, issue_budget, issue_status, review_status, issue_budget_approved))) => 
+                Ok(IssueSubset {
+                    issue_id,
+                    project_id,
+                    issue_title,
+                    issue_budget,
+                    issue_status,
+                    review_status: match review_status.unwrap_or_default().as_str() {
+                        "queue" => ReviewStatus::Queue,
+                        "approve" => ReviewStatus::Approve,
+                        "decline" => ReviewStatus::Decline,
+                        _ => ReviewStatus::Queue,
+                    },
+                    issue_budget_approved: issue_budget_approved.unwrap_or_default(),
+                }),
+            Ok(None) => Err(mysql_async::Error::from(mysql_async::DriverError::new("Issue not found", None))),
+            Err(e) => Err(e),
+        }
+} */
 pub async fn list_issues(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<IssueSubset>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;

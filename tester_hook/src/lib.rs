@@ -53,4 +53,3 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
     // let _ = pull_master(&pool).await;
     // let _ = run_hourly(&pool).await;
 }
-
