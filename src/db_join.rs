@@ -20,9 +20,11 @@ pub async fn open_master(pool: &mysql_async::Pool) -> Result<()> {
         issues_open io;
     ";
 
-    match conn.query_drop(query).await {
-        Ok(_) => (),
-        Err(e) => log::error!("Error: {:?}", e),
+    if let Err(e) = conn.query_drop(query).await {
+        log::error!(
+            "Error consolidating issues_open into issues_master: {:?}",
+            e
+        );
     };
 
     Ok(())
@@ -38,9 +40,11 @@ SET im.date_issue_assigned = ia.date_assigned,
     im.issue_assignees = JSON_ARRAY(ia.issue_assignee);        
     ";
 
-    match conn.query_drop(query).await {
-        Ok(_) => (),
-        Err(e) => log::error!("Error: {:?}", e),
+    if let Err(e) = conn.query_drop(query).await {
+        log::error!(
+            "Error consolidating issues_assigned into issues_master: {:?}",
+            e
+        );
     };
 
     Ok(())
@@ -57,35 +61,71 @@ pub async fn closed_master(pool: &mysql_async::Pool) -> Result<()> {
         im.issue_linked_pr = ic.issue_linked_pr;
     ";
 
-    match conn.query_drop(query).await {
-        Ok(_) => (),
-        Err(e) => log::error!("Error: {:?}", e),
+    if let Err(e) = conn.query_drop(query).await {
+        log::error!(
+            "Error consolidating issues_closed into issues_master: {:?}",
+            e
+        );
     };
 
     Ok(())
 }
 
-pub async fn pull_master(pool: &mysql_async::Pool) -> Result<()> {
+pub async fn remove_pull_by_issued_linked_pr(pool: &mysql_async::Pool) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    // let query = r#"UPDATE issues_master AS im
-    // JOIN pull_requests AS pr
-    // ON JSON_CONTAINS(pr.connected_issues, CONCAT('"', im.issue_id, '"'), '$')
-    // SET
-    //     im.issue_assignees = COALESCE(im.issue_assignees, JSON_ARRAY(pr.pull_author)),
-    //     im.issue_linked_pr = COALESCE(im.issue_linked_pr, pr.pull_id)
-    // WHERE
-    //     (im.issue_assignees IS NULL OR JSON_LENGTH(im.issue_assignees) = 0)  
-    //     OR im.issue_linked_pr IS NULL;"#;
+    let query = r#"
+    DELETE FROM pull_requests
+    WHERE pull_id IN (
+        SELECT issue_linked_pr FROM issues_master WHERE issue_linked_pr IS NOT NULL
+    );
+            "#;
 
-    // match conn.query_drop(query).await {
-    //     Ok(_) => (),
-    //     Err(e) => log::error!("Error: {:?}", e),
-    // };
+    if let Err(e) = conn.query_drop(query).await {
+        log::error!(
+            "Error removing pull_request from issues_master by issue_linked_pr: {:?}",
+            e
+        );
+    };
 
     Ok(())
 }
 
+pub async fn delete_issues_open_assigned_closed(pool: &mysql_async::Pool) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let queries = vec![
+        r#"
+        DELETE FROM issues_open;
+        "#,
+        r#"
+        DELETE FROM issues_assigned
+        WHERE issue_id IN (
+            SELECT issue_id FROM issues_master WHERE issue_id IS NOT NULL
+        );
+        "#,
+        r#"
+        DELETE FROM issues_closed
+        WHERE issue_id IN (
+            SELECT issue_id FROM issues_master WHERE issue_id IS NOT NULL
+        );
+        "#,
+    ];
+
+    let msgs = vec![
+        "Error deleting from issues_open",
+        "Error deleting from issues_assigned",
+        "Error deleting from issues_closed",
+    ];
+
+    for (query, msg) in queries.iter().zip(msgs.iter()) {
+        if let Err(e) = conn.query_drop(*query).await {
+            log::error!("{:?}: {:?}", msg, e);
+        };
+    }
+
+    Ok(())
+}
 pub async fn master_project(pool: &mysql_async::Pool) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
@@ -93,81 +133,50 @@ pub async fn master_project(pool: &mysql_async::Pool) -> Result<()> {
     INSERT INTO projects (project_id, issues_list)
     SELECT 
         project_id,
-        JSON_ARRAY(
-            GROUP_CONCAT(issue_id)
-        )
+        JSON_ARRAYAGG(issue_id)
     FROM 
-        issues_master
+        (SELECT DISTINCT project_id, issue_id FROM issues_master) AS distinct_issues
     GROUP BY 
         project_id
     ON DUPLICATE KEY UPDATE
         issues_list = VALUES(issues_list);
-    ";
+        ";
 
-    match conn.query_drop(query).await {
-        Ok(_) => (),
-        Err(e) => log::error!("Error: {:?}", e),
+    if let Err(e) = conn.query_drop(query).await {
+        log::error!("Error building project from issues_master: {:?}", e);
     };
 
     Ok(())
 }
 
-pub async fn master_project_incl_budget(pool: &mysql_async::Pool) -> Result<()> {
+pub async fn sum_budget_to_project(pool: &mysql_async::Pool) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"
-    INSERT INTO projects (project_id, issues_list, participants_list)
-    SELECT 
-        project_id,
-        JSON_ARRAYAGG(issue_id) AS issues_list,
-        (
-            SELECT JSON_ARRAYAGG(j.assignee)
-            FROM (
-                SELECT DISTINCT JSON_UNQUOTE(JSON_EXTRACT(ja.value, '$')) AS assignee
-                FROM issues_master, JSON_TABLE(issue_assignees, '$[*]' COLUMNS(value JSON PATH '$')) AS ja
-                WHERE issues_master.project_id = distinct_values.project_id
-            ) AS j
-        ) AS participants_list
-    FROM (
-        SELECT DISTINCT
-            im.project_id,
-            im.issue_id,
-            im.issue_assignees
-        FROM 
-            issues_master im
-    ) AS distinct_values
-    GROUP BY 
-        project_id
-    ON DUPLICATE KEY UPDATE
-        issues_list = VALUES(issues_list),
-        participants_list = VALUES(participants_list);";
+    UPDATE projects p
+    JOIN (
+        SELECT project_id, SUM(issue_budget) AS total_budget
+        FROM issues_master
+        GROUP BY project_id
+    ) AS summed_budgets ON p.project_id = summed_budgets.project_id
+    SET p.total_budget_allocated = summed_budgets.total_budget;";
 
-    match conn.query_drop(query).await {
-        Ok(_) => (),
-        Err(e) => log::error!("Error: {:?}", e),
+    if let Err(e) = conn.query_drop(query).await {
+        log::error!("Error summing total_budget_allocated: {:?}", e);
     };
 
+    let query = r"
+    UPDATE projects p
+    JOIN (
+        SELECT project_id, SUM(issue_budget) AS total_used_budget
+        FROM issues_master
+        WHERE issue_budget_approved = TRUE
+        GROUP BY project_id
+    ) AS approved_budgets ON p.project_id = approved_budgets.project_id
+    SET p.total_budget_used = approved_budgets.total_used_budget;";
+
+    if let Err(e) = conn.query_drop(query).await {
+        log::error!("Error summing total_budget_used: {:?}", e);
+    };
     Ok(())
 }
-/* pub async fn master_project(pool: &mysql_async::Pool) -> Result<()> {
-    let mut conn = pool.get_conn().await?;
-
-    let query = r"
-    INSERT INTO projects (project_id, issues_list)
-    SELECT
-        project_id,
-        JSON_ARRAYAGG(issue_id) AS issues_list
-    FROM
-        issues_master
-    GROUP BY
-        project_id
-    ON DUPLICATE KEY UPDATE
-        issues_list = VALUES(issues_list);";
-
-    match conn.query_drop(query).await {
-        Ok(_) => (),
-        Err(e) => log::error!("Error: {:?}", e),
-    };
-
-    Ok(())
-} */

@@ -1,6 +1,5 @@
 use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_bot::*, issue_tracker::*};
 use crate::{ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
-use chrono::{Duration, NaiveDate, Utc};
 
 use mysql_async::Pool;
 
@@ -39,58 +38,10 @@ pub fn inner_query_1_hour(
     query
 }
 
-/* pub fn inner_query_vec_by_date_range(
-    start_date: &str,
-    n_days: i64,
-    _start_hour: &str,
-    _end_hour: &str,
-    issue_label: &str,
-    pr_label: &str,
-    is_issue: bool,
-    is_assigned_issue: bool,
-    is_start: bool,
-) -> Vec<String> {
-    let start_date =
-        NaiveDate::parse_from_str(start_date, "%Y-%m-%d").expect("Failed to parse date");
-
-    let date_range_vec = (1..n_days * 10) // 0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19
-        .step_by(n_days as usize) // 0 2 4 6 8 10 12 14 16 18
-        .map(|i| (i + 1, i + n_days))
-        .map(|(i, j)| {
-            format!(
-                "{}..{}",
-                (start_date + Duration::try_days(i as i64).expect("Invalid number of days"))
-                    .format("%Y-%m-%d")
-                    .to_string(),
-                (start_date + Duration::try_days(j as i64).expect("Invalid number of days"))
-                    .format("%Y-%m-%d")
-                    .to_string()
-            )
-        })
-        .collect::<Vec<_>>();
-
-    let mut out = Vec::new();
-
-    for date_range in date_range_vec {
-        let query = if is_issue && is_start {
-            format!("label:{issue_label} is:issue is:open no:assignee created:{date_range} -label:spam -label:invalid")
-        } else if is_assigned_issue {
-            format!("label:{issue_label} is:issue is:open is:assigned created:>={start_date} updated:{date_range} -label:spam -label:invalid")
-        } else if is_issue && !is_start {
-            format!("label:{issue_label} is:issue is:closed updated:{date_range} -label:spam -label:invalid")
-        } else {
-            format!("label:{pr_label} is:pr is:merged merged:{date_range} review:approved -label:spam -label:invalid")
-        };
-
-        out.push(query);
-    }
-
-    out
-} */
-
 pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let _ = popuate_dbs(pool).await?;
     let _ = join_ops(pool).await?;
+    let _ = cleanup_ops(pool).await?;
     let _ = note_issues(pool).await?;
     Ok(())
 }
@@ -178,8 +129,8 @@ pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
 
     let _ = closed_master(&pool).await?;
 
-    // let _ = pull_master(&pool).await?;
     let _ = master_project(&pool).await?;
+    let _ = sum_budget_to_project(&pool).await?;
 
     let query_repos: String = get_projects_as_repo_list(pool, 1).await?;
 
@@ -188,6 +139,14 @@ pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
     for repo_data in repo_data_vec {
         let _ = fill_project_w_repo_data(&pool, repo_data).await?;
     }
+
+    Ok(())
+}
+
+pub async fn cleanup_ops(pool: &Pool) -> anyhow::Result<()> {
+    let _ = remove_pull_by_issued_linked_pr(&pool).await?;
+    let _ = delete_issues_open_assigned_closed(&pool).await?;
+
     Ok(())
 }
 
@@ -201,43 +160,51 @@ pub async fn note_issues(pool: &Pool) -> anyhow::Result<()> {
 
 pub async fn note_budget_allocated(pool: &Pool) -> anyhow::Result<()> {
     let issue_ids = get_issue_ids_with_budget(pool).await?;
-    log::info!("Issue ids with budget allocated: {:?}", issue_ids);
+    log::info!(
+        "Issue ids with budget allocated, count: {:?}",
+        issue_ids.len()
+    );
     for issue_id in issue_ids {
         let comment = format!("{}/n Congratulations! GOSIM grant approved. Your proposal is approved to get $100 fund to fix the issue.", issue_id);
 
-        let _ = mock_comment_on_issue(&issue_id, &comment).await?;
+        let _ = mock_comment_on_issue(1, &comment).await?;
     }
     Ok(())
 }
 
 pub async fn note_issue_declined(pool: &Pool) -> anyhow::Result<()> {
     let issue_ids = get_issue_ids_declined(pool).await?;
-    log::info!("Issue ids with budget: {:?}", issue_ids);
+    log::info!(
+        "Issue ids with budget declined, count: {:?}",
+        issue_ids.len()
+    );
     for issue_id in issue_ids {
         let comment = format!("{}/n  I’m sorry your proposal wasn't approved", issue_id);
 
-        let _ = mock_comment_on_issue_decline(&issue_id, &comment).await?;
+        let _ = mock_comment_on_issue(2, &comment).await?;
     }
     Ok(())
 }
 
 pub async fn note_distribute_fund(pool: &Pool) -> anyhow::Result<()> {
-    let issue_ids: Vec<(String, String, i32)> = get_issue_ids_distribute_fund(pool).await?;
-    log::info!("Issue_ids to split fund: {:?}", issue_ids);
+    let issue_ids: Vec<(Option<String>, String, i32)> = get_issue_ids_distribute_fund(pool).await?;
+    log::info!("Issue_ids to split fund, count: {:?}", issue_ids.len());
     for (issue_assignee, issue_id, issue_budget) in issue_ids {
-        let comment = format!("@{}, Well done!  According to the PR commit history. @{} should receive ${}. Please fill in this form to claim your fund. ", issue_assignee, issue_assignee, issue_budget);
+        let comment = format!("@{:?}, Well done!  According to the PR commit history. @{:?} should receive ${}. Please fill in this form to claim your fund. ", issue_assignee, issue_assignee, issue_budget);
 
-        let _ = mock_comment_on_issue_distribute_fund(&issue_id, &comment).await?;
+        let _ = mock_comment_on_issue(3, &comment).await?;
     }
     Ok(())
 }
 
 pub async fn note_one_months_no_pr(pool: &Pool) -> anyhow::Result<()> {
     let issue_ids = get_issue_ids_one_month_no_activity(pool).await?;
+    log::info!("Issue_ids no activity, count: {:?}", issue_ids.len());
+
     for issue_id in issue_ids {
         let comment = format!("{}\n @{} please link your PR to the issue it fixed in three days. Or this issue will be deemed not completed, then we can’t provide the fund.", issue_id, "issue_assignee" );
 
-        let _ = mock_comment_on_issue_no_activity(&issue_id, &comment).await?;
+        let _ = mock_comment_on_issue(4, &comment).await?;
     }
     Ok(())
 }

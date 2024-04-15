@@ -1,10 +1,9 @@
 use chrono::{Timelike, Utc};
 use dotenv::dotenv;
+use flowsnet_platform_sdk::logger;
 use gosim_project::db_populate::get_pool;
 use gosim_project::the_runner::*;
 use schedule_flows::{schedule_cron_job, schedule_handler};
-use flowsnet_platform_sdk::logger;
-
 
 #[no_mangle]
 #[tokio::main(flavor = "current_thread")]

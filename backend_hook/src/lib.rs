@@ -82,7 +82,7 @@ async fn approve_issue_budget_handler(
     let issue_budget = load.issue_budget.unwrap_or_default();
     let issue_id = load.issue_id.unwrap_or_default();
     let pool = get_pool().await;
-    let _ = approve_issue_budget_in_db(&pool, &issue_id, issue_budget).await;
+    let _ = assign_issue_budget_in_db(&pool, &issue_id, issue_budget).await;
 }
 
 async fn conclude_issue_handler(
@@ -123,7 +123,6 @@ async fn get_issue_handler(
             return;
         }
     };
-
 
     log::info!("Issue_id: {}", issue_id);
     let pool = get_pool().await;

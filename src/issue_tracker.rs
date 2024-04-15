@@ -38,13 +38,13 @@ pub async fn github_http_get(url: &str, token: &str) -> anyhow::Result<Vec<u8>> 
     }
 }
 
-pub async fn github_http_post(url: &str, query: &str) -> anyhow::Result<Vec<u8>> {
+pub async fn github_http_post(url: &str, body: &str) -> anyhow::Result<Vec<u8>> {
     let token = env::var("GITHUB_TOKEN").expect("github_token is required");
     let mut writer = Vec::new();
 
     let uri = Uri::try_from(url).expect("failed to parse url");
 
-    let query = serde_json::json!({"body": query});
+    let body = serde_json::json!({"body": body});
 
     match Request::new(&uri)
         .method(Method::POST)
@@ -52,8 +52,8 @@ pub async fn github_http_post(url: &str, query: &str) -> anyhow::Result<Vec<u8>>
         .header("Content-Type", "application/json")
         .header("Accept", "application/json")
         .header("Authorization", &format!("Bearer {}", token))
-        .header("Content-Length", &query.to_string().len())
-        .body(&query.to_string().into_bytes())
+        .header("Content-Length", &body.to_string().len())
+        .body(&body.to_string().into_bytes())
         .send(&mut writer)
     {
         Ok(res) => {
@@ -72,8 +72,7 @@ pub async fn github_http_post(url: &str, query: &str) -> anyhow::Result<Vec<u8>>
 
 pub async fn github_http_post_gql(query: &str) -> anyhow::Result<Vec<u8>> {
     let token = env::var("GITHUB_TOKEN").expect("github_token is required");
-    let base_url = "https://api.github.com/graphql";
-    let base_url = Uri::try_from(base_url).unwrap();
+    let base_url = Uri::try_from("https://api.github.com/graphql").unwrap();
     let mut writer = Vec::new();
 
     let query = serde_json::json!({"query": query});
@@ -839,7 +838,7 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
                             .clone()
                             .rsplitn(3, '/')
                             .nth(2)
-                            .unwrap_or("unknown")
+                            .unwrap_or("failed_to_get_project_id")
                             .to_string();
                         let pull_title = node.title.clone().unwrap_or_default();
                         let pull_author =

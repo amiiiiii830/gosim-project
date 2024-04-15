@@ -55,7 +55,6 @@ CREATE TABLE pull_requests (
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 
-
 ALTER DATABASE gosim CHARACTER SET = utf8mb4 COLLATE = utf8mb4_unicode_ci;
 
 ALTER TABLE table_name CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -123,3 +122,44 @@ select issue_id from issues_master where date_issue_assigned < '2023-10-04 13:04
 select issue_id from issues_master where review_status='decline' limit 5;
 
 select issue_id, issue_budget  from issues_master where issue_budget_approved=1;
+
+UPDATE projects p
+JOIN (
+    SELECT project_id, SUM(issue_budget) AS total_budget
+    FROM issues_master
+    GROUP BY project_id
+) AS summed_budgets ON p.project_id = summed_budgets.project_id
+SET p.total_budget_allocated = summed_budgets.total_budget;
+
+
+UPDATE projects p
+JOIN (
+    SELECT project_id, SUM(issue_budget) AS total_used_budget
+    FROM issues_master
+    WHERE issue_budget_approved = TRUE
+    GROUP BY project_id
+) AS approved_budgets ON p.project_id = approved_budgets.project_id
+SET p.total_budget_used = approved_budgets.total_used_budget;
+
+SELECT pull_requests.pull_id
+FROM pull_requests
+JOIN issues_master
+ON pull_requests.pull_id = issues_master.issue_linked_pr;
+
+
+-- Step 2: Insert the records into the orphan_pull_requests table
+INSERT INTO orphan_pull_requests
+SELECT * FROM pull_requests
+WHERE pull_id NOT IN (
+    SELECT issue_linked_pr FROM issues_master WHERE issue_linked_pr IS NOT NULL
+);
+
+-- Step 3: Delete the records from the pull_requests table
+DELETE FROM pull_requests
+WHERE pull_id IN (
+    SELECT issue_linked_pr FROM issues_master WHERE issue_linked_pr IS NOT NULL
+);
+
+UPDATE issues_master
+SET issue_assignees = JSON_ARRAY()
+WHERE issue_assignees IS NULL;

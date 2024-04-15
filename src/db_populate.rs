@@ -51,15 +51,22 @@ pub async fn get_pool() -> Pool {
     Pool::new(builder.pool_opts(pool_opts))
 }
 
-pub async fn project_exists(pool: &mysql_async::Pool, project_id: &str) -> Result<bool> {
+pub async fn project_exists(pool: &mysql_async::Pool, project_id: &str) -> anyhow::Result<bool> {
     let mut conn = pool.get_conn().await?;
-    let result: Option<(i32,)> = conn
+    let result: Option<u32> = conn
         .query_first(format!(
             "SELECT 1 FROM projects WHERE project_id = '{}'",
             project_id
         ))
         .await?;
-    Ok(result.is_some())
+
+    match result {
+        Some(_) => Ok(true),
+        None => {
+            log::error!("Project not found");
+            Err(anyhow::Error::msg("Project not found"))
+        }
+    }
 }
 
 pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyhow::Result<()> {
@@ -74,10 +81,10 @@ pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyho
     } else if !repo_data.repo_description.is_empty() {
         repo_data.repo_description.clone()
     } else {
-        String::from("No description available")
+        String::from("No repo description or Readme available")
     };
 
-    match conn
+    if let Err(e) = conn
         .exec_drop(
             r"UPDATE projects SET
             project_logo = :project_logo,
@@ -93,32 +100,45 @@ pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyho
         )
         .await
     {
-        Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        log::error!("Failed to fill project with repo data: {:?}", e);
     };
     Ok(())
 }
 
-pub async fn issue_exists(pool: &mysql_async::Pool, issue_id: &str) -> Result<bool> {
+pub async fn issue_exists(pool: &mysql_async::Pool, issue_id: &str) -> anyhow::Result<bool> {
     let mut conn = pool.get_conn().await?;
-    let result: Option<(i32,)> = conn
+    let result: Option<u32> = conn
         .query_first(format!(
             "SELECT 1 FROM issues WHERE issue_id = '{}'",
             issue_id
         ))
         .await?;
-    Ok(result.is_some())
+
+    match result {
+        Some(_) => Ok(true),
+        None => {
+            log::error!("Issue not found");
+            Err(anyhow::Error::msg("Issue not found"))
+        }
+    }
 }
 
-pub async fn pull_request_exists(pool: &Pool, pull_id: &str) -> Result<bool> {
+pub async fn pull_request_exists(pool: &mysql_async::Pool, pull_id: &str) -> anyhow::Result<bool> {
     let mut conn = pool.get_conn().await?;
-    let result: Option<(i32,)> = conn
+    let result: Option<u32> = conn
         .query_first(format!(
             "SELECT 1 FROM pull_requests WHERE pull_id = '{}'",
             pull_id
         ))
         .await?;
-    Ok(result.is_some())
+
+    match result {
+        Some(_) => Ok(true),
+        None => {
+            log::error!("Pull request not found");
+            Err(anyhow::Error::msg("Pull request not found"))
+        }
+    }
 }
 
 pub async fn add_issues_open(pool: &Pool, issue: IssueOpen) -> Result<()> {
@@ -127,7 +147,7 @@ pub async fn add_issues_open(pool: &Pool, issue: IssueOpen) -> Result<()> {
     let query = r"INSERT INTO issues_open (issue_id, project_id, issue_title, issue_description)
                   VALUES (:issue_id, :project_id, :issue_title, :issue_description)";
 
-    match conn
+    if let Err(e) = conn
         .exec_drop(
             query,
             params! {
@@ -139,8 +159,7 @@ pub async fn add_issues_open(pool: &Pool, issue: IssueOpen) -> Result<()> {
         )
         .await
     {
-        Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        log::error!("Error add issues_open: {:?}", e);
     };
 
     Ok(())
@@ -152,7 +171,7 @@ pub async fn add_issues_open_batch(pool: &Pool, issues: Vec<IssueOpen>) -> Resul
     let query = r"INSERT INTO issues_open (issue_id, project_id, issue_title, issue_description)
                   VALUES (:issue_id, :project_id, :issue_title, :issue_description)";
 
-    match query
+    if let Err(e) = query
         .with(issues.iter().map(|issue| {
             params! {
                 "issue_id" => &issue.issue_id,
@@ -164,8 +183,7 @@ pub async fn add_issues_open_batch(pool: &Pool, issues: Vec<IssueOpen>) -> Resul
         .batch(&mut conn)
         .await
     {
-        Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        log::error!("Error add issues_open in batch: {:?}", e);
     };
 
     Ok(())
@@ -179,7 +197,7 @@ pub async fn add_issues_closed(pool: &Pool, issue: IssueClosed) -> Result<()> {
     let query = r"INSERT INTO issues_closed (issue_id, issue_assignees, issue_linked_pr)
                   VALUES (:issue_id, :issue_assignees, :issue_linked_pr)";
 
-    match conn
+    if let Err(e) = conn
         .exec_drop(
             query,
             params! {
@@ -190,8 +208,7 @@ pub async fn add_issues_closed(pool: &Pool, issue: IssueClosed) -> Result<()> {
         )
         .await
     {
-        Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        log::error!("Error add issues_closed: {:?}", e);
     };
 
     Ok(())
@@ -200,22 +217,27 @@ pub async fn add_issues_closed(pool: &Pool, issue: IssueClosed) -> Result<()> {
 pub async fn add_issues_assigned(pool: &Pool, issue_assigned: IssueAssigned) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
+    let issue_assignee = if issue_assigned.issue_assignee.is_empty() {
+        None
+    } else {
+        Some(issue_assigned.issue_assignee)
+    };
+
     let query = r"INSERT INTO issues_assigned (issue_id, issue_assignee, date_assigned)
                   VALUES (:issue_id, :issue_assignee, :date_assigned)";
 
-    match conn
+    if let Err(e) = conn
         .exec_drop(
             query,
             params! {
                 "issue_id" => &issue_assigned.issue_id,
-                "issue_assignee" => &issue_assigned.issue_assignee,
+                "issue_assignee" => &issue_assignee,
                 "date_assigned" => &issue_assigned.date_assigned,
             },
         )
         .await
     {
-        Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        log::error!("Error add issues_assigned: {:?}", e);
     };
 
     Ok(())
@@ -224,11 +246,10 @@ pub async fn add_issues_assigned(pool: &Pool, issue_assigned: IssueAssigned) -> 
 pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-
     let query = r"INSERT INTO pull_requests (pull_id, pull_title, pull_author, project_id, date_merged)
                   VALUES (:pull_id, :pull_title, :pull_author, :project_id, :date_merged)";
 
-    match conn
+    if let Err(e) = conn
         .exec_drop(
             query,
             params! {
@@ -241,8 +262,7 @@ pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
         )
         .await
     {
-        Ok(_) => (),
-        Err(e) => eprintln!("Error: {:?}", e),
+        log::error!("Error add pull_request: {:?}", e);
     };
 
     Ok(())
