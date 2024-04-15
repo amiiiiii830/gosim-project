@@ -63,3 +63,84 @@ pub async fn mock_comment_on_issue(issue_id: &str, comment: &str) -> anyhow::Res
 
     Ok(())
 }
+pub async fn mock_comment_on_issue_decline(issue_id: &str, comment: &str) -> anyhow::Result<()> {
+    // let issue_id = "https://github.com/alabulei1/a-test/issues/88";
+    // let project_id = "https://github.com/KwickerHub/WebCraftifyAI";
+    let (owner, repo) = ("alabulei1", "a-test");
+    let issue_number = 87;
+
+    let url = format!("https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments");
+
+    match github_http_post(&url, comment).await {
+        Ok(_) => (),
+
+        Err(e) => log::error!("Error commenting on issue: {:?}", e),
+    }
+
+    // let octocrab = get_octo(&GithubLogin::Default);
+    // let report_issue_handle = octocrab.issues(owner, repo);
+
+    // match report_issue_handle
+    //     .create_comment(issue_number, comment)
+    //     .await
+    // {
+    //     Ok(_) => (),
+    //     Err(e) => log::error!("Error commenting on issue: {:?}", e),
+    // }
+
+    Ok(())
+}
+pub async fn mock_comment_on_issue_distribute_fund(issue_id: &str, comment: &str) -> anyhow::Result<()> {
+    // let issue_id = "https://github.com/alabulei1/a-test/issues/90";
+    // let project_id = "https://github.com/KwickerHub/WebCraftifyAI";
+    let (owner, repo) = ("alabulei1", "a-test");
+    let issue_number = 87;
+
+    let url = format!("https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments");
+
+    match github_http_post(&url, comment).await {
+        Ok(_) => (),
+
+        Err(e) => log::error!("Error commenting on issue: {:?}", e),
+    }
+
+    // let octocrab = get_octo(&GithubLogin::Default);
+    // let report_issue_handle = octocrab.issues(owner, repo);
+
+    // match report_issue_handle
+    //     .create_comment(issue_number, comment)
+    //     .await
+    // {
+    //     Ok(_) => (),
+    //     Err(e) => log::error!("Error commenting on issue: {:?}", e),
+    // }
+
+    Ok(())
+}
+pub async fn mock_comment_on_issue_no_activity(issue_id: &str, comment: &str) -> anyhow::Result<()> {
+    // let issue_id = "https://github.com/alabulei1/a-test/issues/89";
+    // let project_id = "https://github.com/KwickerHub/WebCraftifyAI";
+    let (owner, repo) = ("alabulei1", "a-test");
+    let issue_number = 87;
+
+    let url = format!("https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments");
+
+    match github_http_post(&url, comment).await {
+        Ok(_) => (),
+
+        Err(e) => log::error!("Error commenting on issue: {:?}", e),
+    }
+
+    // let octocrab = get_octo(&GithubLogin::Default);
+    // let report_issue_handle = octocrab.issues(owner, repo);
+
+    // match report_issue_handle
+    //     .create_comment(issue_number, comment)
+    //     .await
+    // {
+    //     Ok(_) => (),
+    //     Err(e) => log::error!("Error commenting on issue: {:?}", e),
+    // }
+
+    Ok(())
+}

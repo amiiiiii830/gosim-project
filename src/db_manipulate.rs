@@ -102,12 +102,48 @@ pub async fn list_projects(pool: &Pool, page: usize, page_size: usize) -> Result
 
 pub async fn get_issue_ids_with_budget(pool: &Pool) -> Result<Vec<String>> {
     let mut conn = pool.get_conn().await?;
+    let one_hour_ago = (Utc::now() - Duration::hours(1))
+        .naive_utc()
+        .format("%Y-%m-%d %H:%M:%S")
+        .to_string();
+    let one_hour_ago = "2023-10-04 13:04:00".to_string();
+
     let selected_rows: Vec<String> = conn
-        .query_map(
-            "SELECT issue_id FROM issues_master WHERE issue_budget > 0",
+        .exec_map(
+            "SELECT issue_id FROM issues_master WHERE issue_budget > 0 AND date_issue_assigned > :one_hour_ago",
+            params! {
+                "one_hour_ago" => &one_hour_ago
+            },
             |issue_id| issue_id,
         )
         .await?;
+    Ok(selected_rows)
+}
+
+pub async fn get_issue_ids_declined(pool: &Pool) -> Result<Vec<String>> {
+    let mut conn = pool.get_conn().await?;
+    let selected_rows: Vec<String> = conn
+        .query_map(
+            "select issue_id from issues_master where review_status='decline' limit 5;",
+            |issue_id| issue_id,
+        )
+        .await?;
+    Ok(selected_rows)
+}
+
+pub async fn get_issue_ids_distribute_fund(pool: &Pool) -> Result<Vec<(String, String, i32)>> {
+    let mut conn = pool.get_conn().await?;
+    let selected_rows: Vec<(String, String, i32)> = conn
+        .query_map(
+            "SELECT issue_assignees, issue_id, issue_budget FROM issues_master WHERE issue_budget_approved=1 LIMIT 5",
+            |(issue_assignees, issue_id, issue_budget): (Option<String>, Option<String>, Option<i32>)| (issue_assignees, issue_id, issue_budget),
+        )
+        .await?.into_iter().map(|(issue_assignees, issue_id, issue_budget)| {
+
+            let issue_assignee  = issue_assignees.unwrap_or_default().split(",").next().unwrap_or_default().to_string();
+
+            (issue_assignee, issue_id.unwrap_or_default(), issue_budget.unwrap_or_default())
+        }).collect::<Vec<(String, String, i32)>>();
     Ok(selected_rows)
 }
 

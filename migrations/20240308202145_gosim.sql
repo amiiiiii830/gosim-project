@@ -98,5 +98,28 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- assign 30% of the issues to a decline
+SET @total_rows = (SELECT COUNT(*) FROM issues_master);
+SET @rows_to_update = ROUND(@total_rows * 0.3);
+SET @sql = CONCAT('UPDATE issues_master SET review_status = \'decline\' ORDER BY RAND() LIMIT ', @rows_to_update);
+
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
+
+-- assign 20% to be budget approved
+SET @total_rows = (SELECT COUNT(*) FROM issues_master);
+SET @rows_to_update = ROUND(@total_rows * 0.2);
+SET @sql = CONCAT('UPDATE issues_master SET issue_budget_approved = TRUE ORDER BY RAND() LIMIT ', @rows_to_update);
+
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 select issue_id from issues_master where date_issue_assigned < '2023-10-04 13:04:00' AND issue_linked_pr IS NULL;
+
+
+select issue_id from issues_master where review_status='decline' limit 5;
+
+select issue_id, issue_budget  from issues_master where issue_budget_approved=1;

@@ -1,5 +1,6 @@
 use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_bot::*, issue_tracker::*};
 use crate::{ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
+use chrono::{Duration, NaiveDate, Utc};
 
 use mysql_async::Pool;
 
@@ -192,14 +193,15 @@ pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
 
 pub async fn note_issues(pool: &Pool) -> anyhow::Result<()> {
     let _ = note_budget_allocated(pool).await?;
-    // let _ = note_pr_merged(pool).await?;
-    // let _ = note_one_months_no_pr(pool).await?;
+    let _ = note_issue_declined(pool).await?;
+    let _ = note_distribute_fund(pool).await?;
+    let _ = note_one_months_no_pr(pool).await?;
     Ok(())
 }
 
 pub async fn note_budget_allocated(pool: &Pool) -> anyhow::Result<()> {
     let issue_ids = get_issue_ids_with_budget(pool).await?;
-    log::info!("Issue ids with budget: {:?}", issue_ids);
+    log::info!("Issue ids with budget allocated: {:?}", issue_ids);
     for issue_id in issue_ids {
         let comment = format!("{}/n Congratulations! GOSIM grant approved. Your proposal is approved to get $100 fund to fix the issue.", issue_id);
 
@@ -208,18 +210,34 @@ pub async fn note_budget_allocated(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
-// pub async fn note_pr_merged(pool: &Pool) -> anyhow::Result<()> {
-//     let pr_ids = get_pr_ids_with_review(pool)?;
-//     for pr_id in pr_ids {
-//         let _ = comment_on_pr(&pr_id, "This PR has been merged").await?;
-//     }
-//     Ok(())
-// }
+pub async fn note_issue_declined(pool: &Pool) -> anyhow::Result<()> {
+    let issue_ids = get_issue_ids_declined(pool).await?;
+    log::info!("Issue ids with budget: {:?}", issue_ids);
+    for issue_id in issue_ids {
+        let comment = format!("{}/n  I’m sorry your proposal wasn't approved", issue_id);
 
-// pub async fn note_one_months_no_pr(pool: &Pool) -> anyhow::Result<()> {
-//     let pr_ids = get_pr_ids_with_review(pool)?;
-//     for pr_id in pr_ids {
-//         let _ = comment_on_pr(&pr_id, "This PR has been merged").await?;
-//     }
-//     Ok(())
-// }
+        let _ = mock_comment_on_issue_decline(&issue_id, &comment).await?;
+    }
+    Ok(())
+}
+
+pub async fn note_distribute_fund(pool: &Pool) -> anyhow::Result<()> {
+    let issue_ids: Vec<(String, String, i32)> = get_issue_ids_distribute_fund(pool).await?;
+    log::info!("Issue_ids to split fund: {:?}", issue_ids);
+    for (issue_assignee, issue_id, issue_budget) in issue_ids {
+        let comment = format!("@{}, Well done!  According to the PR commit history. @{} should receive ${}. Please fill in this form to claim your fund. ", issue_assignee, issue_assignee, issue_budget);
+
+        let _ = mock_comment_on_issue_distribute_fund(&issue_id, &comment).await?;
+    }
+    Ok(())
+}
+
+pub async fn note_one_months_no_pr(pool: &Pool) -> anyhow::Result<()> {
+    let issue_ids = get_issue_ids_one_month_no_activity(pool).await?;
+    for issue_id in issue_ids {
+        let comment = format!("{}\n @{} please link your PR to the issue it fixed in three days. Or this issue will be deemed not completed, then we can’t provide the fund.", issue_id, "issue_assignee" );
+
+        let _ = mock_comment_on_issue_no_activity(&issue_id, &comment).await?;
+    }
+    Ok(())
+}
