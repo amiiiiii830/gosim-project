@@ -45,7 +45,7 @@ pub async fn list_issues_by_status(
                     issue_budget,
                     issue_assignees,
                     issue_linked_pr,
-                    issue_status: issue_status.unwrap_or_default(),
+                    issue_status: issue_status,
                     review_status,
                     issue_budget_approved: issue_budget_approved.unwrap_or_default(),
                 }

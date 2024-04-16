@@ -14,7 +14,7 @@ pub struct IssueOut {
     pub issue_budget: Option<i32>,
     pub issue_assignees: Option<Vec<String>>, // or a more specific type if you know the structure of the JSON
     pub issue_linked_pr: Option<String>,
-    pub issue_status: String,
+    pub issue_status: Option<String>,
     pub review_status: String,
     pub issue_budget_approved: bool,
 }
