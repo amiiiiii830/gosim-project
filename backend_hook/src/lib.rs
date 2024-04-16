@@ -119,29 +119,6 @@ async fn batch_decline_issue_handler(
     _qry: HashMap<String, Value>,
     _body: Vec<u8>,
 ) {
-    let page = match _qry
-        .get("page")
-        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
-    {
-        Some(m) if m > 0 => m,
-        _ => {
-            log::error!("Invalid or missing 'page' parameter");
-            return;
-        }
-    };
-
-    let page_size = match _qry
-        .get("page_size")
-        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
-    {
-        Some(m) if m > 0 => m,
-        _ => {
-            log::error!("Invalid or missing 'page_size' parameter");
-            return;
-        }
-    };
-    log::error!("page: {}, page_size: {}", page, page_size);
-
     #[derive(Serialize, Deserialize)]
     struct IssueIds {
         issue_ids: Vec<String>,

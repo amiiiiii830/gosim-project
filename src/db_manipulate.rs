@@ -37,6 +37,7 @@ pub async fn batch_decline_issues_in_db(
 
     Ok(())
 }
+
 pub async fn list_issues_by_status(
     pool: &Pool,
     review_status: &str,
