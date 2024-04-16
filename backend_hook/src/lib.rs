@@ -54,6 +54,9 @@ async fn handler(
     router
         .insert("/budget", vec![post(approve_issue_budget_handler)])
         .unwrap();
+    router
+        .insert("/decline", vec![post(batch_decline_issue_handler)])
+        .unwrap();
 
     router
         .insert("/conclude", vec![post(conclude_issue_handler)])
@@ -111,6 +114,51 @@ async fn conclude_issue_handler(
     }
 }
 
+async fn batch_decline_issue_handler(
+    _headers: Vec<(String, String)>,
+    _qry: HashMap<String, Value>,
+    _body: Vec<u8>,
+) {
+    let page = match _qry
+        .get("page")
+        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
+    {
+        Some(m) if m > 0 => m,
+        _ => {
+            log::error!("Invalid or missing 'page' parameter");
+            return;
+        }
+    };
+
+    let page_size = match _qry
+        .get("page_size")
+        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
+    {
+        Some(m) if m > 0 => m,
+        _ => {
+            log::error!("Invalid or missing 'page_size' parameter");
+            return;
+        }
+    };
+    log::error!("page: {}, page_size: {}", page, page_size);
+
+    #[derive(Serialize, Deserialize)]
+    struct IssueIds {
+        issue_ids: Vec<String>,
+    }
+    let load: IssueIds = match serde_json::from_slice(&_body) {
+        Ok(obj) => obj,
+        Err(_e) => {
+            log::error!("failed to parse IssueSubset: {}", _e);
+            return;
+        }
+    };
+
+    let issue_ids = load.issue_ids;
+    let pool = get_pool().await;
+    let _ = batch_decline_issues_in_db(&pool, issue_ids).await;
+}
+
 async fn list_issues_by_status_handler(
     _headers: Vec<(String, String)>,
     _qry: HashMap<String, Value>,
@@ -160,7 +208,10 @@ async fn list_issues_by_status_handler(
             send_response(
                 200,
                 vec![
-                    (String::from("content-type"), String::from("application/json")),
+                    (
+                        String::from("content-type"),
+                        String::from("application/json"),
+                    ),
                     (
                         String::from("Access-Control-Allow-Origin"),
                         String::from("*"),
@@ -180,7 +231,6 @@ async fn get_issue_by_post_handler(
     _qry: HashMap<String, Value>,
     _body: Vec<u8>,
 ) {
-
     #[derive(Serialize, Deserialize)]
     struct IssueId {
         issue_id: String,
@@ -206,7 +256,10 @@ async fn get_issue_by_post_handler(
     send_response(
         200,
         vec![
-            (String::from("content-type"), String::from("application/json")),
+            (
+                String::from("content-type"),
+                String::from("application/json"),
+            ),
             (
                 String::from("Access-Control-Allow-Origin"),
                 String::from("*"),

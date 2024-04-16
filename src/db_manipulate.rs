@@ -15,6 +15,28 @@ pub struct IssueSubset {
     pub issue_budget_approved: bool,
 }
 
+pub async fn batch_decline_issues_in_db(
+    pool: &Pool,
+    issue_ids: Vec<String>,
+) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    for issue_id in issue_ids {
+        if let Err(e) = conn
+            .exec_drop(
+                r"UPDATE issues_master SET review_status = 'decline' WHERE issue_id = :issue_id",
+                params! {
+                    "issue_id" => &issue_id
+                },
+            )
+            .await
+        {
+            log::error!("Error batch decline issues: {:?}", e);
+        }
+    }
+
+    Ok(())
+}
 pub async fn list_issues_by_status(
     pool: &Pool,
     review_status: &str,

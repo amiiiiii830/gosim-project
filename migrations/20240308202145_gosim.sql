@@ -29,7 +29,14 @@ CREATE TABLE issues_open (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
     project_id VARCHAR(255) NOT NULL,
     issue_title VARCHAR(255) NOT NULL,
+    issue_budget INT,
+    main_language VARCHAR(50) NOT NULL,
     issue_description TEXT NOT NULL
+) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE issues_comment (
+    issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
+    comment TEXT NOT NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 

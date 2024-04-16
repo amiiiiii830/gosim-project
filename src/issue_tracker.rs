@@ -105,6 +105,7 @@ pub struct RepoData {
     pub repo_description: String,
     pub repo_readme: String,
     pub repo_stars: i64,
+    pub main_language: String,          // url of an issue
     pub project_logo: String,
 }
 
@@ -142,12 +143,18 @@ pub async fn search_repos_in_batch(query: &str) -> anyhow::Result<Vec<RepoData>>
         url: String,
         description: Option<String>,
         readme: Option<Readme>,
+        language: Option<Vec<Language>>,
         stargazers: Option<Stargazers>,
         owner: Option<Owner>,
     }
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct Readme {
+        text: Option<String>,
+    }
+
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Language {
         text: Option<String>,
     }
 
@@ -173,6 +180,11 @@ pub async fn search_repos_in_batch(query: &str) -> anyhow::Result<Vec<RepoData>>
                                     text
                                 }}
                             }}
+                            languages(first: 1, orderBy: {{field: SIZE, direction: DESC}}) {{
+                                nodes {{
+                                  name
+                                }}
+                            }}
                         }}
                     }}
                 }}
@@ -196,6 +208,7 @@ pub async fn search_repos_in_batch(query: &str) -> anyhow::Result<Vec<RepoData>>
                         project_id: repo.url.clone(),
                         repo_description: repo.description.clone().unwrap_or_default(),
                         repo_readme: repo.readme.and_then(|r| r.text).unwrap_or_default(),
+                        main_language: repo.language.and_then(|r| r.get(0).and_then(|l| l.text.clone())).unwrap_or_default(),
                         repo_stars: repo.stargazers.and_then(|s| s.totalCount).unwrap_or(0),
                         project_logo: repo.owner.and_then(|o| o.avatarUrl).unwrap_or_default(),
                     });
@@ -355,6 +368,7 @@ pub async fn search_issues_assigned(query: &str) -> anyhow::Result<Vec<IssueAssi
 pub struct IssueOpen {
     pub issue_title: String,
     pub issue_id: String,          // url of an issue
+    pub issue_budget: i32,          // url of an issue
     pub issue_description: String, // description of the issue, could be truncated body text
     pub project_id: String,        // url of the repo
 }
@@ -459,6 +473,7 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
                             issue_title: issue.title,
                             issue_id: issue.url, // Assuming issue.url is the issue_id
                             issue_description,
+                            issue_budget: 100,
                             project_id,
                         });
                     }
