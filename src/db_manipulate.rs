@@ -15,64 +15,43 @@ pub struct IssueSubset {
     pub issue_budget_approved: bool,
 }
 
-/* pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> Result<IssueSubset, mysql_async::Error> {
-    let conn = pool.get_conn().await?;
-    if let Err(e) = conn
-        .exec_first::<(String, String, String, Option<i32>, Option<String>, Option<String>, Option<bool>), _, _>(
-            "SELECT issue_id, project_id, issue_title, issue_budget, issue_status, review_status, issue_budget_approved FROM issues_master WHERE issue_id = :issue_id",
-            params! {
-                "issue_id" => issue_id
-            },
-        )
-        .await
-        {
-            Ok(Some((issue_id, project_id, issue_title, issue_budget, issue_status, review_status, issue_budget_approved))) =>
-                Ok(IssueSubset {
-                    issue_id,
-                    project_id,
-                    issue_title,
-                    issue_budget,
-                    issue_status,
-                    review_status: match review_status.unwrap_or_default().as_str() {
-                        "queue" => ReviewStatus::Queue,
-                        "approve" => ReviewStatus::Approve,
-                        "decline" => ReviewStatus::Decline,
-                        _ => ReviewStatus::Queue,
-                    },
-                    issue_budget_approved: issue_budget_approved.unwrap_or_default(),
-                }),
-            Ok(None) => Err(mysql_async::Error::from(mysql_async::DriverError::new("Issue not found", None))),
-            Err(e) => Err(e),
-        }
-} */
+
 pub async fn list_issues_by_status(
     pool: &Pool,
     review_status: &str,
     page: usize,
     page_size: usize,
-) -> Result<Vec<IssueSubset>> {
+) -> Result<Vec<IssueOut>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
-    let issues: Vec<IssueSubset> = conn
+    let issues: Vec<IssueOut> = conn
         .query_map(
             format!(
-                "SELECT issue_id, project_id, issue_title, issue_budget, issue_status, review_status, issue_budget_approved FROM issues_master where review_status = :review_status ORDER BY issue_id LIMIT {} OFFSET {}",
+                "SELECT issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master where review_status = :review_status ORDER BY issue_id LIMIT {} OFFSET {}",
                 page_size, offset
             ),
-            |(issue_id, project_id, issue_title, issue_budget, issue_status, review_status, issue_budget_approved): (String, String, String, Option<i32>, Option<String>, Option<String>, Option<bool>)| {
-                IssueSubset {
+            |(issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees_value, issue_linked_pr, issue_status, review_status, issue_budget_approved): (String, String, String, String, Option<i32>, Value, Option<String>, String, String, bool)| {
+                // Convert issue_assignees_value into Vec<String>
+                let issue_assignees = match issue_assignees_value {
+                    Value::Bytes(bytes) => {
+                        let s = String::from_utf8_lossy(&bytes);
+                        let vec: Vec<String> = serde_json::from_str(&s).unwrap_or_default();
+                        Some(vec)
+                    },
+                    _ => None,
+                };
+
+                IssueOut {
                     issue_id,
                     project_id,
                     issue_title,
+                    issue_description,
                     issue_budget,
+                    issue_assignees,
+                    issue_linked_pr,
                     issue_status,
-                    review_status: match review_status.unwrap_or_default().as_str() {
-                        "queue" => ReviewStatus::Queue,
-                        "approve" => ReviewStatus::Approve,
-                        "decline" => ReviewStatus::Decline,
-                        _ => ReviewStatus::Queue,
-                    },
-                    issue_budget_approved: issue_budget_approved.unwrap_or_default(),
+                    review_status,
+                    issue_budget_approved,
                 }
             },
         )
