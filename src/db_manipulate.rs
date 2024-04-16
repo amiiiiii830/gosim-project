@@ -187,7 +187,7 @@ impl FromRow for IssueOut {
 pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<IssueOut> {
     let mut conn = pool.get_conn().await?;
 
-    let query = r"SELECT * FROM issues_master WHERE issue_id = :issue_id";
+    let query = r"SELECT issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE issue_id = :issue_id";
 
     match conn
         .exec_first(
