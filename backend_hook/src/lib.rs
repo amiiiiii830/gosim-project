@@ -46,7 +46,7 @@ async fn handler(
         )
         .unwrap();
     router
-        .insert("/issue", vec![get(get_issue_handler)])
+        .insert("/issue", vec![post(get_issue_by_post_handler)])
         .unwrap();
     router
         .insert("/projects", vec![get(list_projects_handler)])
@@ -175,23 +175,25 @@ async fn list_issues_by_status_handler(
     }
 }
 
-async fn get_issue_handler(
+async fn get_issue_by_post_handler(
     _headers: Vec<(String, String)>,
     _qry: HashMap<String, Value>,
     _body: Vec<u8>,
 ) {
-    log::info!("Received query parameters: {:?}", _qry);
 
-    let issue_id = match _qry
-        .get("issue_id")
-        .and_then(|v| v.as_str())
-    {
-        Some(m) => m,
-        _ => {
-            log::error!("Invalid or missing 'issue_id' parameter");
+    #[derive(Serialize, Deserialize)]
+    struct IssueId {
+        issue_id: String,
+    }
+    let load: IssueId = match serde_json::from_slice(&_body) {
+        Ok(obj) => obj,
+        Err(_e) => {
+            log::error!("failed to parse IssueSubset: {}", _e);
             return;
         }
     };
+
+    let issue_id = &load.issue_id;
 
     log::info!("Issue_id: {}", issue_id);
     let pool = get_pool().await;
