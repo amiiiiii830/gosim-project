@@ -1,6 +1,5 @@
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
-use gosim_project::db_join::*;
 use gosim_project::db_manipulate::*;
 use gosim_project::db_populate::*;
 use serde::{Deserialize, Serialize};
@@ -38,7 +37,13 @@ async fn handler(
 
     let mut router = Router::new();
     router
-        .insert("/issues", vec![get(list_issues_handler)])
+        .insert(
+            "/issues",
+            vec![
+                get(list_issues_handler),
+                post(list_issues_by_status_handler),
+            ],
+        )
         .unwrap();
     router
         .insert("/issue", vec![get(get_issue_handler)])
@@ -106,6 +111,70 @@ async fn conclude_issue_handler(
     }
 }
 
+async fn list_issues_by_status_handler(
+    _headers: Vec<(String, String)>,
+    _qry: HashMap<String, Value>,
+    _body: Vec<u8>,
+) {
+    let page = match _qry
+        .get("page")
+        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
+    {
+        Some(m) if m > 0 => m,
+        _ => {
+            log::error!("Invalid or missing 'page' parameter");
+            return;
+        }
+    };
+
+    let page_size = match _qry
+        .get("page_size")
+        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
+    {
+        Some(m) if m > 0 => m,
+        _ => {
+            log::error!("Invalid or missing 'page_size' parameter");
+            return;
+        }
+    };
+    log::error!("page: {}, page_size: {}", page, page_size);
+
+    #[derive(Serialize, Deserialize)]
+    struct ReviewStatus {
+        review_status: String,
+    }
+    let load: ReviewStatus = match serde_json::from_slice(&_body) {
+        Ok(obj) => obj,
+        Err(_e) => {
+            log::error!("failed to parse IssueSubset: {}", _e);
+            return;
+        }
+    };
+
+    let review_status = load.review_status;
+    let pool = get_pool().await;
+    match list_issues_by_status(&pool, &review_status, page, page_size).await {
+        Ok(issues_obj) => {
+            let issues_str = json!(issues_obj).to_string();
+
+            send_response(
+                200,
+                vec![
+                    (String::from("content-type"), String::from("application/json")),
+                    (
+                        String::from("Access-Control-Allow-Origin"),
+                        String::from("*"),
+                    ),
+                ],
+                issues_str.as_bytes().to_vec(),
+            );
+        }
+        Err(e) => {
+            log::error!("Error: {:?}", e);
+        }
+    }
+}
+
 async fn get_issue_handler(
     _headers: Vec<(String, String)>,
     _qry: HashMap<String, Value>,
@@ -115,9 +184,9 @@ async fn get_issue_handler(
 
     let issue_id = match _qry
         .get("issue_id")
-        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
+        .and_then(|v| v.as_str())
     {
-        Some(m) if m > 0 => m,
+        Some(m) => m,
         _ => {
             log::error!("Invalid or missing 'issue_id' parameter");
             return;
@@ -127,16 +196,15 @@ async fn get_issue_handler(
     log::info!("Issue_id: {}", issue_id);
     let pool = get_pool().await;
 
-    let issue = todo!();
-    // let issue = get_issue_by_id(&pool, issue_id).await.expect("msg");
+    let issue = get_issue_by_id(&pool, issue_id).await.expect("msg");
 
-    let issues_str = format!("{:?}", issue);
+    let issues_str = json!(issue).to_string();
     log::error!("issues_str: {}", issues_str);
 
     send_response(
         200,
         vec![
-            (String::from("content-type"), String::from("text/html")),
+            (String::from("content-type"), String::from("application/json")),
             (
                 String::from("Access-Control-Allow-Origin"),
                 String::from("*"),

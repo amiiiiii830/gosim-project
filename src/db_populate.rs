@@ -6,6 +6,20 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct IssueOut {
+    pub issue_id: String,
+    pub project_id: String,
+    pub issue_title: String,
+    pub issue_description: String,
+    pub issue_budget: Option<i32>,
+    pub issue_assignees: Option<Vec<String>>, // or a more specific type if you know the structure of the JSON
+    pub issue_linked_pr: Option<String>,
+    pub issue_status: String,
+    pub review_status: String,
+    pub issue_budget_approved: bool,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct IssueMaster {
     pub issue_id: String,
     pub project_id: String,

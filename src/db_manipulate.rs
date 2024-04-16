@@ -45,6 +45,42 @@ pub struct IssueSubset {
             Err(e) => Err(e),
         }
 } */
+pub async fn list_issues_by_status(
+    pool: &Pool,
+    review_status: &str,
+    page: usize,
+    page_size: usize,
+) -> Result<Vec<IssueSubset>> {
+    let mut conn = pool.get_conn().await?;
+    let offset = (page - 1) * page_size;
+    let issues: Vec<IssueSubset> = conn
+        .query_map(
+            format!(
+                "SELECT issue_id, project_id, issue_title, issue_budget, issue_status, review_status, issue_budget_approved FROM issues_master where review_status = :review_status ORDER BY issue_id LIMIT {} OFFSET {}",
+                page_size, offset
+            ),
+            |(issue_id, project_id, issue_title, issue_budget, issue_status, review_status, issue_budget_approved): (String, String, String, Option<i32>, Option<String>, Option<String>, Option<bool>)| {
+                IssueSubset {
+                    issue_id,
+                    project_id,
+                    issue_title,
+                    issue_budget,
+                    issue_status,
+                    review_status: match review_status.unwrap_or_default().as_str() {
+                        "queue" => ReviewStatus::Queue,
+                        "approve" => ReviewStatus::Approve,
+                        "decline" => ReviewStatus::Decline,
+                        _ => ReviewStatus::Queue,
+                    },
+                    issue_budget_approved: issue_budget_approved.unwrap_or_default(),
+                }
+            },
+        )
+        .await?;
+
+    Ok(issues)
+}
+
 pub async fn list_issues(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<IssueSubset>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
@@ -130,6 +166,71 @@ pub async fn list_projects(pool: &Pool, page: usize, page_size: usize) -> Result
     Ok(projects)
 }
 
+use mysql_async::prelude::FromRow;
+use mysql_async::Row;
+use mysql_async::Value;
+
+impl FromRow for IssueOut {
+    fn from_row_opt(row: Row) -> std::result::Result<Self, mysql_async::FromRowError> {
+        let (
+            issue_id,
+            project_id,
+            issue_title,
+            issue_description,
+            issue_budget,
+            issue_assignees_value,
+            issue_linked_pr,
+            issue_status,
+            review_status,
+            issue_budget_approved,
+        ) = mysql_async::from_row_opt(row)?;
+
+        // Convert issue_assignees_value into Vec<String>
+        let issue_assignees = match issue_assignees_value {
+            Value::Bytes(bytes) => {
+                let s = String::from_utf8_lossy(&bytes);
+                let vec: Vec<String> = serde_json::from_str(&s).unwrap_or_default();
+                Some(vec)
+            },
+            _ => None,
+        };
+
+        Ok(IssueOut {
+            issue_id,
+            project_id,
+            issue_title,
+            issue_description,
+            issue_budget,
+            issue_assignees,
+            issue_linked_pr,
+            issue_status,
+            review_status,
+            issue_budget_approved,
+        })
+    }
+}
+pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<IssueOut> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"SELECT * FROM issues_master WHERE issue_id = :issue_id";
+
+    match conn
+        .exec_first(
+            query,
+            params! {
+                "issue_id" => issue_id,
+            },
+        )
+        .await
+    {
+        Ok(Some(issue)) => Ok(issue),
+        Ok(None) => Err(anyhow::anyhow!("No issue found with the provided issue_id")),
+        Err(e) => {
+            log::error!("Error getting issue by issue_id: {:?}", e);
+            Err(anyhow::anyhow!("Error getting issue by issue_id"))
+        }
+    }
+}
 pub async fn get_issue_ids_with_budget(pool: &Pool) -> Result<Vec<String>> {
     let mut conn = pool.get_conn().await?;
     // let one_hour_ago = (Utc::now() - Duration::try_hours(1).unwrap())
