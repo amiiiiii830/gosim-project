@@ -29,7 +29,7 @@ pub async fn list_issues_by_status(
                 "SELECT issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master where review_status = '{}' ORDER BY issue_id LIMIT {} OFFSET {}",
                 review_status, page_size, offset
             ),
-            |(issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees_value, issue_linked_pr, issue_status, review_status, issue_budget_approved): (String, String, String, String, Option<i32>, Option<String>, Option<String>, String, String, Option<bool>)| {
+            |(issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees_value, issue_linked_pr, issue_status, review_status, issue_budget_approved): (String, String, String, String, Option<i32>, Option<String>, Option<String>, Option<String>, String, Option<bool>)| {
                 let issue_assignees = match &issue_assignees_value {
                     Some(value) => {
                         let vec: Vec<String> = serde_json::from_str(value).unwrap_or_default();
@@ -45,7 +45,7 @@ pub async fn list_issues_by_status(
                     issue_budget,
                     issue_assignees,
                     issue_linked_pr,
-                    issue_status,
+                    issue_status: issue_status.unwrap_or_default(),
                     review_status,
                     issue_budget_approved: issue_budget_approved.unwrap_or_default(),
                 }
