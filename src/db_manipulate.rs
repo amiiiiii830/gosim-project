@@ -15,7 +15,7 @@ pub struct IssueSubset {
     pub issue_budget_approved: bool,
 }
 
-
+use mysql_async::prelude::Queryable;
 pub async fn list_issues_by_status(
     pool: &Pool,
     review_status: &str,
@@ -24,37 +24,48 @@ pub async fn list_issues_by_status(
 ) -> Result<Vec<IssueOut>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
+    let query = r"SELECT issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master where review_status = :review_status ORDER BY issue_id LIMIT :limit OFFSET :offset";
+    let params = params! {
+        "review_status" => review_status,
+        "limit" => page_size,
+        "offset" => offset,
+    };
     let issues: Vec<IssueOut> = conn
-        .query_map(
-            format!(
-                "SELECT issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master where review_status = :review_status ORDER BY issue_id LIMIT {} OFFSET {}",
-                page_size, offset
-            ),
-            |(issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees_value, issue_linked_pr, issue_status, review_status, issue_budget_approved): (String, String, String, String, Option<i32>, Value, Option<String>, String, String, bool)| {
-                // Convert issue_assignees_value into Vec<String>
-                let issue_assignees = match issue_assignees_value {
-                    Value::Bytes(bytes) => {
-                        let s = String::from_utf8_lossy(&bytes);
-                        let vec: Vec<String> = serde_json::from_str(&s).unwrap_or_default();
-                        Some(vec)
-                    },
-                    _ => None,
-                };
-
-                IssueOut {
-                    issue_id,
-                    project_id,
-                    issue_title,
-                    issue_description,
-                    issue_budget,
-                    issue_assignees,
-                    issue_linked_pr,
-                    issue_status,
-                    review_status,
-                    issue_budget_approved,
+        .exec_map(query, params, |row| {
+            let (
+                issue_id,
+                project_id,
+                issue_title,
+                issue_description,
+                issue_budget,
+                issue_assignees_value,
+                issue_linked_pr,
+                issue_status,
+                review_status,
+                issue_budget_approved,
+            ) = mysql_async::from_row(row);
+            let issue_assignees = match issue_assignees_value {
+                Value::Bytes(bytes) => {
+                    let s = String::from_utf8_lossy(&bytes);
+                    let vec: Vec<String> = serde_json::from_str(&s).unwrap_or_default();
+                    Some(vec)
                 }
-            },
-        )
+                _ => None,
+            };
+
+            IssueOut {
+                issue_id,
+                project_id,
+                issue_title,
+                issue_description,
+                issue_budget,
+                issue_assignees,
+                issue_linked_pr,
+                issue_status,
+                review_status,
+                issue_budget_approved,
+            }
+        })
         .await?;
 
     Ok(issues)
@@ -170,7 +181,7 @@ impl FromRow for IssueOut {
                 let s = String::from_utf8_lossy(&bytes);
                 let vec: Vec<String> = serde_json::from_str(&s).unwrap_or_default();
                 Some(vec)
-            },
+            }
             _ => None,
         };
 
