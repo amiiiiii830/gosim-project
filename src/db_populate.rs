@@ -313,3 +313,21 @@ pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
 
     Ok(())
 }
+
+pub async fn get_issues_from_db() -> Result<Vec<(String, String, Option<String>)>> {
+    let pool = get_pool().await;
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"SELECT issue_id, issue_description, issue_assignees FROM issues_master WHERE issue_id not in (SELECT issue_or_project_id FROM issues_repos_indexed)";
+
+    let issues: Vec<(String, String, Option<String>)> = conn
+        .query_map(
+            query,
+            |(issue_id, issue_description, issue_assignees): (String, String, Option<String>)| {
+                (issue_id, issue_description, issue_assignees)
+            },
+        )
+        .await?;
+
+    Ok(issues)
+}

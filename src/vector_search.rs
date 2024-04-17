@@ -1,41 +1,61 @@
 use flowsnet_platform_sdk::logger;
 use openai_flows::{chat, embeddings::EmbeddingsInput, OpenAIFlows};
-use serde_json::{json, Value};
-use std::collections::HashMap;
-use std::str;
+use serde_json::json;
+use std::env;
 use vector_store_flows::*;
-use webhook_flows::{create_endpoint, request_handler, send_response};
 
-pub async fn upload_to_collection(issue_id: &str, payload: &str) {
-    let collection_name = env::var("collection_name").unwrap_or("gosim_vector".to_string());
+pub async fn upload_to_collection(
+    issue_id: &str,
+    issue_assignees: Option<String>,
+    issue_body: Option<String>,
+    repo_readme: Option<String>,
+) -> anyhow::Result<()> {
+    let collection_name = env::var("collection_name").unwrap_or("gosim_search".to_string());
     let vector_size: u64 = 1536;
-    let mut id: u64 = 0;
+    // let issue_id = "https://github.com/alabulei1/a-test/issues/87";
+    let issue_parts: Vec<&str> = issue_id.rsplitn(5, '/').collect();
+    let issue_number = issue_parts[0].parse::<i32>().unwrap_or(0);
+    let (repo, owner) = (issue_parts[2].to_string(), issue_parts[3].to_string());
+
+    let payload = match (issue_body.as_ref(), repo_readme.as_ref()) {
+        (Some(body), _) => format!(
+            "The issue is from the repository `{repo}` and the owner is `{owner}`, the issue_number is `{issue_number}`, it's assigned to `{issue_assignees:?}`, the body text: {body:?}"
+        ),
+        (_, Some(readme)) => format!(
+            "The repository `{repo}` describes itself: {readme:?}, and the owner is `{owner}`"
+        ),
+        _ => return Ok(()),
+    };
 
     let mut openai = OpenAIFlows::new();
     openai.set_retry_times(3);
 
-    let input = EmbeddingsInput::String(line.clone());
+    let input = EmbeddingsInput::String(payload.clone());
     match openai.create_embeddings(input).await {
         Ok(r) => {
             for v in r.iter() {
-                let p = Point {
-                    id: PointId::Num(id),
+                let p = vec![Point {
+                    id: PointId::Uuid(issue_id.to_string()),
                     vector: v.iter().map(|n| *n as f32).collect(),
-                    payload: json!({"text": line}).as_object().map(|m| m.to_owned()),
-                };
+                    payload: json!({
+                        "text": payload})
+                    .as_object()
+                    .map(|m| m.to_owned()),
+                }];
 
-                if let Err(e) = upsert_points(collection_name, p).await {
+                if let Err(e) = upsert_points(&collection_name, p).await {
                     log::error!("Cannot upsert into database! {}", e);
-                    send_success("Cannot upsert into database!");
-                    return;
+                    log::info!("Cannot upsert into database!");
+                    return Ok(());
                 }
 
-                log::debug!("Created vector {} with length {}", id, v.len());
-                id += 1;
+                log::debug!("Created vector {} with length {}", issue_id, v.len());
             }
+            Ok(())
         }
         Err(e) => {
             log::error!("OpenAI returned an error: {}", e);
+            Err(anyhow::anyhow!("OpenAI returned an error: {}", e))
         }
     }
 }
@@ -48,24 +68,17 @@ pub async fn check_vector_db(collection_name: &str) {
                 ci.points_count,
                 collection_name
             );
-            send_success(&format!(
+            log::info!(
                 "Successfully inserted {} records. The collection now has {} records in total.",
-                points_count, ci.points_count
-            ));
+                ci.points_count,
+                ci.points_count
+            );
         }
         Err(e) => {
             log::error!("Cannot get collection stat {}", e);
-            send_success("Cannot upsert into database!");
+            log::info!("Cannot upsert into database!");
         }
     }
-}
-
-pub async fn send_success(body: &str) {
-    send_response(
-        200,
-        vec![(String::from("content-type"), String::from("text/html"))],
-        body.as_bytes().to_vec(),
-    );
 }
 
 pub async fn summarize_long_chunks(input: &str) -> String {
@@ -95,30 +108,31 @@ pub async fn summarize_long_chunks(input: &str) -> String {
     }
 }
 
-
 pub async fn search_collection(
     question: &str,
-    collection_name: &str
-) -> anyhow::Result<Vec<(u64, String)>> {
+    collection_name: &str,
+) -> anyhow::Result<Vec<String>> {
     let mut openai = OpenAIFlows::new();
     openai.set_retry_times(3);
 
-    let question_vector = match
-        openai.create_embeddings(EmbeddingsInput::String(question.to_string())).await
+    let question_vector = match openai
+        .create_embeddings(EmbeddingsInput::String(question.to_string()))
+        .await
     {
         Ok(r) => {
             if r.len() < 1 {
                 log::error!("LLM returned no embedding for the question");
-                return Err(anyhow::anyhow!("LLM returned no embedding for the question"));
+                return Err(anyhow::anyhow!(
+                    "LLM returned no embedding for the question"
+                ));
             }
-            r[0]
-                .iter()
-                .map(|n| *n as f32)
-                .collect()
+            r[0].iter().map(|n| *n as f32).collect()
         }
         Err(_e) => {
             log::error!("LLM returned an error: {}", _e);
-            return Err(anyhow::anyhow!("LLM returned no embedding for the question"));
+            return Err(anyhow::anyhow!(
+                "LLM returned no embedding for the question"
+            ));
         }
     };
 
@@ -127,24 +141,26 @@ pub async fn search_collection(
         limit: 5,
     };
 
+    let mut out = vec![];
     match search_points(&collection_name, &p).await {
         Ok(sp) => {
             for p in sp.iter() {
+                let p_text = p
+                    .payload
+                    .as_ref()
+                    .unwrap()
+                    .get("text")
+                    .unwrap()
+                    .as_str()
+                    .unwrap();
+
                 log::debug!(
                     "Received vector score={} and text={}",
                     p.score,
-                    first_x_chars(
-                        p.payload.as_ref().unwrap().get("text").unwrap().as_str().unwrap(),
-                        256
-                    )
+                    p_text.chars().take(50).collect::<String>()
                 );
-                let p_text = p.payload.as_ref().unwrap().get("text").unwrap().as_str().unwrap();
-                let p_id = match p.id {
-                    PointId::Num(i) => i,
-                    _ => 0,
-                };
                 if p.score > 0.75 {
-                    rag_content.push((p_id, p_text.to_string()));
+                    out.push(p_text.to_string());
                 }
             }
         }
@@ -152,5 +168,16 @@ pub async fn search_collection(
             log::error!("Vector search returns error: {}", e);
         }
     }
-    Ok(rag_content)
+    Ok(out)
+}
+
+pub async fn create_my_collection(vector_size: u64, collection_name: &str) -> anyhow::Result<()> {
+    let params = CollectionCreateParams {
+        vector_size: vector_size,
+    };
+
+    if let Err(e) = create_collection(collection_name, &params).await {
+        log::info!("Collection already exists");
+    }
+    Ok(())
 }

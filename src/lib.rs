@@ -4,7 +4,7 @@ pub mod db_populate;
 pub mod issue_bot;
 pub mod issue_tracker;
 pub mod the_runner;
-
+pub mod vector_search;
 use chrono::{NaiveDate, Timelike, Utc};
 use lazy_static::lazy_static;
 

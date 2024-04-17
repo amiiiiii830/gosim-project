@@ -5,6 +5,7 @@ use gosim_project::db_manipulate::*;
 use gosim_project::db_populate::*;
 use gosim_project::issue_tracker::*;
 use gosim_project::the_runner::*;
+use gosim_project::vector_search::*;
 use mysql_async::*;
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -55,9 +56,11 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
     // let repo_data = get_projects_as_repo_list(&pool, 1).await;
     let query ="label:hacktoberfest label:hacktoberfest-accepted is:issue created:>2023-10-01 updated:2023-10-03T05:00:00..2023-10-03T06:00:00 -label:spam -label:invalid";
     let query = "label:hacktoberfest is:issue updated:>2024-04-16 -label:spam -label:invalid";
-    for issue in search_issues_comment(query).await.expect("msg") {
-        log::info!("{:?}", issue.issue_id);
-        let _ = add_issues_comment(&pool, issue).await;
+
+    let _ = create_my_collection(1536, "gosim_search").await;
+    for issue in get_issues_from_db().await.expect("msg") {
+        log::info!("{:?}", issue.0);
+        let _ = upload_to_collection(&issue.0, Some(issue.1.clone()), issue.2, None).await;
     }
 
     // let _ = pull_master(&pool).await;
