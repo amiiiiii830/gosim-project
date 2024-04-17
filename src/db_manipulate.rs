@@ -14,10 +14,7 @@ pub struct IssueSubset {
     pub issue_budget_approved: bool,
 }
 
-pub async fn batch_decline_issues_in_db(
-    pool: &Pool,
-    issue_ids: Vec<String>,
-) -> Result<()> {
+pub async fn batch_decline_issues_in_db(pool: &Pool, issue_ids: Vec<String>) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
     for issue_id in issue_ids {

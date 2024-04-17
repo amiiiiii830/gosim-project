@@ -512,7 +512,8 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct IssueComment {
-    pub issue_id: String, // url of an issue
+    pub issue_id: String,        // url of an issue
+    pub comment_creator: String, // url of an issue
     pub comment_date: String,
     pub comment_body: String,
 }
@@ -625,8 +626,14 @@ pub async fn search_issues_comment(query: &str) -> anyhow::Result<Vec<IssueComme
                                             .unwrap()
                                             .with_timezone(&Utc);
                                         if updated_at > last_hour {
+                                            let comment_creator = comment
+                                                .author
+                                                .as_ref()
+                                                .and_then(|author| author.login.clone())
+                                                .unwrap_or_default();
                                             inner_comments_vec.push(IssueComment {
                                                 issue_id: issue.url.clone(),
+                                                comment_creator,
                                                 comment_date: updated_at
                                                     .format("%Y-%m-%d %H:%M:%S")
                                                     .to_string(),
@@ -640,9 +647,8 @@ pub async fn search_issues_comment(query: &str) -> anyhow::Result<Vec<IssueComme
                                 }
                             }
                         }
-                     all_issues.extend(inner_comments_vec);
-                   }
-
+                        all_issues.extend(inner_comments_vec);
+                    }
                 }
 
                 if let Some(page_info) = search.pageInfo {

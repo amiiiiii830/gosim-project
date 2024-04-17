@@ -183,14 +183,15 @@ pub async fn add_issues_open(pool: &Pool, issue: IssueOpen) -> Result<()> {
 pub async fn add_issues_comment(pool: &Pool, issue: IssueComment) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    let query = r"INSERT INTO issues_comment (issue_id, comment_date, comment_body)
-                  VALUES (:issue_id, :comment_date, :comment_body)";
+    let query = r"INSERT INTO issues_comment (issue_id, comment_creator, comment_date, comment_body)
+                  VALUES (:issue_id, :comment_creator, :comment_date, :comment_body)";
 
     if let Err(e) = conn
         .exec_drop(
             query,
             params! {
                 "issue_id" => &issue.issue_id,
+                "comment_creator" => &issue.comment_creator,
                 "comment_date" => &issue.comment_date,
                 "comment_body" => &issue.comment_body,
             },
