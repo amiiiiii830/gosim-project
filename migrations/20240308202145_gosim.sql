@@ -178,3 +178,7 @@ WHERE pull_id IN (
 UPDATE issues_master
 SET issue_assignees = JSON_ARRAY()
 WHERE issue_assignees IS NULL;
+
+select issue_id, issue_description from issues_master where  project_id not in (SELECT issue_or_project_id FROM issues_repos_indexed) limit 1;
+
+select project_id, project_description from projects where  project_id not in (SELECT issue_or_project_id FROM issues_repos_indexed) limit 1;

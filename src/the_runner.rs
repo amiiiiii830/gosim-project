@@ -1,6 +1,9 @@
-use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_bot::*, issue_tracker::*};
+use crate::{
+    db_join::*, db_manipulate::*, db_populate::*, issue_bot::*, issue_tracker::*, vector_search::*,
+};
 use crate::{ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
 
+use anyhow::Ok;
 use mysql_async::Pool;
 
 pub fn inner_query_1_hour(
@@ -43,6 +46,7 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let _ = join_ops(pool).await?;
     let _ = cleanup_ops(pool).await?;
     let _ = note_issues(pool).await?;
+    let _ = populate_vector_db(pool).await;
     Ok(())
 }
 pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
@@ -131,6 +135,23 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
         let _ = add_pull_request(&pool, pull).await;
     }
 
+    Ok(())
+}
+
+pub async fn populate_vector_db(pool: &Pool) -> anyhow::Result<()> {
+    for issue in get_issues_from_db().await.expect("msg") {
+        log::info!("{:?}", issue.0);
+        let _ = upload_to_collection(&issue.0, Some(issue.1.clone()), issue.2, None).await;
+        let _ = add_indexed_id(&pool, &issue.0).await;
+    }
+    let _ = check_vector_db("gosim_search").await;
+
+    for project in get_projects_from_db().await.expect("msg") {
+        log::info!("{:?}", project.0);
+        let _ = upload_to_collection(&project.0, None, None, Some(project.1)).await;
+        let _ = add_indexed_id(&pool, &project.0).await;
+    }
+    let _ = check_vector_db("gosim_search").await;
     Ok(())
 }
 

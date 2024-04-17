@@ -63,20 +63,13 @@ pub async fn upload_to_collection(
 pub async fn check_vector_db(collection_name: &str) {
     match collection_info(collection_name).await {
         Ok(ci) => {
-            log::debug!(
-                "There are {} vectors in collection `{}`",
-                ci.points_count,
-                collection_name
-            );
             log::info!(
-                "Successfully inserted {} records. The collection now has {} records in total.",
-                ci.points_count,
+                "The collection now has {} records in total.",
                 ci.points_count
             );
         }
         Err(e) => {
-            log::error!("Cannot get collection stat {}", e);
-            log::info!("Cannot upsert into database!");
+            log::error!("Cannot get collection: {} Error: {}", collection_name, e);
         }
     }
 }
@@ -179,5 +172,7 @@ pub async fn create_my_collection(vector_size: u64, collection_name: &str) -> an
     if let Err(e) = create_collection(collection_name, &params).await {
         log::info!("Collection already exists");
     }
+
+    check_vector_db(collection_name).await;
     Ok(())
 }

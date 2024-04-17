@@ -289,6 +289,27 @@ pub async fn add_issues_assigned(pool: &Pool, issue_assigned: IssueAssigned) -> 
     Ok(())
 }
 
+pub async fn add_indexed_id(pool: &Pool, issue_or_project_id: &str) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"INSERT INTO issues_repos_indexed (issue_or_project_id)
+                  VALUES (:issue_or_project_id)";
+
+    if let Err(e) = conn
+        .exec_drop(
+            query,
+            params! {
+                "issue_or_project_id" => &issue_or_project_id,
+            },
+        )
+        .await
+    {
+        log::error!("Error adding  issue_or_project_id: {:?}", e);
+    };
+
+    Ok(())
+}
+
 pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
@@ -318,7 +339,7 @@ pub async fn get_issues_from_db() -> Result<Vec<(String, String, Option<String>)
     let pool = get_pool().await;
     let mut conn = pool.get_conn().await?;
 
-    let query = r"SELECT issue_id, issue_description, issue_assignees FROM issues_master WHERE issue_id not in (SELECT issue_or_project_id FROM issues_repos_indexed)";
+    let query = r"SELECT issue_id, issue_description, issue_assignees FROM issues_master WHERE issue_id not in (SELECT issue_or_project_id FROM issues_repos_indexed) limit 50";
 
     let issues: Vec<(String, String, Option<String>)> = conn
         .query_map(
@@ -330,4 +351,20 @@ pub async fn get_issues_from_db() -> Result<Vec<(String, String, Option<String>)
         .await?;
 
     Ok(issues)
+}
+
+pub async fn get_projects_from_db() -> Result<Vec<(String, String)>> {
+    let pool = get_pool().await;
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"SELECT project_id, project_description  FROM issues_master WHERE project_id not in (SELECT issue_or_project_id FROM issues_repos_indexed) limit 50";
+
+    let projects: Vec<(String, String)> = conn
+        .query_map(
+            query,
+            |(project_id, project_description): (String, String)| (project_id, project_description),
+        )
+        .await?;
+
+    Ok(projects)
 }
