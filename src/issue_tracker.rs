@@ -570,6 +570,7 @@ pub async fn search_issues_comment(query: &str) -> anyhow::Result<Vec<IssueComme
     let mut all_issues = Vec::new();
     let mut after_cursor: Option<String> = None;
     let last_hour = Utc::now() - Duration::try_hours(1).unwrap();
+    let last_hour = Utc::now() - Duration::try_days(5).unwrap();
 
     for _ in 0..10 {
         let query_str = format!(
