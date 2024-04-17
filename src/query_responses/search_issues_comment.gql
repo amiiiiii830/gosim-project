@@ -1,0 +1,50 @@
+query ($query: String!) {
+  search(query: $query, type: ISSUE, first: 100, after: null) {
+    issueCount
+    nodes {
+      ... on Issue {
+        url
+        comments (first: 100, orderBy: {field: UPDATED_AT, direction: DESC}) {
+          nodes {
+            author {
+              login
+            }
+            body
+            updatedAt
+          }
+        }
+      }
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+  }
+}
+
+{
+  "query": "label:hacktoberfest is:issue created:>2023-10-01 updated:2023-10-03T05:00:00..2023-10-03T06:00:00 -label:spam -label:invalid"
+}
+
+{
+  "query": "label:hacktoberfest is:issue is:open no:assignee created:2023-10-01..2023-10-03 -label:spam -label:invalid",
+  "firstComments": 10,
+  "firstTimelineItems": 10
+}
+#   Author: author:<username>
+# Milestone: milestone:<milestone>
+# Assignee: assignee:<username>
+# Commenter: commenter:<username>
+# Created: created:<date>
+# Updated: updated:<date>
+# Closed: closed:<date>
+# Labels: label:<label>
+# Projects: project:<project>
+# Reactions: reactions:<reaction>
+# Review requests: review-requested:<username>
+# Review comments: review-commenter:<username>
+# You can combine multiple filter conditions using the following operators:
+
+# AND: condition1 condition2
+# OR: condition1 OR condition2
+# NOT: NOT condition

@@ -53,9 +53,9 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
     let repos = "repo:WasmEdge/wasmedge-db-examples repo:WasmEdge/www repo:WasmEdge/docs repo:WasmEdge/llvm-windows repo:WasmEdge/wasmedge-rust-sdk repo:WasmEdge/YOLO-rs repo:WasmEdge/proxy-wasm-cpp-host repo:WasmEdge/hyper-util repo:WasmEdge/hyper repo:WasmEdge/h2 repo:WasmEdge/wasmedge_hyper_demo repo:WasmEdge/tokio-rustls repo:WasmEdge/mysql_async_wasi repo:WasmEdge/mediapipe-rs repo:WasmEdge/wasmedge_reqwest_demo repo:WasmEdge/reqwest repo:WasmEdge/.github repo:WasmEdge/mio repo:WasmEdge/elasticsearch-rs-wasi repo:WasmEdge/oss-fuzz repo:WasmEdge/wasm-log-flex repo:WasmEdge/wasmedge_sdk_async_wasi repo:WasmEdge/tokio repo:WasmEdge/rust-mysql-simple-wasi repo:WasmEdge/GSoD2023 repo:WasmEdge/llm-agent-sdk repo:WasmEdge/sqlx repo:WasmEdge/rust-postgres repo:WasmEdge/redis-rs";
 
     // let repo_data = get_projects_as_repo_list(&pool, 1).await;
-
-    for res in search_repos_in_batch(repos).await.expect("msg") {
-        log::info!("{:?}: {:?}", res.project_id, res.main_language);
+    let query ="label:hacktoberfest label:hacktoberfest-accepted is:issue created:>2023-10-01 updated:2023-10-03T05:00:00..2023-10-03T06:00:00 -label:spam -label:invalid";
+    for res in search_issues_comment(query).await.expect("msg") {
+        log::info!("{:?}: {:?}", res.issue_id, res.issue_comment);
     }
 
     // let _ = pull_master(&pool).await;

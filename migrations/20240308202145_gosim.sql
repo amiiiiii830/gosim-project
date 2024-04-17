@@ -4,8 +4,7 @@ CREATE TABLE projects (
     repo_stars INT,
     project_description TEXT,  -- description of the project, summary of its readme, etc.
     issues_list JSON,
-    total_budget_allocated INT,
-    total_budget_used INT
+    total_budget_allocated INT
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE issues_master (
@@ -28,9 +27,9 @@ CREATE TABLE issues_master (
 CREATE TABLE issues_open (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
     project_id VARCHAR(255) NOT NULL,
+    issue_creator VARCHAR(50) NOT NULL,
     issue_title VARCHAR(255) NOT NULL,
     issue_budget INT,
-    main_language VARCHAR(50) NOT NULL,
     issue_description TEXT NOT NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 

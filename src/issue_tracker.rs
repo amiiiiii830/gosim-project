@@ -1,5 +1,5 @@
 use anyhow::anyhow;
-use chrono::{DateTime, ParseError, Utc};
+use chrono::{DateTime, Duration, ParseError, Utc};
 use http_req::{
     request::{Method, Request},
     uri::Uri,
@@ -378,6 +378,7 @@ pub async fn search_issues_assigned(query: &str) -> anyhow::Result<Vec<IssueAssi
 pub struct IssueOpen {
     pub issue_title: String,
     pub issue_id: String,          // url of an issue
+    pub issue_creator: String,     // url of an issue
     pub issue_budget: i32,         // url of an issue
     pub issue_description: String, // description of the issue, could be truncated body text
     pub project_id: String,        // url of the repo
@@ -471,19 +472,25 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
                             .unwrap_or_default()
                             .chars()
                             .take(240)
-                            .collect();
+                            .collect::<String>();
                         let project_id = issue
                             .url
                             .rsplitn(3, '/')
                             .nth(2)
                             .unwrap_or("wrong_project_id")
                             .to_string();
-
+                        let issue_creator = issue
+                            .author
+                            .as_ref()
+                            .and_then(|author| author.login.clone())
+                            .unwrap_or_default();
+                        let issue_budget = extract_budget(&issue_description);
                         all_issues.push(IssueOpen {
                             issue_title: issue.title,
                             issue_id: issue.url, // Assuming issue.url is the issue_id
+                            issue_creator,
                             issue_description,
-                            issue_budget: 100,
+                            issue_budget,
                             project_id,
                         });
                     }
@@ -501,6 +508,182 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
     }
 
     Ok(all_issues)
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct IssueComment {
+    pub issue_id: String,      // url of an issue
+    pub issue_comment: String, // url of the repo
+}
+
+pub async fn search_issues_comment(query: &str) -> anyhow::Result<Vec<IssueComment>> {
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct GraphQLResponse {
+        data: Option<Data>,
+    }
+
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Data {
+        search: Option<Search>,
+    }
+
+    #[allow(non_snake_case)]
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Search {
+        issueCount: Option<i32>,
+        nodes: Option<Vec<Issue>>,
+        pageInfo: Option<PageInfo>,
+    }
+
+    #[allow(non_snake_case)]
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct PageInfo {
+        endCursor: Option<String>,
+        hasNextPage: bool,
+    }
+
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Issue {
+        url: String,
+        comments: Option<CommentNodes>,
+    }
+
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct CommentNodes {
+        nodes: Option<Vec<Comment>>,
+    }
+
+    #[allow(non_snake_case)]
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Comment {
+        author: Option<Author>,
+        body: Option<String>,
+        updatedAt: Option<String>,
+    }
+
+    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
+    struct Author {
+        login: Option<String>,
+    }
+
+    let mut all_issues = Vec::new();
+    let mut after_cursor: Option<String> = None;
+    let last_hour = Utc::now() - Duration::try_hours(1).unwrap();
+
+    for _ in 0..10 {
+        let query_str = format!(
+            r#"
+            query {{
+                search(query: "{}", type: ISSUE, first: 100, after: {}) {{
+                    issueCount
+                    nodes {{
+                        ... on Issue {{
+                            url
+                            comments (first: 100, orderBy: {{field: UPDATED_AT, direction: DESC}}) {{
+                                nodes {{
+                                  author {{
+                                    login
+                                  }}
+                                  body
+                                  updatedAt
+                                }}
+                            }}
+                        }}
+                    }}
+                    pageInfo {{
+                        endCursor
+                        hasNextPage
+                    }}
+                }}
+            }}
+            "#,
+            query.replace("\"", "\\\""),
+            after_cursor
+                .as_ref()
+                .map_or(String::from("null"), |c| format!("\"{}\"", c)),
+        );
+
+        let response_body = github_http_post_gql(&query_str)
+            .await
+            .map_err(|e| anyhow!("Failed to post GraphQL query: {}", e))?;
+
+        let response: GraphQLResponse = serde_json::from_slice(&response_body)
+            .map_err(|e| anyhow!("Failed to deserialize response: {}", e))?;
+
+        if let Some(data) = response.data {
+            if let Some(search) = data.search {
+                if let Some(nodes) = search.nodes {
+                    for issue in nodes {
+                        let issue_comment = issue
+                            .comments
+                            .as_ref()
+                            .and_then(|c| {
+                                c.nodes.as_ref().and_then(|n| {
+                                    Some(
+                                        n.iter()
+                                            .filter_map(|comment| {
+                                                if let Some(updated_at) = &comment.updatedAt {
+                                                    let updated_at =
+                                                        DateTime::parse_from_rfc3339(updated_at)
+                                                            .unwrap()
+                                                            .with_timezone(&Utc);
+                                                    if updated_at > last_hour {
+                                                        Some(format!(
+                                                            "{}: {}",
+                                                            comment
+                                                                .author
+                                                                .as_ref()?
+                                                                .login
+                                                                .as_ref()?,
+                                                            comment.body.as_ref()?
+                                                        ))
+                                                    } else {
+                                                        None
+                                                    }
+                                                } else {
+                                                    None
+                                                }
+                                            })
+                                            .collect::<Vec<_>>(),
+                                    )
+                                })
+                            })
+                            .unwrap_or_default()
+                            .join("\n");
+
+                        all_issues.push(IssueComment {
+                            issue_id: issue.url, // Assuming issue.url is the issue_id
+                            issue_comment,       // Add the comments to the IssueOpen struct
+                        });
+                    }
+                }
+
+                if let Some(page_info) = search.pageInfo {
+                    if page_info.hasNextPage {
+                        after_cursor = page_info.endCursor;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(all_issues)
+}
+
+pub fn extract_budget(body: &str) -> i32 {
+    let re = regex::Regex::new(r"(?i)budget:?\s*(\d{2,3})").unwrap();
+    for cap in re.captures_iter(body) {
+        if let Some(match_) = cap.get(1) {
+            if let Ok(b) = match_.as_str().parse::<i32>() {
+                if b >= 10 && b <= 999 {
+                    return b; // Returns the first match found
+                }
+            }
+        }
+    }
+    0
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug)]

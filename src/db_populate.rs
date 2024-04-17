@@ -49,7 +49,6 @@ pub struct Project {
     pub project_description: Option<String>,
     pub issues_list: Option<Vec<String>>,
     pub total_budget_allocated: Option<i32>,
-    pub total_budget_used: Option<i32>,
 }
 
 pub async fn get_pool() -> Pool {
@@ -158,8 +157,8 @@ pub async fn pull_request_exists(pool: &mysql_async::Pool, pull_id: &str) -> any
 pub async fn add_issues_open(pool: &Pool, issue: IssueOpen) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    let query = r"INSERT INTO issues_open (issue_id, project_id, issue_title, issue_description)
-                  VALUES (:issue_id, :project_id, :issue_title, :issue_description)";
+    let query = r"INSERT INTO issues_open (issue_id, project_id, issue_title, issue_budget, issue_description)
+                  VALUES (:issue_id, :project_id, :issue_title, :issue_budget, :issue_description)";
 
     if let Err(e) = conn
         .exec_drop(
@@ -168,6 +167,7 @@ pub async fn add_issues_open(pool: &Pool, issue: IssueOpen) -> Result<()> {
                 "issue_id" => &issue.issue_id,
                 "project_id" => &issue.project_id,
                 "issue_title" => &issue.issue_title,
+                "issue_budget" => &issue.issue_budget,
                 "issue_description" => &issue.issue_description,
             },
         )
@@ -182,8 +182,8 @@ pub async fn add_issues_open(pool: &Pool, issue: IssueOpen) -> Result<()> {
 pub async fn add_issues_open_batch(pool: &Pool, issues: Vec<IssueOpen>) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    let query = r"INSERT INTO issues_open (issue_id, project_id, issue_title, issue_description)
-                  VALUES (:issue_id, :project_id, :issue_title, :issue_description)";
+    let query = r"INSERT INTO issues_open (issue_id, project_id, issue_title, issue_budget, issue_description)
+                  VALUES (:issue_id, :project_id, :issue_title, :issue_budget, :issue_description)";
 
     if let Err(e) = query
         .with(issues.iter().map(|issue| {
@@ -191,6 +191,7 @@ pub async fn add_issues_open_batch(pool: &Pool, issues: Vec<IssueOpen>) -> Resul
                 "issue_id" => &issue.issue_id,
                 "project_id" => &issue.project_id,
                 "issue_title" => &issue.issue_title,
+                "issue_budget" => &issue.issue_budget,
                 "issue_description" => &issue.issue_description,
             }
         }))
