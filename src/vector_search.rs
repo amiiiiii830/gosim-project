@@ -16,7 +16,7 @@ pub async fn upload_to_collection(
     let issue_parts: Vec<&str> = issue_id.rsplitn(5, '/').collect();
     let issue_number = issue_parts[0].parse::<i32>().unwrap_or(0);
     let (repo, owner) = (issue_parts[2].to_string(), issue_parts[3].to_string());
-
+    let mut id: u64 = 0;
     let payload = match (issue_body.as_ref(), repo_readme.as_ref()) {
         (Some(body), _) => format!(
             "The issue is from the repository `{repo}` and the owner is `{owner}`, the issue_number is `{issue_number}`, it's assigned to `{issue_assignees:?}`, the body text: {body:?}"
@@ -35,9 +35,10 @@ pub async fn upload_to_collection(
         Ok(r) => {
             for v in r.iter() {
                 let p = vec![Point {
-                    id: PointId::Uuid(issue_id.to_string()),
+                    id: PointId::Num(id),
                     vector: v.iter().map(|n| *n as f32).collect(),
                     payload: json!({
+                        "issue_or_project_id": issue_id,
                         "text": payload})
                     .as_object()
                     .map(|m| m.to_owned()),
@@ -48,7 +49,7 @@ pub async fn upload_to_collection(
                     log::info!("Cannot upsert into database!");
                     return Ok(());
                 }
-
+                id += 1;
                 log::debug!("Created vector {} with length {}", issue_id, v.len());
             }
             Ok(())
