@@ -54,9 +54,10 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
 
     // let repo_data = get_projects_as_repo_list(&pool, 1).await;
     let query ="label:hacktoberfest label:hacktoberfest-accepted is:issue created:>2023-10-01 updated:2023-10-03T05:00:00..2023-10-03T06:00:00 -label:spam -label:invalid";
-    let query ="label:hacktoberfest is:issue updated:>2024-04-16 -label:spam -label:invalid";
-    for res in search_issues_comment(query).await.expect("msg") {
-        log::info!("{:?}: {:?}", res.issue_id, res.issue_comment);
+    let query = "label:hacktoberfest is:issue updated:>2024-04-16 -label:spam -label:invalid";
+    for issue in search_issues_comment(query).await.expect("msg") {
+        log::info!("{:?}", issue.issue_id);
+        let _ = add_issues_comment(&pool, issue).await;
     }
 
     // let _ = pull_master(&pool).await;

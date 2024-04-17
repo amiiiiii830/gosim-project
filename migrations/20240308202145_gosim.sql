@@ -35,11 +35,18 @@ CREATE TABLE issues_open (
     issue_description TEXT NOT NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-CREATE TABLE issues_comment (
+/* CREATE TABLE issues_comment (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
     issue_comment TEXT NOT NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
+ */
 
+CREATE TABLE issues_comment (
+    comment_id INT AUTO_INCREMENT PRIMARY KEY,  -- id of a comment
+    issue_id VARCHAR(255) NOT NULL,  -- url of an issue
+    comment_date DATETIME NOT NULL,  -- date of the comment
+    comment_body TEXT NOT NULL  -- content of the comment
+) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE issues_assigned (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue

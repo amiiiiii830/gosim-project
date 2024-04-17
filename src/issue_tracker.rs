@@ -512,8 +512,9 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct IssueComment {
-    pub issue_id: String,      // url of an issue
-    pub issue_comment: String, // url of the repo
+    pub issue_id: String, // url of an issue
+    pub comment_date: String,
+    pub comment_body: String,
 }
 
 pub async fn search_issues_comment(query: &str) -> anyhow::Result<Vec<IssueComment>> {
@@ -614,48 +615,33 @@ pub async fn search_issues_comment(query: &str) -> anyhow::Result<Vec<IssueComme
             if let Some(search) = data.search {
                 if let Some(nodes) = search.nodes {
                     for issue in nodes {
-                        let issue_comment = issue
-                            .comments
-                            .as_ref()
-                            .and_then(|c| {
-                                c.nodes.as_ref().and_then(|n| {
-                                    Some(
-                                        n.iter()
-                                            .filter_map(|comment| {
-                                                if let Some(updated_at) = &comment.updatedAt {
-                                                    let updated_at =
-                                                        DateTime::parse_from_rfc3339(updated_at)
-                                                            .unwrap()
-                                                            .with_timezone(&Utc);
-                                                    if updated_at > last_hour {
-                                                        Some(format!(
-                                                            "{}: {}",
-                                                            comment
-                                                                .author
-                                                                .as_ref()?
-                                                                .login
-                                                                .as_ref()?,
-                                                            comment.body.as_ref()?
-                                                        ))
-                                                    } else {
-                                                        None
-                                                    }
-                                                } else {
-                                                    None
-                                                }
-                                            })
-                                            .collect::<Vec<_>>(),
-                                    )
-                                })
-                            })
-                            .unwrap_or_default()
-                            .join("\n");
+                        let mut inner_comments_vec = Vec::new();
+                        if let Some(comments) = &issue.comments {
+                            if let Some(nodes) = &comments.nodes {
+                                for comment in nodes {
+                                    if let Some(updated_at) = &comment.updatedAt {
+                                        let updated_at = DateTime::parse_from_rfc3339(updated_at)
+                                            .unwrap()
+                                            .with_timezone(&Utc);
+                                        if updated_at > last_hour {
+                                            inner_comments_vec.push(IssueComment {
+                                                issue_id: issue.url.clone(),
+                                                comment_date: updated_at
+                                                    .format("%Y-%m-%d %H:%M:%S")
+                                                    .to_string(),
+                                                comment_body: comment
+                                                    .body
+                                                    .clone()
+                                                    .unwrap_or_default(),
+                                            });
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                     all_issues.extend(inner_comments_vec);
+                   }
 
-                        all_issues.push(IssueComment {
-                            issue_id: issue.url, // Assuming issue.url is the issue_id
-                            issue_comment,       // Add the comments to the IssueOpen struct
-                        });
-                    }
                 }
 
                 if let Some(page_info) = search.pageInfo {
