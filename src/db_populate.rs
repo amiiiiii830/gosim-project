@@ -157,8 +157,8 @@ pub async fn pull_request_exists(pool: &mysql_async::Pool, pull_id: &str) -> any
 pub async fn add_issues_open(pool: &Pool, issue: IssueOpen) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    let query = r"INSERT INTO issues_open (issue_id, project_id, issue_title, issue_budget, issue_description)
-                  VALUES (:issue_id, :project_id, :issue_title, :issue_budget, :issue_description)";
+    let query = r"INSERT INTO issues_open (issue_id, project_id, issue_title,issue_creator, issue_budget, issue_description)
+                  VALUES (:issue_id, :project_id, :issue_title, :issue_creator, :issue_budget, :issue_description)";
 
     if let Err(e) = conn
         .exec_drop(
@@ -167,6 +167,7 @@ pub async fn add_issues_open(pool: &Pool, issue: IssueOpen) -> Result<()> {
                 "issue_id" => &issue.issue_id,
                 "project_id" => &issue.project_id,
                 "issue_title" => &issue.issue_title,
+                "issue_creator" => &issue.issue_creator,
                 "issue_budget" => &issue.issue_budget,
                 "issue_description" => &issue.issue_description,
             },
@@ -174,6 +175,28 @@ pub async fn add_issues_open(pool: &Pool, issue: IssueOpen) -> Result<()> {
         .await
     {
         log::error!("Error add issues_open: {:?}", e);
+    };
+
+    Ok(())
+}
+
+pub async fn add_issues_comment(pool: &Pool, issue: IssueComment) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"INSERT INTO issues_comment (issue_id, issue_comment)
+                  VALUES (:issue_id, :issue_comment)";
+
+    if let Err(e) = conn
+        .exec_drop(
+            query,
+            params! {
+                "issue_id" => &issue.issue_id,
+                "issue_comment" => &issue.issue_comment,
+            },
+        )
+        .await
+    {
+        log::error!("Error add issues_comment: {:?}", e);
     };
 
     Ok(())

@@ -11,7 +11,9 @@ CREATE TABLE issues_master (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
     project_id VARCHAR(255) NOT NULL,
     issue_title VARCHAR(255) NOT NULL,
+    issue_creator VARCHAR(50) NOT NULL,
     issue_description TEXT NOT NULL,  -- description of the issue, could be truncated body text
+    issue_comment TEXT,
     issue_budget INT,
     issue_assignees JSON,    
     date_issue_assigned DATETIME,   
@@ -35,7 +37,7 @@ CREATE TABLE issues_open (
 
 CREATE TABLE issues_comment (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
-    comment TEXT NOT NULL
+    issue_comment TEXT NOT NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 

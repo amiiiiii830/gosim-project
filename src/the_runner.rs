@@ -65,6 +65,16 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
         let _ = add_issues_open(pool, issue).await;
     }
 
+    let query_comment = "label:hacktoberfest is:issue updated:>2024-03-10 -label:spam -label:invalid";
+    log::info!("query_open: {:?}", query_open);
+
+    let issue_comment_obj: Vec<IssueComment> = search_issues_comment(&query_comment).await?;
+    let len = issue_comment_obj.len();
+    log::info!("Issues comment recorded: {:?}", len);
+    for issue in issue_comment_obj {
+        let _ = add_issues_comment(pool, issue).await;
+    }
+
     let _query_assigned = inner_query_1_hour(
         &START_DATE,
         &THIS_HOUR,

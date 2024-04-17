@@ -9,12 +9,16 @@ pub async fn open_master(pool: &mysql_async::Pool) -> Result<()> {
         issue_id, 
         project_id, 
         issue_title, 
+        issue_creator,
+        issue_budget,
         issue_description
     )
     SELECT 
         io.issue_id, 
         io.project_id, 
         io.issue_title, 
+        io.issue_creator,
+        io.issue_budget,
         io.issue_description
     FROM 
         issues_open io;
@@ -64,6 +68,25 @@ pub async fn closed_master(pool: &mysql_async::Pool) -> Result<()> {
     if let Err(e) = conn.query_drop(query).await {
         log::error!(
             "Error consolidating issues_closed into issues_master: {:?}",
+            e
+        );
+    };
+
+    Ok(())
+}
+pub async fn comment_master(pool: &mysql_async::Pool) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"
+    UPDATE issues_master im
+    JOIN issues_comment ic ON im.issue_id = ic.issue_id
+    SET
+        im.issue_comment = CONCAT_WS('\n', im.issue_comment, ic.issue_comment);
+    ";
+
+    if let Err(e) = conn.query_drop(query).await {
+        log::error!(
+            "Error consolidating issues_comment into issues_master: {:?}",
             e
         );
     };
