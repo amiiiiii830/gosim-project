@@ -357,7 +357,7 @@ pub async fn get_projects_from_db() -> Result<Vec<(String, String)>> {
     let pool = get_pool().await;
     let mut conn = pool.get_conn().await?;
 
-    let query = r"SELECT project_id, project_description  FROM issues_master WHERE project_id not in (SELECT issue_or_project_id FROM issues_repos_indexed) limit 50";
+    let query = r"SELECT project_id, project_description  FROM projects WHERE project_id not in (SELECT issue_or_project_id FROM issues_repos_indexed) limit 50";
 
     let projects: Vec<(String, String)> = conn
         .query_map(
