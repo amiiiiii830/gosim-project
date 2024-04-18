@@ -1,7 +1,7 @@
-use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
 use gosim_project::db_manipulate::*;
 use gosim_project::db_populate::*;
+use gosim_project::vector_search::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -55,6 +55,9 @@ async fn handler(
         .insert("/budget", vec![post(approve_issue_budget_handler)])
         .unwrap();
     router
+        .insert("/search", vec![post(search_handler)])
+        .unwrap();
+    router
         .insert("/decline", vec![post(batch_decline_issue_handler)])
         .unwrap();
 
@@ -91,6 +94,50 @@ async fn approve_issue_budget_handler(
     let issue_id = load.issue_id.unwrap_or_default();
     let pool = get_pool().await;
     let _ = assign_issue_budget_in_db(&pool, &issue_id, issue_budget).await;
+}
+
+async fn search_handler(
+    _headers: Vec<(String, String)>,
+    _qry: HashMap<String, Value>,
+    _body: Vec<u8>,
+) {
+    #[derive(Serialize, Deserialize, Clone, Debug, Default)]
+    pub struct SearchLoad {
+        pub query: String,
+    }
+
+    let load: SearchLoad = match serde_json::from_slice(&_body) {
+        Ok(obj) => obj,
+        Err(_e) => {
+            log::error!("failed to parse body: {}", _e);
+            return;
+        }
+    };
+
+    let query = load.query;
+    match search_collection(&query, "gosim_search").await {
+        Ok(search_result) => {
+            let search_result_str = json!(search_result).to_string();
+
+            send_response(
+                200,
+                vec![
+                    (
+                        String::from("content-type"),
+                        String::from("application/json"),
+                    ),
+                    (
+                        String::from("Access-Control-Allow-Origin"),
+                        String::from("*"),
+                    ),
+                ],
+                search_result_str.as_bytes().to_vec(),
+            );
+        }
+        Err(e) => {
+            log::error!("Error: {:?}", e);
+        }
+    }
 }
 
 async fn conclude_issue_handler(
