@@ -188,7 +188,39 @@ async fn batch_decline_issue_handler(
 
     let issue_ids = load.issue_ids;
     let pool = get_pool().await;
-    let _ = batch_decline_issues_in_db(&pool, issue_ids).await;
+    match batch_decline_issues_in_db(&pool, issue_ids).await {
+        Ok(_) => {
+            send_response(
+                200,
+                vec![
+                    (String::from("content-type"), String::from("plain/text")),
+                    (
+                        String::from("Access-Control-Allow-Origin"),
+                        String::from("*"),
+                    ),
+                ],
+                "all issue_ids successfully processed".as_bytes().to_vec(),
+            );
+        }
+        Err(failed_ids) => {
+            log::error!("Error, failed processing these: {:?}", failed_ids);
+
+            send_response(
+                500,
+                vec![
+                    (
+                        String::from("content-type"),
+                        String::from("application/json"),
+                    ),
+                    (
+                        String::from("Access-Control-Allow-Origin"),
+                        String::from("*"),
+                    ),
+                ],
+                format!("{:?}", failed_ids).as_bytes().to_vec(),
+            );
+        }
+    }
 }
 
 async fn list_issues_by_status_handler(

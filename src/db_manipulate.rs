@@ -14,9 +14,12 @@ pub struct IssueSubset {
     pub issue_budget_approved: bool,
 }
 
-pub async fn batch_decline_issues_in_db(pool: &Pool, issue_ids: Vec<String>) -> Result<()> {
-    let mut conn = pool.get_conn().await?;
-
+pub async fn batch_decline_issues_in_db(
+    pool: &Pool,
+    issue_ids: Vec<String>,
+) -> anyhow::Result<(), String> {
+    let mut conn = pool.get_conn().await.expect("Error getting connection");
+    let mut failed_ids = Vec::new();
     for issue_id in issue_ids {
         if let Err(e) = conn
             .exec_drop(
@@ -27,11 +30,16 @@ pub async fn batch_decline_issues_in_db(pool: &Pool, issue_ids: Vec<String>) -> 
             )
             .await
         {
+            failed_ids.push(issue_id);
             log::error!("Error batch decline issues: {:?}", e);
         }
     }
 
-    Ok(())
+    if failed_ids.is_empty() {
+        Ok(())
+    } else {
+        Err(failed_ids.join(","))
+    }
 }
 
 pub async fn list_issues_by_status(
