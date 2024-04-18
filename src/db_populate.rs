@@ -93,12 +93,12 @@ pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyho
     let project_logo = repo_data.project_logo;
     let repo_stars = repo_data.repo_stars;
 
-    let project_description = if !repo_data.repo_readme.is_empty() {
-        repo_data.repo_readme.clone()
-    } else if !repo_data.repo_description.is_empty() {
+    let project_description = if !repo_data.repo_description.is_empty() {
         repo_data.repo_description.clone()
+    } else if !repo_data.repo_readme.is_empty() {
+        repo_data.repo_readme.chars().take(1000).collect()
     } else {
-        String::from("No repo description or Readme available")
+        String::from("No description available")
     };
 
     if let Err(e) = conn
