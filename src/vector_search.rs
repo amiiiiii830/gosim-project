@@ -116,7 +116,7 @@ pub async fn summarize_long_chunks(input: &str) -> String {
 pub async fn search_collection(
     question: &str,
     collection_name: &str,
-) -> anyhow::Result<Vec<String>> {
+) -> anyhow::Result<Vec<(String, String)>> {
     let mut openai = OpenAIFlows::new();
     openai.set_retry_times(3);
 
@@ -159,13 +159,22 @@ pub async fn search_collection(
                     .as_str()
                     .unwrap();
 
+                let issue_or_project_id = p
+                    .payload
+                    .as_ref()
+                    .unwrap()
+                    .get("issue_or_project_id")
+                    .unwrap()
+                    .as_str()
+                    .unwrap();
+
                 log::debug!(
                     "Received vector score={} and text={}",
                     p.score,
                     p_text.chars().take(50).collect::<String>()
                 );
                 if p.score > 0.75 {
-                    out.push(p_text.to_string());
+                    out.push((issue_or_project_id.to_string(), p_text.to_string()));
                 }
             }
         }

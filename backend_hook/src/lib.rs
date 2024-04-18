@@ -106,6 +106,12 @@ async fn search_handler(
         pub query: String,
     }
 
+    // #[derive(Serialize, Deserialize, Clone, Debug, Default)]
+    // pub struct SearchResult {
+    //     pub issue_or_project_id: String,
+    //     pub text: String,
+    // }
+
     let load: SearchLoad = match serde_json::from_slice(&_body) {
         Ok(obj) => obj,
         Err(_e) => {
@@ -117,7 +123,9 @@ async fn search_handler(
     let query = load.query;
     match search_collection(&query, "gosim_search").await {
         Ok(search_result) => {
-            let search_result_str = json!(search_result).to_string();
+            let search_result_obj = search_result[0].clone();
+            // let search_result_obj: SearchResult = serde_json::from_slice(&search_result).unwrap();
+            let search_result_str = json!(search_result_obj.0).to_string();
 
             send_response(
                 200,
