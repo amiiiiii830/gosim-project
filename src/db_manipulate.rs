@@ -289,6 +289,42 @@ pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<Issu
         issue_comments: comments,
     })
 }
+pub async fn get_comments_by_issue_id(
+    pool: &Pool,
+    issue_id: &str,
+) -> anyhow::Result<Vec<(String, String)>> {
+    let mut conn = pool.get_conn().await?;
+
+    let query_comments = r"SELECT comment_creator, comment_date, comment_body FROM issues_comment WHERE issue_id = :issue_id ORDER BY comment_date";
+
+    match conn
+        .exec(
+            query_comments,
+            params! {
+                "issue_id" => issue_id,
+            },
+        )
+        .await
+    {
+        Ok(ve) => {
+            if !ve.is_empty() {
+                Ok(ve
+                    .into_iter()
+                    .map(|(creator, _, body): (String, String, String)| (creator, body))
+                    .collect::<Vec<(String, String)>>())
+            } else {
+                Err(anyhow::anyhow!("Error no comments found by issue_id"))
+            }
+        }
+        Err(e) => {
+            log::error!("Error getting comments by issue_id: {:?}", e);
+            Err(anyhow::anyhow!(
+                "Error getting comments found by issue_id: {:?}",
+                e
+            ))
+        }
+    }
+}
 pub async fn get_issue_ids_with_budget(pool: &Pool) -> Result<Vec<String>> {
     let mut conn = pool.get_conn().await?;
     // let one_hour_ago = (Utc::now() - Duration::try_hours(1).unwrap())

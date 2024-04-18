@@ -13,7 +13,6 @@ CREATE TABLE issues_master (
     issue_title VARCHAR(255) NOT NULL,
     issue_creator VARCHAR(50) NOT NULL,
     issue_description TEXT NOT NULL,  -- description of the issue, could be truncated body text
-    issue_comment TEXT,
     issue_budget INT,
     issue_assignees JSON,    
     date_issue_assigned DATETIME,   
@@ -182,3 +181,7 @@ WHERE issue_assignees IS NULL;
 select issue_id, issue_description from issues_master where  project_id not in (SELECT issue_or_project_id FROM issues_repos_indexed) limit 1;
 
 select project_id, project_description from projects where  project_id not in (SELECT issue_or_project_id FROM issues_repos_indexed) limit 1;
+
+SELECT COUNT(DISTINCT issue_id) FROM issues_comment;
+
+
