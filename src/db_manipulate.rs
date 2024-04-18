@@ -249,7 +249,7 @@ pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<Issu
     };
 
     let mut comments: Option<Vec<(String, String)>> = None;
-    let query_comments = r"SELECT comment_creator, comment_date, comment_body FROM issues_comment WHERE issue_id = :issue_id ORDER BY comment_date";
+    let query_comments = r"SELECT comment_creator, comment_body FROM issues_comment WHERE issue_id = :issue_id ORDER BY comment_date";
 
     match conn
         .exec(
@@ -264,16 +264,15 @@ pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<Issu
             if !ve.is_empty() {
                 comments = Some(
                     ve.into_iter()
-                        .map(|(creator, _, body): (String, String, String)| (creator, body))
+                        .map(|(creator, body): (String, String)| (creator, body))
                         .collect::<Vec<(String, String)>>(),
                 );
             }
         }
         Err(e) => {
             log::error!("Error getting comments by issue_id: {:?}", e);
-            return Err(anyhow::anyhow!("Error getting comments by issue_id"));
         }
-    };
+    }
 
     Ok(IssueAndComments {
         issue_id: issue.issue_id,

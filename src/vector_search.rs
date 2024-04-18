@@ -23,7 +23,11 @@ pub async fn upload_to_collection(
         0
     };
 
-    let mut id: u64 = 0;
+    let mut id: u64 = match collection_info(&collection_name).await {
+        Ok(ci) => ci.points_count,
+        Err(e) => return Err(anyhow::anyhow!("Cannot get collection, can not init points_count: {}", e)),
+    };
+
     let payload = match (issue_body.as_ref(), repo_readme.as_ref()) {
         (Some(body), _) => format!(
             "The issue is from the repository `{repo}` and the owner is `{owner}`, the issue_number is `{issue_number}`, it's assigned to `{issue_assignees:?}`, the body text: {body:?}"
