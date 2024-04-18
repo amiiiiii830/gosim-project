@@ -45,7 +45,7 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let _ = popuate_dbs(pool).await?;
     let _ = join_ops(pool).await?;
     let _ = cleanup_ops(pool).await?;
-    let _ = note_issues(pool).await?;
+    // let _ = note_issues(pool).await?;
     let _ = populate_vector_db(pool).await;
     Ok(())
 }
@@ -70,7 +70,7 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     }
 
     let query_comment =
-        "label:hacktoberfest is:issue updated:>2024-03-10 -label:spam -label:invalid";
+        "label:hacktoberfest-accepted is:issue updated:>2024-01-10 -label:spam -label:invalid";
     log::info!("query_open: {:?}", query_open);
 
     let issue_comment_obj: Vec<IssueComment> = search_issues_comment(&query_comment).await?;
