@@ -210,12 +210,28 @@ impl FromRow for IssueOut {
         })
     }
 }
-pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<IssueOut> {
+
+#[derive(Serialize, Deserialize, Clone, Debug, Default)]
+pub struct IssueAndComments {
+    pub issue_id: String,
+    pub project_id: String,
+    pub issue_title: String,
+    pub issue_description: String,
+    pub issue_budget: Option<i32>,
+    pub issue_assignees: Option<Vec<String>>, // or a more specific type if you know the structure of the JSON
+    pub issue_linked_pr: Option<String>,
+    pub issue_status: Option<String>,
+    pub review_status: String,
+    pub issue_budget_approved: bool,
+    pub issue_comments: Option<Vec<(String, String)>>,
+}
+
+pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<IssueAndComments> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"SELECT issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE issue_id = :issue_id";
 
-    match conn
+    let issue: IssueOut = match conn
         .exec_first(
             query,
             params! {
@@ -224,13 +240,54 @@ pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<Issu
         )
         .await
     {
-        Ok(Some(issue)) => Ok(issue),
-        Ok(None) => Err(anyhow::anyhow!("No issue found with the provided issue_id")),
+        Ok(Some(issue)) => issue,
+        Ok(None) => return Err(anyhow::anyhow!("No issue found with the provided issue_id")),
         Err(e) => {
             log::error!("Error getting issue by issue_id: {:?}", e);
-            Err(anyhow::anyhow!("Error getting issue by issue_id"))
+            return Err(anyhow::anyhow!("Error getting issue by issue_id"));
         }
-    }
+    };
+
+    let mut comments: Option<Vec<(String, String)>> = None;
+    let query_comments = r"SELECT comment_creator, comment_date, comment_body FROM issues_comment WHERE issue_id = :issue_id ORDER BY comment_date";
+
+    match conn
+        .exec(
+            query_comments,
+            params! {
+                "issue_id" => issue_id,
+            },
+        )
+        .await
+    {
+        Ok(ve) => {
+            if !ve.is_empty() {
+                comments = Some(
+                    ve.into_iter()
+                        .map(|(creator, _, body): (String, String, String)| (creator, body))
+                        .collect::<Vec<(String, String)>>(),
+                );
+            }
+        }
+        Err(e) => {
+            log::error!("Error getting comments by issue_id: {:?}", e);
+            return Err(anyhow::anyhow!("Error getting comments by issue_id"));
+        }
+    };
+
+    Ok(IssueAndComments {
+        issue_id: issue.issue_id,
+        project_id: issue.project_id,
+        issue_title: issue.issue_title,
+        issue_description: issue.issue_description,
+        issue_budget: issue.issue_budget,
+        issue_assignees: issue.issue_assignees,
+        issue_linked_pr: issue.issue_linked_pr,
+        issue_status: issue.issue_status,
+        review_status: issue.review_status,
+        issue_budget_approved: issue.issue_budget_approved,
+        issue_comments: comments,
+    })
 }
 pub async fn get_issue_ids_with_budget(pool: &Pool) -> Result<Vec<String>> {
     let mut conn = pool.get_conn().await?;
