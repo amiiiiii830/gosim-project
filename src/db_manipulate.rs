@@ -295,7 +295,7 @@ pub async fn get_comments_by_issue_id(
 ) -> anyhow::Result<Vec<(String, String)>> {
     let mut conn = pool.get_conn().await?;
 
-    let query_comments = r"SELECT comment_creator, comment_date, comment_body FROM issues_comment WHERE issue_id = :issue_id ORDER BY comment_date";
+    let query_comments = r"SELECT comment_creator, comment_body FROM issues_comment WHERE issue_id = :issue_id ORDER BY comment_date";
 
     match conn
         .exec(
@@ -310,7 +310,7 @@ pub async fn get_comments_by_issue_id(
             if !ve.is_empty() {
                 Ok(ve
                     .into_iter()
-                    .map(|(creator, _, body): (String, String, String)| (creator, body))
+                    .map(|(creator, body): (String, String)| (creator, body))
                     .collect::<Vec<(String, String)>>())
             } else {
                 Err(anyhow::anyhow!("Error no comments found by issue_id"))
