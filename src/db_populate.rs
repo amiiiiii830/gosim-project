@@ -16,7 +16,11 @@ pub struct IssueOut {
     pub issue_linked_pr: Option<String>,
     pub issue_status: Option<String>,
     pub review_status: String,
+    #[serde(default = "default_value")]
     pub issue_budget_approved: bool,
+}
+fn default_value() -> bool {
+    false
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
@@ -362,7 +366,9 @@ pub async fn get_projects_from_db() -> Result<Vec<(String, Option<String>)>> {
     let projects: Vec<(String, Option<String>)> = conn
         .query_map(
             query,
-            |(project_id, project_description): (String, Option<String>)| (project_id, project_description),
+            |(project_id, project_description): (String, Option<String>)| {
+                (project_id, project_description)
+            },
         )
         .await?;
 
