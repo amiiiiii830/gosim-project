@@ -5,7 +5,7 @@ use std::env;
 use vector_store_flows::*;
 
 pub async fn upload_to_collection(
-    issue_id: &str,
+    issue_or_project_id: &str,
     issue_assignees: Option<String>,
     issue_body: Option<String>,
     repo_readme: Option<String>,
@@ -13,16 +13,23 @@ pub async fn upload_to_collection(
     let collection_name = env::var("collection_name").unwrap_or("gosim_search".to_string());
     let vector_size: u64 = 1536;
     // let issue_id = "https://github.com/alabulei1/a-test/issues/87";
-    let issue_parts: Vec<&str> = issue_id.rsplitn(5, '/').collect();
-    let issue_number = issue_parts[0].parse::<i32>().unwrap_or(0);
-    let (repo, owner) = (issue_parts[2].to_string(), issue_parts[3].to_string());
+    // let project_id = "https://github.com/alabulei1/a-test";
+    let parts: Vec<&str> = issue_or_project_id.split('/').collect();
+    let owner = parts[3].to_string();
+    let repo = parts[4].to_string();
+    let issue_number = if parts.len() > 6 {
+        parts[6].parse::<i32>().unwrap_or(0)
+    } else {
+        0
+    };
+
     let mut id: u64 = 0;
     let payload = match (issue_body.as_ref(), repo_readme.as_ref()) {
         (Some(body), _) => format!(
             "The issue is from the repository `{repo}` and the owner is `{owner}`, the issue_number is `{issue_number}`, it's assigned to `{issue_assignees:?}`, the body text: {body:?}"
         ),
         (_, Some(readme)) => format!(
-            "The repository `{repo}` describes itself: {readme:?}, and the owner is `{owner}`"
+            "The repository `{repo}` describes itself: {readme}, and the owner is `{owner}`"
         ),
         _ => return Ok(()),
     };
@@ -38,7 +45,7 @@ pub async fn upload_to_collection(
                     id: PointId::Num(id),
                     vector: v.iter().map(|n| *n as f32).collect(),
                     payload: json!({
-                        "issue_or_project_id": issue_id,
+                        "issue_or_project_id": issue_or_project_id,
                         "text": payload})
                     .as_object()
                     .map(|m| m.to_owned()),
@@ -50,7 +57,11 @@ pub async fn upload_to_collection(
                     return Ok(());
                 }
                 id += 1;
-                log::debug!("Created vector {} with length {}", issue_id, v.len());
+                log::debug!(
+                    "Created vector {} with length {}",
+                    issue_or_project_id,
+                    v.len()
+                );
             }
             Ok(())
         }
