@@ -1,5 +1,6 @@
 use crate::{
-    db_join::*, db_manipulate::*, db_populate::*, issue_bot::*, issue_tracker::*, vector_search::*,
+    db_join::*, db_manipulate::*, db_populate::*, issue_bot::*, issue_tracker::*, llm_utils::*,
+    vector_search::*,
 };
 use crate::{ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
 
@@ -47,6 +48,7 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let _ = cleanup_ops(pool).await?;
     // let _ = note_issues(pool).await?;
     let _ = populate_vector_db(pool).await;
+    let _ = summarize_issues_projects(pool).await;
     Ok(())
 }
 pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
@@ -152,6 +154,73 @@ pub async fn populate_vector_db(pool: &Pool) -> anyhow::Result<()> {
         let _ = add_indexed_id(&pool, &project.0).await;
     }
     let _ = check_vector_db("gosim_search").await;
+    Ok(())
+}
+
+pub async fn summarize_issues_projects(pool: &Pool) -> anyhow::Result<()> {
+    for issue in get_issues_from_db().await.expect("msg") {
+        log::info!("{:?}", issue.0);
+        let (issue_id, issue_description, issue_assignees) = issue.clone();
+
+        let parts: Vec<&str> = issue_id.split('/').collect();
+        let owner = parts[3].to_string();
+        let repo = parts[4].to_string();
+        let issue_number = if parts.len() > 6 {
+            parts[6].parse::<i32>().unwrap_or(0)
+        } else {
+            0
+        };
+        let system_prompt = r#"
+        Summarize the issue in one paragraph, highlighting the core problem, key requirements, and essential context, using language that is concise, informative, and easy to understand. Prioritize clarity and brevity over nuance, to ensure the generated summary is a faithful representation of the original text."#;
+
+        let payload = format!(
+                "Here is the input: The issue `{issue_number}` at repository `{repo}` by owner `{owner}` describes itself in the body text: {issue_description}"
+            );
+        let payload = payload.chars().take(8000).collect::<String>();
+
+        let summary = chat_inner_async(
+            system_prompt,
+            &payload,
+            200,
+            "meta-llama/Meta-Llama-3-8B-Instruct",
+        )
+        .await?;
+
+        let _ = add_summary_and_id(&pool, &issue.0, &summary).await;
+    }
+
+    /*     for project in get_projects_from_db().await.expect("msg") {
+        log::info!("{:?}", project.0);
+        let (issue_id, issue_description, issue_assignees) = issue.clone();
+
+        let parts: Vec<&str> = issue_id.split('/').collect();
+        let owner = parts[3].to_string();
+        let repo = parts[4].to_string();
+        let issue_number = if parts.len() > 6 {
+            parts[6].parse::<i32>().unwrap_or(0)
+        } else {
+            0
+        };
+        let project_descrpition = repo_data.repo_description;
+        let project_readme = repo_data.repo_readme;
+        let system_prompt = r#"
+        Summarize the issue in one paragraph, highlighting the core problem, key requirements, and essential context, using language that is concise, informative, and easy to understand. Prioritize clarity and brevity over nuance, to ensure the generated summary is a faithful representation of the original text."#;
+
+        let payload = format!(
+                "Here is the input: The repository `{repo}` describes itself in a short text: {project_descrpition}, expanded in readme: {project_readme}, and the owner is `{owner}`"
+            );
+        let payload = payload.chars().take(8000).collect::<String>();
+
+        let res = chat_inner_async(
+            system_prompt,
+            &payload,
+            200,
+            "meta-llama/Meta-Llama-3-8B-Instruct",
+        )
+        .await?;
+
+        let _ = add_summary_and_id(&pool, &project.0).await;
+    } */
     Ok(())
 }
 

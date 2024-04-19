@@ -38,6 +38,11 @@ CREATE TABLE issues_repos_indexed (
     issue_or_project_id VARCHAR(255) PRIMARY KEY  -- url of an issue
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
+CREATE TABLE issues_repos_summarized (
+    issue_or_project_id VARCHAR(255) PRIMARY KEY, -- url of an issue
+    issue_or_project_summary TEXT NOT NULL
+) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
+
 
 CREATE TABLE issues_comment (
     comment_id INT AUTO_INCREMENT PRIMARY KEY,  -- id of a comment

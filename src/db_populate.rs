@@ -314,6 +314,32 @@ pub async fn add_indexed_id(pool: &Pool, issue_or_project_id: &str) -> Result<()
     Ok(())
 }
 
+pub async fn add_summary_and_id(
+    pool: &Pool,
+    issue_or_project_id: &str,
+    issue_or_project_summary: &str,
+) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"INSERT INTO issues_repos_summarized (issue_or_project_id, issue_or_project_summary)
+                  VALUES (:issue_or_project_id, :issue_or_project_summary)";
+
+    if let Err(e) = conn
+        .exec_drop(
+            query,
+            params! {
+                "issue_or_project_id" => &issue_or_project_id,
+                "issue_or_project_summary" => &issue_or_project_summary,
+            },
+        )
+        .await
+    {
+        log::error!("Error adding  issue_or_project_id: {:?}", e);
+    };
+
+    Ok(())
+}
+
 pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
