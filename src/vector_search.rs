@@ -182,7 +182,7 @@ pub async fn search_collection(
                     p.score,
                     p_text.chars().take(50).collect::<String>()
                 );
-                if p.score > 0.75 {
+                if p.score > 0.79 {
                     out.push((issue_or_project_id.to_string(), p_text.to_string()));
                 }
             }
