@@ -315,7 +315,7 @@ async fn get_issue_by_post_handler(
     let issue = get_issue_by_id(&pool, issue_id).await.expect("msg");
 
     let issues_str = json!(issue).to_string();
-    log::error!("issues_str: {}", issues_str);
+    // log::error!("issues_str: {}", issues_str);
 
     send_response(
         200,
@@ -367,7 +367,7 @@ async fn list_issues_handler(
     let issues_obj = list_issues(&pool, page, page_size).await.expect("msg");
 
     let issues_str = format!("{:?}", issues_obj);
-    log::error!("issues_str: {}", issues_str);
+    // log::error!("issues_str: {}", issues_str);
 
     send_response(
         200,

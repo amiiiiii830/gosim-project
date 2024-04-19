@@ -177,8 +177,8 @@ pub async fn search_collection(
                     .as_str()
                     .unwrap();
 
-                log::debug!(
-                    "Received vector score={} and text={}",
+                log::info!(
+                    "Received vector score={} and text={}\n",
                     p.score,
                     p_text.chars().take(50).collect::<String>()
                 );
