@@ -35,4 +35,8 @@ wasmedge_wasi_socket = "0.4.3"
 lazy_static = "1.4.0"
 vector-store-flows = "0.1.2"
 openai-flows = "0.9.1"
+secrecy = "0.8.0"
 # wasmedge_wasi_socket = {version = "0.4.3", features = ["wasi"]}
+
+async-openai-wasi = "0.16.4"
+reqwest_wasi = "0.11.16"

@@ -5,6 +5,7 @@ pub mod issue_bot;
 pub mod issue_tracker;
 pub mod the_runner;
 pub mod vector_search;
+pub mod llm_utils;
 use chrono::{NaiveDate, Timelike, Utc};
 use lazy_static::lazy_static;
 

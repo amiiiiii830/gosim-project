@@ -1,4 +1,3 @@
-use flowsnet_platform_sdk::logger;
 use openai_flows::{chat, embeddings::EmbeddingsInput, OpenAIFlows};
 use serde_json::json;
 use std::env;
@@ -11,7 +10,7 @@ pub async fn upload_to_collection(
     repo_readme: Option<String>,
 ) -> anyhow::Result<()> {
     let collection_name = env::var("collection_name").unwrap_or("gosim_search".to_string());
-    let vector_size: u64 = 1536;
+    // let vector_size: u64 = 1536;
     // let issue_id = "https://github.com/alabulei1/a-test/issues/87";
     // let project_id = "https://github.com/alabulei1/a-test";
     let parts: Vec<&str> = issue_or_project_id.split('/').collect();
