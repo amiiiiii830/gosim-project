@@ -1,6 +1,5 @@
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, USER_AGENT};
 use secrecy::Secret;
-use serde::Deserialize;
 use std::collections::HashMap;
 
 use async_openai::{
@@ -14,7 +13,6 @@ use async_openai::{
     },
     Client as OpenAIClient,
 };
-
 
 pub async fn chain_of_chat(
     sys_prompt_1: &str,
@@ -181,42 +179,6 @@ pub async fn chat_inner_async(
     }
 }
 
-pub fn parse_summary_from_raw_json(input: &str) -> String {
-    #[derive(Deserialize, Debug)]
-    struct SummaryStruct {
-        impactful: Option<String>,
-        alignment: Option<String>,
-        patterns: Option<String>,
-        synergy: Option<String>,
-        significance: Option<String>,
-    }
-
-    let summary: SummaryStruct = serde_json::from_str(input).expect("Failed to parse summary JSON");
-
-    let mut output = String::new();
-
-    let fields = [
-        &summary.impactful,
-        &summary.alignment,
-        &summary.patterns,
-        &summary.synergy,
-        &summary.significance,
-    ];
-
-    fields
-        .iter()
-        .filter_map(|&field| field.as_ref()) // Convert Option<&String> to Option<&str>
-        .filter(|field| !field.is_empty()) // Filter out empty strings
-        .fold(String::new(), |mut acc, field| {
-            if !acc.is_empty() {
-                acc.push_str(" ");
-            }
-            acc.push_str(field);
-            acc
-        })
-}
-
-
 
 pub fn parse_issue_summary_from_json(input: &str) -> anyhow::Result<Vec<(String, String)>> {
     let parsed: serde_json::Map<String, serde_json::Value> = serde_json::from_str(input)?;
@@ -235,4 +197,17 @@ pub fn parse_issue_summary_from_json(input: &str) -> anyhow::Result<Vec<(String,
     Ok(summaries)
 }
 
+pub fn extract_summary_from_answer(input: &str) -> String {
+    let trimmed_input = input.trim();
+    let lines: Vec<&str> = trimmed_input.lines().collect();
 
+    if lines.len() <= 1 {
+        trimmed_input.to_string()
+    } else {
+        lines.iter().skip(1)
+            .skip_while(|&&line| line.trim().is_empty())
+            .next() // Get the first element after skipping empty lines
+            .map(|line| line.to_string()) // Convert &str to String
+            .unwrap_or_else(|| "No summary located".to_string()) // Provide a default message
+    }
+}

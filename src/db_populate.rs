@@ -293,11 +293,11 @@ pub async fn add_issues_assigned(pool: &Pool, issue_assigned: IssueAssigned) -> 
     Ok(())
 }
 
-pub async fn add_indexed_id(pool: &Pool, issue_or_project_id: &str) -> Result<()> {
+pub async fn mark_id_indexed(pool: &Pool, issue_or_project_id: &str) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    let query = r"INSERT INTO issues_repos_indexed (issue_or_project_id)
-                  VALUES (:issue_or_project_id)";
+    let query = r"UPDATE issues_repos_summarized
+    SET indexed=1 WHERE issue_or_project_id = :issue_or_project_id";
 
     if let Err(e) = conn
         .exec_drop(
@@ -308,7 +308,7 @@ pub async fn add_indexed_id(pool: &Pool, issue_or_project_id: &str) -> Result<()
         )
         .await
     {
-        log::error!("Error adding  issue_or_project_id: {:?}", e);
+        log::error!("Error marking issue_or_project_id: {:?}", e);
     };
 
     Ok(())
@@ -365,18 +365,39 @@ pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
     Ok(())
 }
 
-pub async fn get_issues_from_db() -> Result<Vec<(String, String, Option<String>)>> {
+pub async fn get_issues_repos_from_db() -> Result<Vec<(String, String)>> {
     let pool = get_pool().await;
     let mut conn = pool.get_conn().await?;
 
-    let query = r"SELECT issue_id, issue_description, issue_assignees FROM issues_master WHERE issue_id not in (SELECT issue_or_project_id FROM issues_repos_indexed) limit 50";
+    let query = r"SELECT issue_or_project_id, issue_or_project_summary FROM issues_repos_summarized WHERE indexed=0 limit 50";
 
-    let issues: Vec<(String, String, Option<String>)> = conn
+    let entries: Vec<(String, String)> = conn
         .query_map(
             query,
-            |(issue_id, issue_description, issue_assignees): (String, String, Option<String>)| {
-                (issue_id, issue_description, issue_assignees)
+            |(issue_or_project_id, issue_or_project_summary): (String, String)| {
+                (issue_or_project_id, issue_or_project_summary)
             },
+        )
+        .await?;
+
+    Ok(entries)
+}
+
+pub async fn get_issues_from_db() -> Result<Vec<(String, String, String, Option<String>)>> {
+    let pool = get_pool().await;
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"SELECT issue_id, issue_title, issue_description, issue_assignees FROM issues_master WHERE issue_id not in (SELECT issue_or_project_id FROM issues_repos_indexed) limit 50";
+
+    let issues: Vec<(String, String, String, Option<String>)> = conn
+        .query_map(
+            query,
+            |(issue_id, issue_title, issue_description, issue_assignees): (
+                String,
+                String,
+                String,
+                Option<String>,
+            )| { (issue_id, issue_title, issue_description, issue_assignees) },
         )
         .await?;
 

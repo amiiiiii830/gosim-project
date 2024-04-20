@@ -40,7 +40,8 @@ CREATE TABLE issues_repos_indexed (
 
 CREATE TABLE issues_repos_summarized (
     issue_or_project_id VARCHAR(255) PRIMARY KEY, -- url of an issue
-    issue_or_project_summary TEXT NOT NULL
+    issue_or_project_summary TEXT NOT NULL,
+    indexed BOOLEAN NOT NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 

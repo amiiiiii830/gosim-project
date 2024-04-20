@@ -5,42 +5,19 @@ use vector_store_flows::*;
 
 pub async fn upload_to_collection(
     issue_or_project_id: &str,
-    issue_assignees: Option<String>,
-    issue_body: Option<String>,
-    repo_readme: Option<String>,
+    content: String,
 ) -> anyhow::Result<()> {
     let collection_name = env::var("collection_name").unwrap_or("gosim_search".to_string());
-    // let vector_size: u64 = 1536;
-    // let issue_id = "https://github.com/alabulei1/a-test/issues/87";
-    // let project_id = "https://github.com/alabulei1/a-test";
-    let parts: Vec<&str> = issue_or_project_id.split('/').collect();
-    let owner = parts[3].to_string();
-    let repo = parts[4].to_string();
-    let issue_number = if parts.len() > 6 {
-        parts[6].parse::<i32>().unwrap_or(0)
-    } else {
-        0
-    };
 
     let mut id: u64 = match collection_info(&collection_name).await {
         Ok(ci) => ci.points_count,
         Err(e) => return Err(anyhow::anyhow!("Cannot get collection, can not init points_count: {}", e)),
     };
 
-    let payload = match (issue_body.as_ref(), repo_readme.as_ref()) {
-        (Some(body), _) => format!(
-            "The issue is from the repository `{repo}` and the owner is `{owner}`, the issue_number is `{issue_number}`, it's assigned to `{issue_assignees:?}`, the body text: {body:?}"
-        ),
-        (_, Some(readme)) => format!(
-            "The repository `{repo}` describes itself: {readme}, and the owner is `{owner}`"
-        ),
-        _ => return Ok(()),
-    };
-
     let mut openai = OpenAIFlows::new();
     openai.set_retry_times(3);
 
-    let input = EmbeddingsInput::String(payload.clone());
+    let input = EmbeddingsInput::String(content.clone());
     match openai.create_embeddings(input).await {
         Ok(r) => {
             for v in r.iter() {
@@ -49,7 +26,7 @@ pub async fn upload_to_collection(
                     vector: v.iter().map(|n| *n as f32).collect(),
                     payload: json!({
                         "issue_or_project_id": issue_or_project_id,
-                        "text": payload})
+                        "text": content})
                     .as_object()
                     .map(|m| m.to_owned()),
                 }];
@@ -269,7 +246,7 @@ pub async fn create_my_collection(vector_size: u64, collection_name: &str) -> an
         vector_size: vector_size,
     };
 
-    if let Err(e) = create_collection(collection_name, &params).await {
+    if let Err(_e) = create_collection(collection_name, &params).await {
         log::info!("Collection already exists");
     }
 

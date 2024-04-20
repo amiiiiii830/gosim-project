@@ -47,8 +47,8 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let _ = join_ops(pool).await?;
     let _ = cleanup_ops(pool).await?;
     // let _ = note_issues(pool).await?;
+    let _ = summarize_issues(pool).await;
     let _ = populate_vector_db(pool).await;
-    let _ = summarize_issues_projects(pool).await;
     Ok(())
 }
 pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
@@ -141,40 +141,46 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
 }
 
 pub async fn populate_vector_db(pool: &Pool) -> anyhow::Result<()> {
-    for issue in get_issues_from_db().await.expect("msg") {
-        log::info!("{:?}", issue.0);
-        let _ = upload_to_collection(&issue.0, Some(issue.1.clone()), issue.2, None).await;
-        let _ = add_indexed_id(&pool, &issue.0).await;
+    for item in get_issues_repos_from_db().await.expect("msg") {
+        log::info!("uploading to vector_db: {:?}", item.0);
+        let _ = upload_to_collection(&item.0, item.1.clone()).await;
+        let _ = mark_id_indexed(&pool, &item.0).await;
+        // match upload_to_collection(&item.0, item.1.clone()).await {
+        //     Ok(_) => {
+        //         mark_id_indexed(&pool, &item.0).await;
+        //     }
+        //     Err(e) => {
+        //         log::error!("Error uploading to collection: {:?}", e);
+        //     }
+        // }
     }
     let _ = check_vector_db("gosim_search").await;
 
-    for project in get_projects_from_db().await.expect("msg") {
-        log::info!("{:?}", project.0);
-        let _ = upload_to_collection(&project.0, None, None, project.1).await;
-        let _ = add_indexed_id(&pool, &project.0).await;
-    }
-    let _ = check_vector_db("gosim_search").await;
     Ok(())
 }
 
-pub async fn summarize_issues_projects(pool: &Pool) -> anyhow::Result<()> {
+pub async fn summarize_issues(pool: &Pool) -> anyhow::Result<()> {
     for issue in get_issues_from_db().await.expect("msg") {
         log::info!("{:?}", issue.0);
-        let (issue_id, issue_description, issue_assignees) = issue.clone();
+        let (issue_id, issue_title, issue_description, issue_assignees) = issue.clone();
 
         let parts: Vec<&str> = issue_id.split('/').collect();
         let owner = parts[3].to_string();
         let repo = parts[4].to_string();
-        let issue_number = if parts.len() > 6 {
-            parts[6].parse::<i32>().unwrap_or(0)
-        } else {
-            0
-        };
+
         let system_prompt = r#"
         Summarize the issue in one paragraph, highlighting the core problem, key requirements, and essential context, using language that is concise, informative, and easy to understand. Prioritize clarity and brevity over nuance, to ensure the generated summary is a faithful representation of the original text."#;
 
+        let assignees_str = match issue_assignees {
+            Some(assignees) => {
+                let assignees: Vec<&str> = assignees.split(',').collect();
+                let assignees_str = assignees.join(", ");
+                format!("assigned to: `{assignees_str}`")
+            }
+            None => String::from(""),
+        };
         let payload = format!(
-                "Here is the input: The issue `{issue_number}` at repository `{repo}` by owner `{owner}` describes itself in the body text: {issue_description}"
+                "Here is the input: The issue titled `{issue_title}` at repository `{repo}` by owner `{owner}` {assignees_str}, states in the body text: {issue_description}"
             );
         let payload = payload.chars().take(8000).collect::<String>();
 
@@ -186,41 +192,44 @@ pub async fn summarize_issues_projects(pool: &Pool) -> anyhow::Result<()> {
         )
         .await?;
 
+        let summary = extract_summary_from_answer(&summary);
         let _ = add_summary_and_id(&pool, &issue.0, &summary).await;
     }
 
-    /*     for project in get_projects_from_db().await.expect("msg") {
-        log::info!("{:?}", project.0);
-        let (issue_id, issue_description, issue_assignees) = issue.clone();
+    Ok(())
+}
+pub async fn summarize_project(pool: &Pool, repo_data: RepoData) -> anyhow::Result<()> {
+    let parts: Vec<&str> = repo_data.project_id.split('/').collect();
+    let owner = parts[3].to_string();
+    let repo = parts[4].to_string();
 
-        let parts: Vec<&str> = issue_id.split('/').collect();
-        let owner = parts[3].to_string();
-        let repo = parts[4].to_string();
-        let issue_number = if parts.len() > 6 {
-            parts[6].parse::<i32>().unwrap_or(0)
-        } else {
-            0
-        };
-        let project_descrpition = repo_data.repo_description;
-        let project_readme = repo_data.repo_readme;
-        let system_prompt = r#"
-        Summarize the issue in one paragraph, highlighting the core problem, key requirements, and essential context, using language that is concise, informative, and easy to understand. Prioritize clarity and brevity over nuance, to ensure the generated summary is a faithful representation of the original text."#;
+    let project_descrpition = repo_data.repo_description;
+    let project_readme = repo_data.repo_readme;
+    let main_language = repo_data.main_language;
+    let system_prompt = r#"
+        Summarize the Github repository's readme and or description in one paragraph, highlighting its key mission, features, and essential context, using language that is concise, informative, and easy to understand. Prioritize clarity and brevity over nuance, to ensure the generated summary is a faithful representation of the original text."#;
 
-        let payload = format!(
-                "Here is the input: The repository `{repo}` describes itself in a short text: {project_descrpition}, expanded in readme: {project_readme}, and the owner is `{owner}`"
+    let use_lang_str = if main_language.is_empty() {
+        String::from("")
+    } else {
+        format!("mainly uses `{main_language}` in the project")
+    };
+
+    let payload = format!(
+                "Here is the input: The repository `{repo}`  by owner `{owner}` {use_lang_str}, has a short text description: `{project_descrpition}`, mentioned more details in readme: `{project_readme}`"
             );
-        let payload = payload.chars().take(8000).collect::<String>();
+    let payload = payload.chars().take(8000).collect::<String>();
 
-        let res = chat_inner_async(
-            system_prompt,
-            &payload,
-            200,
-            "meta-llama/Meta-Llama-3-8B-Instruct",
-        )
-        .await?;
+    let summary = chat_inner_async(
+        system_prompt,
+        &payload,
+        200,
+        "meta-llama/Meta-Llama-3-8B-Instruct",
+    )
+    .await?;
 
-        let _ = add_summary_and_id(&pool, &project.0).await;
-    } */
+    let summary = extract_summary_from_answer(&summary);
+    let _ = add_summary_and_id(&pool, &repo_data.project_id, &summary).await;
     Ok(())
 }
 
@@ -238,7 +247,8 @@ pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
     let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await?;
 
     for repo_data in repo_data_vec {
-        let _ = fill_project_w_repo_data(&pool, repo_data).await?;
+        let _ = fill_project_w_repo_data(&pool, repo_data.clone()).await?;
+        let _ = summarize_project(&pool, repo_data).await?;
     }
 
     Ok(())
@@ -290,7 +300,7 @@ pub async fn note_issue_declined(pool: &Pool) -> anyhow::Result<()> {
 pub async fn note_distribute_fund(pool: &Pool) -> anyhow::Result<()> {
     let issue_ids: Vec<(Option<String>, String, i32)> = get_issue_ids_distribute_fund(pool).await?;
     log::info!("Issue_ids to split fund, count: {:?}", issue_ids.len());
-    for (issue_assignee, issue_id, issue_budget) in issue_ids {
+    for (issue_assignee, _issue_id, issue_budget) in issue_ids {
         let comment = format!("@{:?}, Well done!  According to the PR commit history. @{:?} should receive ${}. Please fill in this form to claim your fund. ", issue_assignee, issue_assignee, issue_budget);
 
         let _ = mock_comment_on_issue(3, &comment).await?;
