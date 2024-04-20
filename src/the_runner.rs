@@ -179,20 +179,30 @@ pub async fn summarize_issues(pool: &Pool) -> anyhow::Result<()> {
             }
             None => String::from(""),
         };
-        let payload = format!(
+
+        let mut summary = String::new();
+
+        if issue_description.len() < 200 {
+            summary = format!(
+                "`{issue_title}` at repository `{repo}` by owner `{owner}`, {assignees_str} states: {issue_description}"
+            );
+        } else {
+            let payload = format!(
                 "Here is the input: The issue titled `{issue_title}` at repository `{repo}` by owner `{owner}` {assignees_str}, states in the body text: {issue_description}"
             );
-        let payload = payload.chars().take(8000).collect::<String>();
+            let payload = payload.chars().take(8000).collect::<String>();
 
-        let summary = chat_inner_async(
-            system_prompt,
-            &payload,
-            200,
-            "meta-llama/Meta-Llama-3-8B-Instruct",
-        )
-        .await?;
+            summary = chat_inner_async(
+                system_prompt,
+                &payload,
+                200,
+                "meta-llama/Meta-Llama-3-8B-Instruct",
+            )
+            .await?;
 
-        let summary = extract_summary_from_answer(&summary);
+            summary = extract_summary_from_answer(&summary);
+        }
+
         let _ = add_summary_and_id(&pool, &issue.0, &summary).await;
     }
 
@@ -215,20 +225,34 @@ pub async fn summarize_project(pool: &Pool, repo_data: RepoData) -> anyhow::Resu
         format!("mainly uses `{main_language}` in the project")
     };
 
-    let payload = format!(
+    let mut summary = String::new();
+
+    let project_readme_str = match project_readme.is_empty() {
+        false => format!("states in readme: {project_readme}"),
+        true => String::from(""),
+    };
+
+    if project_readme.len() < 200 {
+        summary = format!(
+            "The repository `{repo}` by owner `{owner}` {use_lang_str},`{project_descrpition}`, {project_readme_str}"
+        );
+    } else {
+        let payload = format!(
                 "Here is the input: The repository `{repo}`  by owner `{owner}` {use_lang_str}, has a short text description: `{project_descrpition}`, mentioned more details in readme: `{project_readme}`"
             );
-    let payload = payload.chars().take(8000).collect::<String>();
+        let payload = payload.chars().take(8000).collect::<String>();
 
-    let summary = chat_inner_async(
-        system_prompt,
-        &payload,
-        200,
-        "meta-llama/Meta-Llama-3-8B-Instruct",
-    )
-    .await?;
+        summary = chat_inner_async(
+            system_prompt,
+            &payload,
+            200,
+            "meta-llama/Meta-Llama-3-8B-Instruct",
+        )
+        .await?;
 
-    let summary = extract_summary_from_answer(&summary);
+        summary = extract_summary_from_answer(&summary);
+    }
+
     let _ = add_summary_and_id(&pool, &repo_data.project_id, &summary).await;
     Ok(())
 }
