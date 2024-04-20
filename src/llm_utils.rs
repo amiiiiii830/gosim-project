@@ -1,6 +1,8 @@
+use regex::Regex;
 use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, USER_AGENT};
 use secrecy::Secret;
 use std::collections::HashMap;
+use std::env;
 
 use async_openai::{
     config::Config,
@@ -35,7 +37,8 @@ pub async fn chain_of_chat(
         query: HashMap::new(),
     };
 
-    let model = "DEEP_API_KEY-must-be-set";
+    let model = "meta-llama/Meta-Llama-3-8B-Instruct";
+
     let client = OpenAIClient::with_config(config);
 
     let mut messages = vec![
@@ -61,7 +64,7 @@ pub async fn chain_of_chat(
 
     match chat.choices[0].message.clone().content {
         Some(res) => {
-            println!("{:?}", res);
+            log::info!("step 1 chat: {:?}", res);
         }
         None => {
             return Err(anyhow::anyhow!(error_tag.to_string()));
@@ -85,7 +88,7 @@ pub async fn chain_of_chat(
 
     match chat.choices[0].message.clone().content {
         Some(res) => {
-            println!("{:?}", res);
+            log::info!("step 2 chat: {:?}", res);
             Ok(res)
         }
         None => {
@@ -136,11 +139,12 @@ pub async fn chat_inner_async(
     let mut headers = HeaderMap::new();
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert(USER_AGENT, HeaderValue::from_static("MyClient/1.0.0"));
+    let api_key = env::var("DEEP_API_TOKEN").unwrap_or("deep_api_key_not_found".to_string());
     let config = LocalServiceProviderConfig {
-        // api_base: String::from("http://10.0.0.174:8080/v1"),
-        api_base: String::from("https://api.deepinfra.com/v1/openai"),
+        // api_base: String::from("http://52.37.228.1:8080/v1"),
+        api_base: String::from("https://api.deepinfra.com/v1/openai/chat/completions"),
         headers: headers,
-        api_key: Secret::new("lY2h5Vd5wgdyICzjOyDmmmToeU3KyLgv".to_string()),
+        api_key: Secret::new(api_key),
         query: HashMap::new(),
     };
 
@@ -165,37 +169,84 @@ pub async fn chat_inner_async(
     let chat = match client.chat().create(request).await {
         Ok(chat) => chat,
         Err(_e) => {
-            println!("Error getting response from OpenAI: {:?}", _e);
+            log::info!("Error getting response from OpenAI: {:?}", _e);
             return Err(anyhow::anyhow!("Failed to get reply from OpenAI: {:?}", _e));
         }
     };
 
     match chat.choices[0].message.clone().content {
         Some(res) => {
-            // println!("{:?}", chat.choices[0].message.clone());
+            // log::info!("{:?}", chat.choices[0].message.clone());
             Ok(res)
         }
         None => Err(anyhow::anyhow!("Failed to get reply from OpenAI")),
     }
 }
 
+pub fn parse_summary_and_keywords(input: &str) -> (String, Vec<String>) {
+    let summary_regex = Regex::new(r#""summary":\s*"([^"]*)""#).unwrap();
+    let keywords_regex = Regex::new(r#""keywords":\s*\[([^\]]*)\]"#).unwrap();
 
-pub fn parse_issue_summary_from_json(input: &str) -> anyhow::Result<Vec<(String, String)>> {
-    let parsed: serde_json::Map<String, serde_json::Value> = serde_json::from_str(input)?;
+    let summary = summary_regex
+        .captures(input)
+        .and_then(|cap| cap.get(1))
+        .map_or(String::new(), |m| m.as_str().to_string());
 
-    let summaries = parsed
-        .iter()
-        .filter_map(|(key, value)| {
-            if let Some(summary_str) = value.as_str() {
-                Some((key.clone(), summary_str.to_owned()))
-            } else {
-                None
-            }
-        })
-        .collect::<Vec<(String, String)>>(); // Collect into a Vec of tuples
+    let keywords = keywords_regex
+        .captures(input)
+        .and_then(|cap| cap.get(1))
+        .map_or(Vec::new(), |m| {
+            m.as_str()
+                .split(',')
+                .map(|s| s.trim().trim_matches('"').to_string())
+                .collect()
+        });
 
-    Ok(summaries)
+    (summary, keywords)
 }
+
+/* pub fn parse_summary_and_keywords(input: &str) -> (String, Vec<String>) {
+    let summary_key = r#"summary"#;
+    let keywords_key = r#"keywords"#;
+    let end_pattern = r#"","#;
+    let mut summary = String::new();
+    let mut keywords = Vec::new();
+
+    // Extract summary
+    if let Some(start) = input.find(summary_key) {
+        let value_start = start + summary_key.len();
+        if let Some(end) = input[value_start..].find(end_pattern) {
+            summary = input[value_start..value_start + end]
+                .trim()
+                .trim_matches('"')
+                .to_string();
+        } else {
+            summary = input[value_start..]
+                .trim()
+                .trim_matches(|c: char| c == '"' || c == '}')
+                .to_string();
+        }
+    }
+
+    // Extract keywords
+    if let Some(start) = input.find(keywords_key) {
+        let value_start = start + keywords_key.len() + 1; // Skip opening bracket [
+        if let Some(end) = input[value_start..].find("]") {
+            let keywords_str = &input[value_start..value_start + end];
+            keywords = keywords_str
+                .split(',')
+                .map(|s| {
+                    s.trim()
+                        .trim_matches(|c: char| c == '"' || c == ' ')
+                        .to_string()
+                })
+                .filter(|s| !s.is_empty())
+                .collect();
+        }
+    }
+
+    (summary, keywords)
+} */
 
 pub fn extract_summary_from_answer(input: &str) -> String {
     let trimmed_input = input.trim();
@@ -204,7 +255,9 @@ pub fn extract_summary_from_answer(input: &str) -> String {
     if lines.len() <= 1 {
         trimmed_input.to_string()
     } else {
-        lines.iter().skip(1)
+        lines
+            .iter()
+            .skip(1)
             .skip_while(|&&line| line.trim().is_empty())
             .next() // Get the first element after skipping empty lines
             .map(|line| line.to_string()) // Convert &str to String

@@ -169,7 +169,18 @@ pub async fn summarize_issues(pool: &Pool) -> anyhow::Result<()> {
         let repo = parts[4].to_string();
 
         let system_prompt = r#"
-        Summarize the issue in one paragraph, highlighting the core problem, key requirements, and essential context, using language that is concise, informative, and easy to understand. Prioritize clarity and brevity over nuance, to ensure the generated summary is a faithful representation of the original text."#;
+        Summarize the GitHub issue in one paragraph without mentioning the issue number. Highlight the key problem and any signature information provided. The summary should be concise, informative, and easy to understand, prioritizing clarity and brevity. Additionally, extract high-level keywords that represent broader categories or themes relevant to the issue's purpose, features, and tools used. These keywords should help categorize the issue in a wider context and should not be too literal or specific.
+        Expected Output:
+        - A short paragraph summarizing the issue, including its purpose and features, without referencing the issue number.
+        - A list of high-level keywords that encapsulate the broader context, categories, or themes of the issue, excluding specific details and issue numbers.
+        Reply in JSON format:
+        ```json
+        {
+            \"summary\": \"the_summary_generated\",
+            \"keywords\": \"keywords_list\"
+        }
+        ```
+        "#;
 
         let assignees_str = match issue_assignees {
             Some(assignees) => {
@@ -200,7 +211,7 @@ pub async fn summarize_issues(pool: &Pool) -> anyhow::Result<()> {
             )
             .await?;
 
-            summary = extract_summary_from_answer(&summary);
+            summary = parse_summary_and_keywords(&summary).0;
         }
 
         let _ = add_summary_and_id(&pool, &issue.0, &summary).await;
@@ -217,7 +228,18 @@ pub async fn summarize_project(pool: &Pool, repo_data: RepoData) -> anyhow::Resu
     let project_readme = repo_data.repo_readme;
     let main_language = repo_data.main_language;
     let system_prompt = r#"
-        Summarize the Github repository's readme and or description in one paragraph, highlighting its key mission, features, and essential context, using language that is concise, informative, and easy to understand. Prioritize clarity and brevity over nuance, to ensure the generated summary is a faithful representation of the original text."#;
+    Summarize the GitHub repository's README or description in one paragraph. Highlight the project's key mission, tech stack, features, and essential tools used. The summary should be concise, informative, and easy to understand, prioritizing clarity and brevity. Additionally, extract keywords that represent the project's purpose, tech stack, features, and tools used. Ensure that the keywords list includes some of the same words used in the summary.
+    Expected Output: 
+    - A short paragraph summarizing the project, including its purpose, tech stack, and features.
+    - A list of keywords that represent the project's purpose, tech stack, features, and tools used.
+    Reply in JSON format:
+    ```json
+    { 
+        \"summary\": \"the_summary_generated\", 
+        \"keywords\": \"keywords_list\"
+    }
+    ```
+    "#;
 
     let use_lang_str = if main_language.is_empty() {
         String::from("")
@@ -252,6 +274,81 @@ pub async fn summarize_project(pool: &Pool, repo_data: RepoData) -> anyhow::Resu
 
         summary = extract_summary_from_answer(&summary);
     }
+
+    let _ = add_summary_and_id(&pool, &repo_data.project_id, &summary).await;
+    Ok(())
+}
+pub async fn summarize_project_by_chained_chat(
+    pool: &Pool,
+    repo_data: RepoData,
+) -> anyhow::Result<()> {
+    let parts: Vec<&str> = repo_data.project_id.split('/').collect();
+    let owner = parts[3].to_string();
+    let repo = parts[4].to_string();
+
+    let project_descrpition = repo_data.repo_description;
+    let project_readme = repo_data.repo_readme;
+    let main_language = repo_data.main_language;
+    let system_prompt = r#"
+    Summarize the GitHub repository's README or description in one paragraph. Highlight the project's key mission, tech stack, features, and essential tools used. The summary should be concise, informative, and easy to understand, prioritizing clarity and brevity. Focus on the core technological aspects and user benefits, excluding operational details like a project's upkeeping information or procedural guidelines. Additionally, extract high-level keywords that represent broader categories or themes relevant to the project's purpose, tech stack, features, and tools used. These keywords should help categorize the project in a wider context and should not be too literal or specific. Ensure that the keywords list includes broad terms that encapsulate the project's overarching themes and are reflective of the words used in the summary. 
+    Expected Output: 
+    - A short paragraph summarizing the project, including its purpose, tech stack, and features. 
+    - A list of high-level keywords that encapsulate the broader context, categories, or themes of the project, excluding specific details. Reply in JSON format:
+    { \"summary\": \"the_summary_generated\", 
+        \"keywords\": \"keywords_list\" }
+    "#;
+
+    let usr_prompt_2 = r#"
+    fit the information you received into a RFC8259-compliant JSON:
+```json
+    { 
+        \"summary\": \"the_summary_generated\", 
+        \"keywords\": \"keywords_list\"
+    }
+    ```
+    Ensure that the JSON is properly formatted, with correct escaping of special characters. Avoid adding any non-JSON content or formatting    
+    "#;
+
+    let use_lang_str = if main_language.is_empty() {
+        String::from("")
+    } else {
+        format!("mainly uses `{main_language}` in the project")
+    };
+
+    let mut summary = String::new();
+
+    let project_readme_str = match project_readme.is_empty() {
+        false => format!("states in readme: {project_readme}"),
+        true => String::from(""),
+    };
+
+    if project_readme.len() < 200 {
+        let  payload = format!(
+            "The repository `{repo}` by owner `{owner}` {use_lang_str},`{project_descrpition}`, {project_readme_str}"
+        );
+
+        let one_step_system_prompt = r#"Summarize the GitHub repository's README or description in one paragraph. Extract high-level keywords that represent broader categories or themes relevant to the project's purpose, technologies, features, and tools used. Infer plausible details based on common patterns or typical project characteristics related to the technologies or themes mentioned. These keywords should help categorize the project in a wider context and should not be too literal or specific. Expected Output: { \"summary\": \"the_summary_generated\", \"keywords\": \"keywords_list\" }, ensure you reply in RFC8259-compliant JSON format."#;
+        let model = "meta-llama/Meta-Llama-3-8B-Instruct";
+
+        summary = chat_inner_async(one_step_system_prompt, &payload, 250, model).await?;
+    } else {
+        let payload = format!(
+                "Here is the input: The repository `{repo}`  by owner `{owner}` {use_lang_str}, has a short text description: `{project_descrpition}`, mentioned more details in readme: `{project_readme}`"
+            );
+        let payload = payload.chars().take(8000).collect::<String>();
+
+        summary = chain_of_chat(
+            &system_prompt,
+            &payload,
+            "chat_id_chain_chat",
+            400,
+            &usr_prompt_2,
+            200,
+            "chained_chat_to_sum_project",
+        )
+        .await?;
+    }
+    summary = parse_summary_and_keywords(&summary).0;
 
     let _ = add_summary_and_id(&pool, &repo_data.project_id, &summary).await;
     Ok(())
