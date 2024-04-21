@@ -1,4 +1,4 @@
-use openai_flows::{chat, embeddings::EmbeddingsInput, OpenAIFlows};
+use openai_flows::{embeddings::EmbeddingsInput, OpenAIFlows};
 use serde_json::json;
 use std::env;
 use vector_store_flows::*;
@@ -75,7 +75,6 @@ pub async fn check_vector_db(collection_name: &str) -> String {
         }
     }
 }
-
 
 pub async fn search_collection(
     question: &str,
