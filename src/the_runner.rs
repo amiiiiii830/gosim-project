@@ -374,7 +374,7 @@ pub async fn note_budget_allocated(pool: &Pool) -> anyhow::Result<()> {
     for issue_id in issue_ids {
         let comment = format!("{}/n Congratulations! GOSIM grant approved. Your proposal is approved to get $100 fund to fix the issue.", issue_id);
 
-        let _ = mock_comment_on_issue(1, &comment).await?;
+        // let _ = mock_comment_on_issue(1, &comment).await?;
     }
     Ok(())
 }
@@ -388,7 +388,7 @@ pub async fn note_issue_declined(pool: &Pool) -> anyhow::Result<()> {
     for issue_id in issue_ids {
         let comment = format!("{}/n  I’m sorry your proposal wasn't approved", issue_id);
 
-        let _ = mock_comment_on_issue(2, &comment).await?;
+        // let _ = mock_comment_on_issue(2, &comment).await?;
     }
     Ok(())
 }
@@ -399,7 +399,7 @@ pub async fn note_distribute_fund(pool: &Pool) -> anyhow::Result<()> {
     for (issue_assignee, _issue_id, issue_budget) in issue_ids {
         let comment = format!("@{:?}, Well done!  According to the PR commit history. @{:?} should receive ${}. Please fill in this form to claim your fund. ", issue_assignee, issue_assignee, issue_budget);
 
-        let _ = mock_comment_on_issue(3, &comment).await?;
+        // let _ = mock_comment_on_issue(3, &comment).await?;
     }
     Ok(())
 }
@@ -411,7 +411,7 @@ pub async fn note_one_months_no_pr(pool: &Pool) -> anyhow::Result<()> {
     for issue_id in issue_ids {
         let comment = format!("{}\n @{} please link your PR to the issue it fixed in three days. Or this issue will be deemed not completed, then we can’t provide the fund.", issue_id, "issue_assignee" );
 
-        let _ = mock_comment_on_issue(4, &comment).await?;
+        // let _ = mock_comment_on_issue(4, &comment).await?;
     }
     Ok(())
 }
