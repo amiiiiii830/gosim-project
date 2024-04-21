@@ -318,11 +318,12 @@ pub async fn add_summary_and_id(
     pool: &Pool,
     issue_or_project_id: &str,
     issue_or_project_summary: &str,
+    keyword_tags: Vec<String>,
 ) -> Result<()> {
     let mut conn = pool.get_conn().await?;
-
-    let query = r"INSERT INTO issues_repos_summarized (issue_or_project_id, issue_or_project_summary)
-                  VALUES (:issue_or_project_id, :issue_or_project_summary)";
+    let keyword_tags_json_str = json!(keyword_tags).to_string();
+    let query = r"INSERT INTO issues_repos_summarized (issue_or_project_id, issue_or_project_summary, keyword_tags)
+                  VALUES (:issue_or_project_id, :issue_or_project_summary, :keyword_tags_json_str)";
 
     if let Err(e) = conn
         .exec_drop(
@@ -330,6 +331,7 @@ pub async fn add_summary_and_id(
             params! {
                 "issue_or_project_id" => &issue_or_project_id,
                 "issue_or_project_summary" => &issue_or_project_summary,
+                "keyword_tags"=> &keyword_tags_json_str,
             },
         )
         .await

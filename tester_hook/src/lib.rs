@@ -1,16 +1,12 @@
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
-use gosim_project::db_join::*;
 use gosim_project::db_manipulate::*;
 use gosim_project::db_populate::*;
-use gosim_project::issue_tracker::*;
-use gosim_project::the_runner::*;
 use gosim_project::vector_search::*;
 use mysql_async::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
-use std::env;
 use vector_store_flows::delete_collection;
 use webhook_flows::{
     create_endpoint, request_handler,
@@ -124,7 +120,6 @@ async fn check_vdb_by_post_handler(
             return;
         }
     };
-    let pool: Pool = get_pool().await;
     let mut out = String::new();
     if let Some(text) = load.text {
         match search_collection(&text, "gosim_search").await {
@@ -174,7 +169,6 @@ async fn delete_vdb_handler(
             return;
         }
     };
-    let pool: Pool = get_pool().await;
     if let Some(collection_name) = load.collection_name {
         if let Err(e) = delete_collection(&collection_name).await {
             log::error!("Error deleting vector db: {:?}", e);
@@ -216,7 +210,6 @@ async fn create_vdb_handler(
             return;
         }
     };
-    let pool: Pool = get_pool().await;
     if let Some(collection_name) = load.collection_name {
         if let Err(e) = create_my_collection(1536, &collection_name).await {
             log::error!("Error creating vector db: {:?}", e);

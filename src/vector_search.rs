@@ -11,7 +11,12 @@ pub async fn upload_to_collection(
 
     let mut id: u64 = match collection_info(&collection_name).await {
         Ok(ci) => ci.points_count,
-        Err(e) => return Err(anyhow::anyhow!("Cannot get collection, can not init points_count: {}", e)),
+        Err(e) => {
+            return Err(anyhow::anyhow!(
+                "Cannot get collection, can not init points_count: {}",
+                e
+            ))
+        }
     };
 
     let mut openai = OpenAIFlows::new();
