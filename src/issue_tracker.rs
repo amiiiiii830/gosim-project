@@ -462,6 +462,11 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
         let response: GraphQLResponse = serde_json::from_slice(&response_body)
             .map_err(|e| anyhow!("Failed to deserialize response: {}", e))?;
 
+        let test = String::from_utf8_lossy(&response_body)
+            .chars()
+            .take(100)
+            .collect::<String>();
+        log::info!("search issue open response head: {test}");
         if let Some(data) = response.data {
             if let Some(search) = data.search {
                 if let Some(nodes) = search.nodes {
@@ -612,6 +617,11 @@ pub async fn search_issues_comment(query: &str) -> anyhow::Result<Vec<IssueComme
 
         let response: GraphQLResponse = serde_json::from_slice(&response_body)
             .map_err(|e| anyhow!("Failed to deserialize response: {}", e))?;
+        let test = String::from_utf8_lossy(&response_body)
+            .chars()
+            .take(100)
+            .collect::<String>();
+        log::info!("search issue comment response head: {test}");
 
         if let Some(data) = response.data {
             if let Some(search) = data.search {
@@ -824,6 +834,11 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<IssueClosed
 
         let response: GraphQLResponse = serde_json::from_slice(&response_body)
             .map_err(|e| anyhow!("Failed to deserialize response: {}", e))?;
+        let test = String::from_utf8_lossy(&response_body)
+            .chars()
+            .take(100)
+            .collect::<String>();
+        log::info!("search issue closed response head: {test}");
 
         if let Some(data) = response.data {
             if let Some(search) = data.search {
@@ -1029,6 +1044,11 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
 
         let response_body = github_http_post_gql(&query_str).await?;
         let response: GraphQLResponse = serde_json::from_slice(&response_body)?;
+        let test = String::from_utf8_lossy(&response_body)
+            .chars()
+            .take(100)
+            .collect::<String>();
+        log::info!("search pull_request response head: {test}");
 
         if let Some(data) = response.data {
             if let Some(search) = data.search {
