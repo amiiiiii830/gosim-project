@@ -43,6 +43,9 @@ async fn handler(
         .insert("/vector", vec![post(check_vdb_by_post_handler)])
         .unwrap();
     router
+        .insert("/vector/create", vec![post(create_vdb_handler)])
+        .unwrap();
+    router
         .insert("/vector/delete", vec![post(delete_vdb_handler)])
         .unwrap();
 
@@ -175,6 +178,48 @@ async fn delete_vdb_handler(
     if let Some(collection_name) = load.collection_name {
         if let Err(e) = delete_collection(&collection_name).await {
             log::error!("Error deleting vector db: {:?}", e);
+        }
+
+        let result = check_vector_db(&collection_name).await;
+        let out = json!(result).to_string();
+
+        send_response(
+            200,
+            vec![
+                (
+                    String::from("content-type"),
+                    String::from("application/json"),
+                ),
+                (
+                    String::from("Access-Control-Allow-Origin"),
+                    String::from("*"),
+                ),
+            ],
+            out.as_bytes().to_vec(),
+        );
+    }
+}
+async fn create_vdb_handler(
+    _headers: Vec<(String, String)>,
+    _qry: HashMap<String, Value>,
+    _body: Vec<u8>,
+) {
+    #[derive(Serialize, Deserialize, Clone, Debug, Default)]
+    pub struct VectorLoad {
+        pub collection_name: Option<String>,
+    }
+
+    let load: VectorLoad = match serde_json::from_slice(&_body) {
+        Ok(obj) => obj,
+        Err(_e) => {
+            log::error!("failed to parse body: {}", _e);
+            return;
+        }
+    };
+    let pool: Pool = get_pool().await;
+    if let Some(collection_name) = load.collection_name {
+        if let Err(e) = create_my_collection(1536, &collection_name).await {
+            log::error!("Error creating vector db: {:?}", e);
         }
 
         let result = check_vector_db(&collection_name).await;

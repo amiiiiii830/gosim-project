@@ -121,7 +121,7 @@ pub async fn get_projects_as_repo_list(pool: &Pool, page: u32) -> Result<String>
     let offset = (page - 1) * page_size;
     let project_ids: Vec<String> = conn
         .exec_map(
-            "SELECT project_id FROM projects ORDER BY project_id LIMIT :limit OFFSET :offset",
+            "SELECT project_id FROM projects WHERE project_logo is NULL ORDER BY project_id LIMIT :limit OFFSET :offset",
             params! {
                 "limit" => page_size,
                 "offset" => offset,
