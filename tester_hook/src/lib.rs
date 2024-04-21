@@ -2,6 +2,7 @@ use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
 use gosim_project::db_manipulate::*;
 use gosim_project::db_populate::*;
+use gosim_project::llm_utils::chat_inner_async;
 use gosim_project::vector_search::*;
 use mysql_async::*;
 use serde::{Deserialize, Serialize};
@@ -32,6 +33,9 @@ async fn handler(
 
     let mut router = Router::new();
     router.insert("/run", vec![get(trigger)]).unwrap();
+    router
+        .insert("/deep", vec![post(check_deep_handler)])
+        .unwrap();
     router
         .insert("/comment", vec![post(get_comments_by_post_handler)])
         .unwrap();
@@ -134,6 +138,52 @@ async fn check_vdb_by_post_handler(
     if let Some(collection_name) = load.collection_name {
         let result = check_vector_db(&collection_name).await;
         out = json!(result).to_string();
+    }
+
+    send_response(
+        200,
+        vec![
+            (
+                String::from("content-type"),
+                String::from("application/json"),
+            ),
+            (
+                String::from("Access-Control-Allow-Origin"),
+                String::from("*"),
+            ),
+        ],
+        out.as_bytes().to_vec(),
+    );
+}
+async fn check_deep_handler(
+    _headers: Vec<(String, String)>,
+    _qry: HashMap<String, Value>,
+    _body: Vec<u8>,
+) {
+    #[derive(Serialize, Deserialize, Clone, Debug, Default)]
+    pub struct VectorLoad {
+        pub text: Option<String>,
+    }
+
+    let load: VectorLoad = match serde_json::from_slice(&_body) {
+        Ok(obj) => obj,
+        Err(_e) => {
+            log::error!("failed to parse body: {}", _e);
+            return;
+        }
+    };
+    let model = "meta-llama/Meta-Llama-3-8B-Instruct";
+
+    let mut out = String::new();
+    if let Some(text) = load.text {
+        match chat_inner_async("you're a comedian", "tell me a joke", 100, model).await {
+            Ok(search_result) => {
+                out = json!(search_result).to_string();
+            }
+            Err(e) => {
+                log::error!("Error: {:?}", e);
+            }
+        }
     }
 
     send_response(
