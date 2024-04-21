@@ -31,7 +31,7 @@ pub async fn chain_of_chat(
     headers.insert(USER_AGENT, HeaderValue::from_static("MyClient/1.0.0"));
     let config = LocalServiceProviderConfig {
         // api_base: String::from("http://52.37.228.1:8080/v1"),
-        api_base: String::from("https://api.deepinfra.com/v1/openai/chat/completions"),
+        api_base: String::from("https://api.deepinfra.com/v1/openai"),
         headers: headers,
         api_key: Secret::new(api_key),
         query: HashMap::new(),
@@ -142,7 +142,7 @@ pub async fn chat_inner_async(
     let api_key = env::var("DEEP_API_KEY").unwrap_or("deep_api_key_not_found".to_string());
     let config = LocalServiceProviderConfig {
         // api_base: String::from("http://52.37.228.1:8080/v1"),
-        api_base: String::from("https://api.deepinfra.com/v1/openai/chat/completions"),
+        api_base: String::from("https://api.deepinfra.com/v1/openai"),
         headers: headers,
         api_key: Secret::new(api_key),
         query: HashMap::new(),
