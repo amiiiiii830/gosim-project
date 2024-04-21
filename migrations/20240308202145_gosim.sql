@@ -76,3 +76,21 @@ CREATE TABLE pull_requests (
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 
+-- Add a generated column that converts the JSON array to a comma-separated string
+ALTER TABLE issues_repos_summarized
+ADD COLUMN keyword_tags_text TEXT GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(keyword_tags, '$'))) STORED;
+
+-- Add a full-text index to the generated column
+ALTER TABLE issues_repos_summarized
+ADD FULLTEXT(keyword_tags_text);
+
+CREATE TABLE issues_repos_summarized (
+    issue_or_project_id VARCHAR(255) PRIMARY KEY, -- url of an issue
+    issue_or_project_summary TEXT NOT NULL,
+    keyword_tags JSON,
+    keyword_tags_text TEXT GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(keyword_tags, '$'))) STORED,
+    keyword_tags_text FULLTEXT,
+    indexed BOOLEAN NOT NULL
+) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+

@@ -515,54 +515,74 @@ pub async fn conclude_issues_batch_in_db(
     Ok(())
 }
 
-/* pub async fn search_by_keyword_tags(tags_to_search: Vec<String>) -> anyhow::Result<Vec<String>> {
-    let mut conn = pool.get_conn().await?;
+// pub async fn search_by_keyword_tags(tags_to_search: Vec<String>) -> anyhow::Result<Vec<String>> {
+//     let mut conn = pool.get_conn().await?;
 
-    let query = r"select issue_or_project_id, keyword_tags from issues_repos_summarized 
-                  WHERE :tags_to_search in keyword_tags";
+//     let query = r"select issue_or_project_id, keyword_tags from issues_repos_summarized 
+//                   WHERE :tags_to_search in keyword_tags";
 
-    for issue_id in issue_ids {
-        if let Err(e) = conn
-            .exec_drop(
-                query,
-                params! {
-                    "issue_id" => issue_id,
-                },
-            )
-            .await
-        {
-            log::error!("Error concluding issues batch: {:?}", e);
-        };
-    }
+//     for issue_id in issue_ids {
+//         if let Err(e) = conn
+//             .exec_drop(
+//                 query,
+//                 params! {
+//                     "issue_id" => issue_id,
+//                 },
+//             )
+//             .await
+//         {
+//             log::error!("Error concluding issues batch: {:?}", e);
+//         };
+//     }
 
-    Ok(())
-}
+//     Ok(())
+// }
 
-use mysql_async::{Pool, Row};
-use serde_json::Value;
-use anyhow::{Result, anyhow};
+
+// pub async fn search_by_keyword_tags(pool: Pool, tags_to_search: Vec<String>) -> Result<Vec<String>> {
+//     let mut conn = pool.get_conn().await?;
+//     let mut results = Vec::new();
+//     let mut unique_ids = std::collections::HashSet::new();
+
+//     for tag in tags_to_search {
+//         let tag_json = serde_json::to_string(&tag).map_err(|e| anyhow!("Failed to serialize tag: {:?}", e))?;
+//         let query = r"SELECT issue_or_project_id, keyword_tags FROM issues_repos_summarized WHERE JSON_CONTAINS(keyword_tags, :tag)";
+
+//         let rows: Vec<Row> = conn.exec(query, params! {
+//             "tag" => tag_json,
+//         }).await?;
+
+//         for row in rows {
+//             let issue_id: String = row.get("issue_or_project_id").unwrap();
+//             // Ensure that each id is only added once
+//             if unique_ids.insert(issue_id.clone()) {
+//                 results.push(issue_id);
+//             }
+//         }
+//     }
+
+//     Ok(results)
+// }
 
 pub async fn search_by_keyword_tags(pool: Pool, tags_to_search: Vec<String>) -> Result<Vec<String>> {
     let mut conn = pool.get_conn().await?;
     let mut results = Vec::new();
     let mut unique_ids = std::collections::HashSet::new();
 
-    for tag in tags_to_search {
-        let tag_json = serde_json::to_string(&tag).map_err(|e| anyhow!("Failed to serialize tag: {:?}", e))?;
-        let query = r"SELECT issue_or_project_id, keyword_tags FROM issues_repos_summarized WHERE JSON_CONTAINS(keyword_tags, :tag)";
+    let search_string = tags_to_search.join(" ");
 
-        let rows: Vec<Row> = conn.exec(query, params! {
-            "tag" => tag_json,
-        }).await?;
+    let query = r"SELECT issue_or_project_id FROM issues_repos_summarized WHERE MATCH(keyword_tags_text) AGAINST(:tags IN BOOLEAN MODE)";
 
-        for row in rows {
-            let issue_id: String = row.get("issue_or_project_id").unwrap();
-            // Ensure that each id is only added once
-            if unique_ids.insert(issue_id.clone()) {
-                results.push(issue_id);
-            }
+    let rows: Vec<Row> = conn.exec(query, params! {
+        "tags" => &search_string,
+    }).await?;
+
+    for row in rows {
+        let issue_id: String = row.get("issue_or_project_id").unwrap();
+        if unique_ids.insert(issue_id.clone()) {
+            results.push(issue_id);
         }
     }
 
     Ok(results)
-} */
+}
