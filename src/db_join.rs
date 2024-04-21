@@ -188,18 +188,5 @@ pub async fn sum_budget_to_project(pool: &mysql_async::Pool) -> Result<()> {
         log::error!("Error summing total_budget_allocated: {:?}", e);
     };
 
-    let query = r"
-    UPDATE projects p
-    JOIN (
-        SELECT project_id, SUM(issue_budget) AS total_used_budget
-        FROM issues_master
-        WHERE issue_budget_approved = TRUE
-        GROUP BY project_id
-    ) AS approved_budgets ON p.project_id = approved_budgets.project_id
-    SET p.total_budget_used = approved_budgets.total_used_budget;";
-
-    if let Err(e) = conn.query_drop(query).await {
-        log::error!("Error summing total_budget_used: {:?}", e);
-    };
     Ok(())
 }
