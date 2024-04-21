@@ -124,11 +124,23 @@ async fn check_vdb_by_post_handler(
             return;
         }
     };
-    let mut out = String::new();
     if let Some(text) = load.text {
         match search_collection(&text, "gosim_search").await {
             Ok(search_result) => {
-                out = json!(search_result).to_string();
+                send_response(
+                    200,
+                    vec![
+                        (
+                            String::from("content-type"),
+                            String::from("application/json"),
+                        ),
+                        (
+                            String::from("Access-Control-Allow-Origin"),
+                            String::from("*"),
+                        ),
+                    ],
+                    json!(search_result).to_string().as_bytes().to_vec(),
+                );
             }
             Err(e) => {
                 log::error!("Error: {:?}", e);
@@ -137,23 +149,21 @@ async fn check_vdb_by_post_handler(
     }
     if let Some(collection_name) = load.collection_name {
         let result = check_vector_db(&collection_name).await;
-        out = json!(result).to_string();
+        send_response(
+            200,
+            vec![
+                (
+                    String::from("content-type"),
+                    String::from("application/json"),
+                ),
+                (
+                    String::from("Access-Control-Allow-Origin"),
+                    String::from("*"),
+                ),
+            ],
+            json!(result).to_string().as_bytes().to_vec(),
+        );
     }
-
-    send_response(
-        200,
-        vec![
-            (
-                String::from("content-type"),
-                String::from("application/json"),
-            ),
-            (
-                String::from("Access-Control-Allow-Origin"),
-                String::from("*"),
-            ),
-        ],
-        out.as_bytes().to_vec(),
-    );
 }
 async fn check_deep_handler(
     _headers: Vec<(String, String)>,
@@ -164,42 +174,28 @@ async fn check_deep_handler(
     pub struct VectorLoad {
         pub text: Option<String>,
     }
-
-    let load: VectorLoad = match serde_json::from_slice(&_body) {
-        Ok(obj) => obj,
-        Err(_e) => {
-            log::error!("failed to parse body: {}", _e);
-            return;
-        }
-    };
     let model = "meta-llama/Meta-Llama-3-8B-Instruct";
 
-    let mut out = String::new();
-    if let Some(text) = load.text {
-        match chat_inner_async("you're a comedian", "tell me a joke", 100, model).await {
-            Ok(search_result) => {
-                out = json!(search_result).to_string();
-            }
-            Err(e) => {
-                log::error!("Error: {:?}", e);
+    if let Ok(load) = serde_json::from_slice::<VectorLoad>(&_body) {
+        if let Some(text) = load.text {
+            if let Ok(reply) = chat_inner_async("you're an AI assistant", &text, 100, model).await {
+                send_response(
+                    200,
+                    vec![
+                        (
+                            String::from("content-type"),
+                            String::from("application/json"),
+                        ),
+                        (
+                            String::from("Access-Control-Allow-Origin"),
+                            String::from("*"),
+                        ),
+                    ],
+                    json!(reply).to_string().as_bytes().to_vec(),
+                );
             }
         }
     }
-
-    send_response(
-        200,
-        vec![
-            (
-                String::from("content-type"),
-                String::from("application/json"),
-            ),
-            (
-                String::from("Access-Control-Allow-Origin"),
-                String::from("*"),
-            ),
-        ],
-        out.as_bytes().to_vec(),
-    );
 }
 
 async fn delete_vdb_handler(

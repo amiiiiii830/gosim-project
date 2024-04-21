@@ -76,32 +76,6 @@ pub async fn check_vector_db(collection_name: &str) -> String {
     }
 }
 
-pub async fn summarize_long_chunks(input: &str) -> String {
-    let sys_prompt_1 = format!("You're a technical edtior bot.");
-    let co = chat::ChatOptions {
-        model: chat::ChatModel::GPT35Turbo16K,
-        system_prompt: Some(&sys_prompt_1),
-        restart: true,
-        temperature: Some(0.7),
-        max_tokens: Some(256),
-        ..Default::default()
-    };
-    let usr_prompt_1 = format!(
-        "To prepare for downstream question & answer task, you need to proprocess the source material, there are long chunks of text that are tool long to use as context, you need to extract the essence of such chunks, now please summarize this chunk: `{input}` into one concise paragraph, please stay truthful to the source material and handle the task in a factual manner."
-    );
-
-    let mut openai = OpenAIFlows::new();
-    openai.set_retry_times(2);
-
-    match openai
-        .chat_completion("summarize-long-chunks", &usr_prompt_1, &co)
-        .await
-    {
-        Ok(r) => r.choice,
-
-        Err(_e) => "".to_owned(),
-    }
-}
 
 pub async fn search_collection(
     question: &str,
