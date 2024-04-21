@@ -305,13 +305,6 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
     // }
     // let _ = check_vector_db("gosim_search").await;
 
-    // for project in get_projects_from_db().await.expect("msg") {
-    //     log::info!("{:?}", project.0);
-    //     let _ = upload_to_collection(&project.0, None, None, project.1).await;
-    //     let _ = add_indexed_id(&pool, &project.0).await;
-    // }
-    // let _ = check_vector_db("gosim_search").await;
-
     // let _ = pull_master(&pool).await;
     // let _ = run_hourly(&pool).await;
 }

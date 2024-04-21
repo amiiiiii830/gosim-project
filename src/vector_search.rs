@@ -38,7 +38,6 @@ pub async fn upload_to_collection(
 
                 if let Err(e) = upsert_points(&collection_name, p).await {
                     log::error!("Cannot upsert into database! {}", e);
-                    log::info!("Cannot upsert into database!");
                     return Ok(());
                 }
                 id += 1;

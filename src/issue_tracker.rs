@@ -471,7 +471,7 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
                             .clone()
                             .unwrap_or_default()
                             .chars()
-                            .take(240)
+                            .take(8000)
                             .collect::<String>();
                         let project_id = issue
                             .url

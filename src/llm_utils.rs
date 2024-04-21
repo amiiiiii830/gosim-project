@@ -223,49 +223,6 @@ pub fn parse_summary_and_keywords(input: &str) -> (String, Vec<String>) {
     (summary, keywords)
 }
 
-/* pub fn parse_summary_and_keywords(input: &str) -> (String, Vec<String>) {
-    let summary_key = r#"summary"#;
-    let keywords_key = r#"keywords"#;
-    let end_pattern = r#"","#;
-    let mut summary = String::new();
-    let mut keywords = Vec::new();
-
-    // Extract summary
-    if let Some(start) = input.find(summary_key) {
-        let value_start = start + summary_key.len();
-        if let Some(end) = input[value_start..].find(end_pattern) {
-            summary = input[value_start..value_start + end]
-                .trim()
-                .trim_matches('"')
-                .to_string();
-        } else {
-            summary = input[value_start..]
-                .trim()
-                .trim_matches(|c: char| c == '"' || c == '}')
-                .to_string();
-        }
-    }
-
-    // Extract keywords
-    if let Some(start) = input.find(keywords_key) {
-        let value_start = start + keywords_key.len() + 1; // Skip opening bracket [
-        if let Some(end) = input[value_start..].find("]") {
-            let keywords_str = &input[value_start..value_start + end];
-            keywords = keywords_str
-                .split(',')
-                .map(|s| {
-                    s.trim()
-                        .trim_matches(|c: char| c == '"' || c == ' ')
-                        .to_string()
-                })
-                .filter(|s| !s.is_empty())
-                .collect();
-        }
-    }
-
-    (summary, keywords)
-} */
-
 pub fn extract_summary_from_answer(input: &str) -> String {
     let trimmed_input = input.trim();
     let lines: Vec<&str> = trimmed_input.lines().collect();
