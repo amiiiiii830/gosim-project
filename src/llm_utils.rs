@@ -84,7 +84,17 @@ pub async fn chain_of_chat(
         .messages(messages)
         .build()?;
 
-    let chat = client.chat().create(request).await?;
+    let raw_chat = client.chat().create(request).await;
+    // let chat = client.chat().create(request).await?;
+
+    let chat = match raw_chat {
+        Ok(c) => c,
+
+        Err(_e) => {
+            log::error!("step 2 chat error: {:?}", _e);
+            return Err(anyhow::anyhow!(_e.to_string()));
+        }
+    };
 
     match chat.choices[0].message.clone().content {
         Some(res) => {
