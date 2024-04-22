@@ -1,6 +1,7 @@
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
 use gosim_project::db_manipulate::*;
+use gosim_project::db_join::*;
 use gosim_project::db_populate::*;
 use gosim_project::issue_tracker::*;
 use gosim_project::llm_utils::chat_inner_async;
@@ -34,9 +35,9 @@ async fn handler(
 
     let mut router = Router::new();
     router.insert("/run", vec![get(trigger)]).unwrap();
-    router
-        .insert("/deep", vec![post(check_deep_handler)])
-        .unwrap();
+    // router
+    //     .insert("/deep", vec![post(check_deep_handler)])
+    //     .unwrap();
     router
         .insert("/comment", vec![post(get_comments_by_post_handler)])
         .unwrap();
@@ -166,7 +167,7 @@ async fn check_vdb_by_post_handler(
         );
     }
 }
-async fn check_deep_handler(
+async fn _check_deep_handler(
     _headers: Vec<(String, String)>,
     _qry: HashMap<String, Value>,
     _body: Vec<u8>,
@@ -175,7 +176,6 @@ async fn check_deep_handler(
     pub struct VectorLoad {
         pub text: Option<String>,
     }
-    let model = "meta-llama/Meta-Llama-3-8B-Instruct";
 
     if let Ok(load) = serde_json::from_slice::<VectorLoad>(&_body) {
         if let Some(text) = load.text {
@@ -284,16 +284,95 @@ async fn create_vdb_handler(
 }
 async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>) {
     let pool: Pool = get_pool().await;
-    // let _ = note_issues(&pool).await;
+    let _ = run_hourly(&pool).await;
+}
 
-    // let repos = "repo:WasmEdge/wasmedge-db-examples repo:WasmEdge/www repo:WasmEdge/docs repo:WasmEdge/llvm-windows repo:WasmEdge/wasmedge-rust-sdk repo:WasmEdge/YOLO-rs repo:WasmEdge/proxy-wasm-cpp-host repo:WasmEdge/hyper-util repo:WasmEdge/hyper repo:WasmEdge/h2 repo:WasmEdge/wasmedge_hyper_demo repo:WasmEdge/tokio-rustls repo:WasmEdge/mysql_async_wasi repo:WasmEdge/mediapipe-rs repo:WasmEdge/wasmedge_reqwest_demo repo:WasmEdge/reqwest repo:WasmEdge/.github repo:WasmEdge/mio repo:WasmEdge/elasticsearch-rs-wasi repo:WasmEdge/oss-fuzz repo:WasmEdge/wasm-log-flex repo:WasmEdge/wasmedge_sdk_async_wasi repo:WasmEdge/tokio repo:WasmEdge/rust-mysql-simple-wasi repo:WasmEdge/GSoD2023 repo:WasmEdge/llm-agent-sdk repo:WasmEdge/sqlx repo:WasmEdge/rust-postgres repo:WasmEdge/redis-rs";
+pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
+    let _ = popuate_dbs(pool).await?;
+    let _ = join_ops(pool).await?;
+    let _ = cleanup_ops(pool).await?;
+    Ok(())
+}
+pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
+    let query_open =
+        "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-05..2023-10-15 -label:spam -label:invalid";
 
-    let query_repos: String = get_projects_as_repo_list(&pool, 1).await.expect("failed to get projects as repo list");
+    let open_issue_obj: Vec<IssueOpen> = search_issues_open(&query_open).await?;
+    let len = open_issue_obj.len();
+    log::info!("Open Issues recorded: {:?}", len);
+    for issue in open_issue_obj {
+        let _ = add_issues_open(pool, &issue).await;
 
-    let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await.expect("failed to search repos data");
+        let _ = summarize_issue_add_in_db(pool, &issue).await;
+    }
+
+    // let query_comment =
+    //     "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-05..2023-10-15 -label:spam -label:invalid";
+    // log::info!("query_open: {:?}", query_open);
+
+    // let issue_comment_obj: Vec<IssueComment> = search_issues_comment(&query_comment).await?;
+    // let len = issue_comment_obj.len();
+    // log::info!("Issues comment recorded: {:?}", len);
+    // for issue in issue_comment_obj {
+    //     let _ = add_issues_comment(pool, issue).await;
+    // }
+
+    // let _query_assigned =
+    //     "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-05..2023-10-15 -label:spam -label:invalid";
+    // let issues_assigned_obj: Vec<IssueAssigned> = search_issues_assigned(&_query_assigned).await?;
+    // let len = issues_assigned_obj.len();
+    // log::info!("Assigned issues recorded: {:?}", len);
+    // for issue in issues_assigned_obj {
+    //     let _ = add_issues_assigned(pool, issue).await;
+    // }
+
+    let query_closed =
+        "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-05..2023-10-15 -label:spam -label:invalid";
+    let close_issue_obj = search_issues_closed(&query_closed).await?;
+    let len = close_issue_obj.len();
+    log::info!("Closed issues recorded: {:?}", len);
+    for issue in close_issue_obj {
+        let _ = add_issues_closed(pool, issue).await;
+    }
+
+    Ok(())
+}
+
+// pub async fn populate_vector_db(pool: &Pool) -> anyhow::Result<()> {
+//     for item in get_issues_repos_from_db().await.expect("msg") {
+//         log::info!("uploading to vector_db: {:?}", item.0);
+//         let _ = upload_to_collection(&item.0, item.1.clone()).await;
+//         let _ = mark_id_indexed(&pool, &item.0).await;
+//     }
+//     let _ = check_vector_db("gosim_search").await;
+
+//     Ok(())
+// }
+
+pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
+    let _ = open_master(&pool).await?;
+    // let _ = assigned_master(&pool).await?;
+
+    let _ = closed_master(&pool).await?;
+
+    let _ = master_project(&pool).await?;
+    // let _ = sum_budget_to_project(&pool).await?;
+
+    let query_repos: String = get_projects_as_repo_list(pool, 1).await?;
+
+    let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await?;
 
     for repo_data in repo_data_vec {
-        let _ = fill_project_w_repo_data(&pool, repo_data.clone()).await.expect("failed to fill projects table");
-        let _ = summarize_project_add_in_db_one_step(&pool, repo_data).await.expect("failed to summarize and mark in db");
+        let _ = fill_project_w_repo_data(&pool, repo_data.clone()).await?;
+        let _ = summarize_project_add_in_db_one_step(&pool, repo_data).await?;
     }
+
+    Ok(())
+}
+
+pub async fn cleanup_ops(pool: &Pool) -> anyhow::Result<()> {
+    let _ = remove_pull_by_issued_linked_pr(&pool).await?;
+    let _ = delete_issues_open_assigned_closed(&pool).await?;
+
+    Ok(())
 }
