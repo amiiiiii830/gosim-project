@@ -180,7 +180,7 @@ async fn check_deep_handler(
     if let Ok(load) = serde_json::from_slice::<VectorLoad>(&_body) {
         if let Some(text) = load.text {
             log::info!("text: {text}");
-            if let Ok(reply) = chat_inner_async("you're an AI assistant", &text, 100, model).await {
+            if let Ok(reply) = chat_inner_async("you're an AI assistant", &text, 100).await {
                 send_response(
                     200,
                     vec![

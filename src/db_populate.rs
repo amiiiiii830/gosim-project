@@ -443,7 +443,6 @@ pub async fn summarize_issue_add_in_db(pool: &Pool, issue: &IssueOpen) -> anyhow
         system_prompt,
         &raw_input_texts,
         200,
-        "meta-llama/Meta-Llama-3-8B-Instruct",
     )
     .await?;
 
@@ -491,9 +490,8 @@ pub async fn summarize_project_add_in_db_one_step(
                 "Here is the input: The repository `{repo}`  by owner `{owner}` {use_lang_str}, has a short text description: `{project_descrpition}`, mentioned more details in readme: `{project_readme}`"
             ).chars().take(8000).collect::<String>()
     };
-    let model = "meta-llama/Meta-Llama-3-8B-Instruct";
 
-    let generated_summary = chat_inner_async(system_prompt, &raw_input_texts, 250, model).await?;
+    let generated_summary = chat_inner_async(system_prompt, &raw_input_texts, 250).await?;
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
 
     let _ = add_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
@@ -545,9 +543,8 @@ pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> an
         );
 
         let one_step_system_prompt = r#"Summarize the GitHub repository's README or description in one paragraph. Extract high-level keywords that represent broader categories or themes relevant to the project's purpose, technologies, features, and tools used. Infer plausible details based on common patterns or typical project characteristics related to the technologies or themes mentioned. These keywords should help categorize the project in a wider context and should not be too literal or specific. Expected Output: { \"summary\": \"the_summary_generated\", \"keywords\": \"keywords_list\" }, ensure you reply in RFC8259-compliant JSON format."#;
-        let model = "meta-llama/Meta-Llama-3-8B-Instruct";
 
-        chat_inner_async(one_step_system_prompt, &raw_input_texts, 250, model).await?
+        chat_inner_async(one_step_system_prompt, &raw_input_texts, 250).await?
     } else {
         let raw_input_texts = format!(
                 "Here is the input: The repository `{repo}`  by owner `{owner}` {use_lang_str}, has a short text description: `{project_descrpition}`, mentioned more details in readme: `{project_readme}`"
@@ -560,7 +557,6 @@ pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> an
             400,
             &usr_prompt_2,
             200,
-            "chained_chat_to_sum_project",
         )
         .await?
     };

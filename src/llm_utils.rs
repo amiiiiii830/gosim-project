@@ -1,20 +1,8 @@
-use regex::Regex;
-use reqwest::header::{HeaderMap, HeaderValue, CONTENT_TYPE, USER_AGENT};
-use secrecy::Secret;
-use std::collections::HashMap;
-use std::env;
-
-use async_openai::{
-    config::Config,
-    types::{
-        // ChatCompletionFunctionsArgs, ChatCompletionRequestMessage,
-        ChatCompletionRequestSystemMessageArgs,
-        ChatCompletionRequestUserMessageArgs,
-        // ChatCompletionTool, ChatCompletionToolArgs, ChatCompletionToolType,
-        CreateChatCompletionRequestArgs,
-    },
-    Client as OpenAIClient,
+use openai_flows::{
+    chat::{ChatModel, ChatOptions},
+    OpenAIFlows,
 };
+use regex::Regex;
 
 pub async fn chain_of_chat(
     sys_prompt_1: &str,
@@ -23,120 +11,47 @@ pub async fn chain_of_chat(
     gen_len_1: u16,
     usr_prompt_2: &str,
     gen_len_2: u16,
-    error_tag: &str,
 ) -> anyhow::Result<String> {
-    let mut headers = HeaderMap::new();
-    let api_key = std::env::var("DEEP_API_KEY").expect("DEEP_API_KEY must be set");
-    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-    headers.insert(USER_AGENT, HeaderValue::from_static("MyClient/1.0.0"));
-    let config = LocalServiceProviderConfig {
-        // api_base: String::from("http://52.37.228.1:8080/v1"),
-        api_base: String::from("https://api.deepinfra.com/v1/openai"),
-        headers: headers,
-        api_key: Secret::new(api_key),
-        query: HashMap::new(),
+    let mut openai = OpenAIFlows::new();
+    openai.set_retry_times(2);
+
+    let co_1 = ChatOptions {
+        model: ChatModel::GPT35Turbo,
+        system_prompt: Some(sys_prompt_1),
+        max_tokens: Some(gen_len_1),
+        ..Default::default()
     };
 
-    let model = "meta-llama/Meta-Llama-3-8B-Instruct";
+    let co_2 = ChatOptions {
+        model: ChatModel::GPT35Turbo,
+        system_prompt: Some(usr_prompt_2),
+        max_tokens: Some(gen_len_2),
+        ..Default::default()
+    };
 
-    let client = OpenAIClient::with_config(config);
-
-    let mut messages = vec![
-        ChatCompletionRequestSystemMessageArgs::default()
-            .content(sys_prompt_1)
-            .build()
-            .expect("Failed to build system message")
-            .into(),
-        ChatCompletionRequestUserMessageArgs::default()
-            .content(usr_prompt_1)
-            .build()?
-            .into(),
-    ];
-    let request = CreateChatCompletionRequestArgs::default()
-        .max_tokens(gen_len_1)
-        .model(model)
-        .messages(messages.clone())
-        .build()?;
-
-    // dbg!("{:?}", request.clone());
-
-    let chat = client.chat().create(request).await?;
-
-    match chat.choices[0].message.clone().content {
-        Some(res) => {
+    match openai
+        .chat_completion("summarizer", usr_prompt_1, &co_1)
+        .await
+    {
+        Ok(res) => {
             log::info!("step 1 chat: {:?}", res);
+
+            match openai
+                .chat_completion("summarizer", usr_prompt_2, &co_2)
+                .await
+            {
+                Ok(r) => {
+                    log::info!("step 2 chat: {:?}", r);
+                    return Ok(r.choice);
+                }
+                Err(_e) => {
+                    return Err(anyhow::anyhow!("openai generation error, step 2: {_e}"));
+                }
+            }
         }
-        None => {
-            return Err(anyhow::anyhow!(error_tag.to_string()));
-        }
-    }
-
-    messages.push(
-        ChatCompletionRequestUserMessageArgs::default()
-            .content(usr_prompt_2)
-            .build()?
-            .into(),
-    );
-
-    let request = CreateChatCompletionRequestArgs::default()
-        .max_tokens(gen_len_2)
-        .model(model)
-        .messages(messages)
-        .build()?;
-
-    let raw_chat = client.chat().create(request).await;
-    // let chat = client.chat().create(request).await?;
-
-    let chat = match raw_chat {
-        Ok(c) => c,
-
         Err(_e) => {
-            log::error!("step 2 chat error: {:?}", _e);
-            return Err(anyhow::anyhow!(_e.to_string()));
+            return Err(anyhow::anyhow!("openai generation error, step 1: {_e}"));
         }
-    };
-
-    match chat.choices[0].message.clone().content {
-        Some(res) => {
-            log::info!("step 2 chat: {:?}", res);
-            Ok(res)
-        }
-        None => {
-            return Err(anyhow::anyhow!(error_tag.to_string()));
-        }
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct LocalServiceProviderConfig {
-    pub api_base: String,
-    pub headers: HeaderMap,
-    pub api_key: Secret<String>,
-    pub query: HashMap<String, String>,
-}
-
-impl Config for LocalServiceProviderConfig {
-    fn headers(&self) -> HeaderMap {
-        self.headers.clone()
-    }
-
-    fn url(&self, path: &str) -> String {
-        format!("{}{}", self.api_base, path)
-    }
-
-    fn query(&self) -> Vec<(&str, &str)> {
-        self.query
-            .iter()
-            .map(|(k, v)| (k.as_str(), v.as_str()))
-            .collect()
-    }
-
-    fn api_base(&self) -> &str {
-        &self.api_base
-    }
-
-    fn api_key(&self) -> &Secret<String> {
-        &self.api_key
     }
 }
 
@@ -144,70 +59,25 @@ pub async fn chat_inner_async(
     system_prompt: &str,
     user_input: &str,
     max_token: u16,
-    model: &str,
 ) -> anyhow::Result<String> {
-    let mut headers = HeaderMap::new();
-    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
-    headers.insert(USER_AGENT, HeaderValue::from_static("MyClient/1.0.0"));
-    let api_key = env::var("DEEP_API_KEY").unwrap_or("deep_api_key_not_found".to_string());
-    let config = LocalServiceProviderConfig {
-        // api_base: String::from("http://52.37.228.1:8080/v1"),
-        api_base: String::from("https://api.deepinfra.com/v1/openai"),
-        headers: headers,
-        api_key: Secret::new(api_key),
-        query: HashMap::new(),
+    let mut openai = OpenAIFlows::new();
+    openai.set_retry_times(2);
+
+    let co = ChatOptions {
+        model: ChatModel::GPT35Turbo,
+        system_prompt: Some(system_prompt),
+        max_tokens: Some(max_token),
+        ..Default::default()
     };
 
-    let client = OpenAIClient::with_config(config);
-    let messages = vec![
-        ChatCompletionRequestSystemMessageArgs::default()
-            .content(system_prompt)
-            .build()
-            .expect("Failed to build system message")
-            .into(),
-        ChatCompletionRequestUserMessageArgs::default()
-            .content(user_input)
-            .build()?
-            .into(),
-    ];
-    let request = CreateChatCompletionRequestArgs::default()
-        .max_tokens(max_token)
-        .model(model)
-        .messages(messages)
-        .build()?;
-
-    // let raw_chat = client.chat().create(request).await;
-    // log::info!("{:?}", raw_chat);
-    // let chat = match raw_chat {
-    //     Ok(chat) => chat,
-    //     Err(_e) => {
-    //         log::error!("Error getting response from OpenAI: {:?}", _e);
-    //         panic!();
-    //     }
-    // };
-
-    let chat = match client.chat().create(request.clone()).await {
-        Ok(chat) => chat,
+    match openai.chat_completion("summarizer", user_input, &co).await {
+        Ok(r) => {
+            log::info!("one step summarizer: {:?}", r);
+            return Ok(r.choice);
+        }
         Err(_e) => {
-            log::info!("Error getting response from OpenAI: {:?}", _e);
-            match client.chat().create(request).await {
-                Ok(chat) => chat,
-                Err(_e) => {
-                    log::info!("Error getting response from OpenAI, second run: {:?}", _e);
-                    return Err(anyhow::anyhow!(
-                        "Failed to get reply from OpenAI, second run: {:?}",
-                        _e
-                    ));
-                }
-            }
+            return Err(anyhow::anyhow!("openai generation error, inner: {_e}"));
         }
-    };
-    match chat.choices[0].message.clone().content {
-        Some(res) => {
-            // log::info!("{:?}", chat.choices[0].message.clone());
-            Ok(res)
-        }
-        None => Err(anyhow::anyhow!("Failed to get reply from OpenAI")),
     }
 }
 

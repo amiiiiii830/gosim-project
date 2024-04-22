@@ -1,7 +1,4 @@
-use crate::{
-    db_join::*, db_manipulate::*, db_populate::*, issue_bot::*, issue_tracker::*, llm_utils::*,
-    vector_search::*,
-};
+use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_tracker::*};
 use crate::{ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
 
 use anyhow::Ok;
@@ -150,7 +147,6 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
 
 //     Ok(())
 // }
-
 
 pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
     let _ = open_master(&pool).await?;

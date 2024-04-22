@@ -6,12 +6,12 @@ resolver = "2"
 
 [lib]
 path = "src/lib.rs"
-crate-type = [ "lib"]
+crate-type = ["lib"]
 # crate-type = ["cdylib", "lib"]
 
 
 [workspace]
-members = ["register_hook", "track_github", "backend_hook", "tester_hook"]
+members = ["track_github", "backend_hook", "tester_hook"]
 
 [dependencies]
 tokio_wasi = { version = "1", features = ["macros", "rt"] }
@@ -35,8 +35,4 @@ wasmedge_wasi_socket = "0.4.3"
 lazy_static = "1.4.0"
 vector-store-flows = "0.1.2"
 openai-flows = "0.9.1"
-secrecy = "0.8.0"
 # wasmedge_wasi_socket = {version = "0.4.3", features = ["wasi"]}
-
-async-openai-wasi = "0.16.4"
-reqwest_wasi = "0.11.16"
