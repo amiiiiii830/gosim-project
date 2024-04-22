@@ -294,6 +294,6 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
 
     for repo_data in repo_data_vec {
         let _ = fill_project_w_repo_data(&pool, repo_data.clone()).await.expect("failed to fill projects table");
-        let _ = summarize_project_add_in_db(&pool, repo_data).await.expect("failed to summarize and mark in db");
+        let _ = summarize_project_add_in_db_one_step(&pool, repo_data).await.expect("failed to summarize and mark in db");
     }
 }
