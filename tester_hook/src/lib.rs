@@ -2,6 +2,7 @@ use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
 use gosim_project::db_manipulate::*;
 use gosim_project::db_populate::*;
+use gosim_project::issue_tracker::*;
 use gosim_project::llm_utils::chat_inner_async;
 use gosim_project::vector_search::*;
 use mysql_async::*;
@@ -285,26 +286,14 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
     let pool: Pool = get_pool().await;
     // let _ = note_issues(&pool).await;
 
-    let repos = "repo:WasmEdge/wasmedge-db-examples repo:WasmEdge/www repo:WasmEdge/docs repo:WasmEdge/llvm-windows repo:WasmEdge/wasmedge-rust-sdk repo:WasmEdge/YOLO-rs repo:WasmEdge/proxy-wasm-cpp-host repo:WasmEdge/hyper-util repo:WasmEdge/hyper repo:WasmEdge/h2 repo:WasmEdge/wasmedge_hyper_demo repo:WasmEdge/tokio-rustls repo:WasmEdge/mysql_async_wasi repo:WasmEdge/mediapipe-rs repo:WasmEdge/wasmedge_reqwest_demo repo:WasmEdge/reqwest repo:WasmEdge/.github repo:WasmEdge/mio repo:WasmEdge/elasticsearch-rs-wasi repo:WasmEdge/oss-fuzz repo:WasmEdge/wasm-log-flex repo:WasmEdge/wasmedge_sdk_async_wasi repo:WasmEdge/tokio repo:WasmEdge/rust-mysql-simple-wasi repo:WasmEdge/GSoD2023 repo:WasmEdge/llm-agent-sdk repo:WasmEdge/sqlx repo:WasmEdge/rust-postgres repo:WasmEdge/redis-rs";
+    // let repos = "repo:WasmEdge/wasmedge-db-examples repo:WasmEdge/www repo:WasmEdge/docs repo:WasmEdge/llvm-windows repo:WasmEdge/wasmedge-rust-sdk repo:WasmEdge/YOLO-rs repo:WasmEdge/proxy-wasm-cpp-host repo:WasmEdge/hyper-util repo:WasmEdge/hyper repo:WasmEdge/h2 repo:WasmEdge/wasmedge_hyper_demo repo:WasmEdge/tokio-rustls repo:WasmEdge/mysql_async_wasi repo:WasmEdge/mediapipe-rs repo:WasmEdge/wasmedge_reqwest_demo repo:WasmEdge/reqwest repo:WasmEdge/.github repo:WasmEdge/mio repo:WasmEdge/elasticsearch-rs-wasi repo:WasmEdge/oss-fuzz repo:WasmEdge/wasm-log-flex repo:WasmEdge/wasmedge_sdk_async_wasi repo:WasmEdge/tokio repo:WasmEdge/rust-mysql-simple-wasi repo:WasmEdge/GSoD2023 repo:WasmEdge/llm-agent-sdk repo:WasmEdge/sqlx repo:WasmEdge/rust-postgres repo:WasmEdge/redis-rs";
 
-    // let repo_data = get_projects_as_repo_list(&pool, 1).await;
-    let query ="label:hacktoberfest label:hacktoberfest-accepted is:issue created:>2023-10-01 updated:2023-10-03T05:00:00..2023-10-03T06:00:00 -label:spam -label:invalid";
-    let query = "label:hacktoberfest is:issue updated:>2024-04-16 -label:spam -label:invalid";
+    let query_repos: String = get_projects_as_repo_list(&pool, 1).await.expect("failed to get projects as repo list");
 
-    let _ = create_my_collection(1536, "gosim_search").await;
+    let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await.expect("failed to search repos data");
 
-    let issue_id = "https://github.com/ianshulx/React-projects-for-beginners/issues/60";
-    if let Ok(res) = get_comments_by_issue_id(&pool, &issue_id).await {
-        println!("{:?}", res);
+    for repo_data in repo_data_vec {
+        let _ = fill_project_w_repo_data(&pool, repo_data.clone()).await.expect("failed to fill projects table");
+        let _ = summarize_project_add_in_db(&pool, repo_data).await.expect("failed to summarize and mark in db");
     }
-
-    // for issue in get_issues_from_db().await.expect("msg") {
-    //     log::info!("{:?}", issue.0);
-    //     let _ = upload_to_collection(&issue.0, Some(issue.1.clone()), issue.2, None).await;
-    //     let _ = add_indexed_id(&pool, &issue.0).await;
-    // }
-    // let _ = check_vector_db("gosim_search").await;
-
-    // let _ = pull_master(&pool).await;
-    // let _ = run_hourly(&pool).await;
 }

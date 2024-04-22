@@ -337,7 +337,7 @@ pub async fn add_summary_and_id(
             params! {
                 "issue_or_project_id" => &issue_or_project_id,
                 "issue_or_project_summary" => &issue_or_project_summary,
-                "keyword_tags"=> &keyword_tags_json_str,
+                "keyword_tags_json_str" => &keyword_tags_json_str, // Corrected parameter name here
             },
         )
         .await
@@ -347,6 +347,7 @@ pub async fn add_summary_and_id(
 
     Ok(())
 }
+
 
 pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
     let mut conn = pool.get_conn().await?;
