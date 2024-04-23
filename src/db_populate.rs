@@ -1,5 +1,6 @@
 use crate::issue_tracker::*;
-use crate::llm_utils::*;
+use crate::llm_utils::parse_summary_and_keywords;
+use crate::llm_utils_together::*;
 use dotenv::dotenv;
 use mysql_async::prelude::*;
 use mysql_async::*;
@@ -98,26 +99,28 @@ pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyho
         String::from("No description available")
     };
 
-    let res = conn.exec_drop(
-        r"INSERT INTO projects (project_id, project_logo, repo_stars, project_description)
+    let res = conn
+        .exec_drop(
+            r"INSERT INTO projects (project_id, project_logo, repo_stars, project_description)
         VALUES (:project_id, :project_logo, :repo_stars, :project_description)
         ON DUPLICATE KEY UPDATE
         project_logo = VALUES(project_logo),
         repo_stars = VALUES(repo_stars),
         project_description = VALUES(project_description);",
-        params! {
-            "project_id" => &repo_data.project_id,
-            "project_logo" => &repo_data.project_logo,
-            "repo_stars" => repo_data.repo_stars,
-            "project_description" => project_description,
-        },
-    ).await;
+            params! {
+                "project_id" => &repo_data.project_id,
+                "project_logo" => &repo_data.project_logo,
+                "repo_stars" => repo_data.repo_stars,
+                "project_description" => project_description,
+            },
+        )
+        .await;
 
     match res {
         Ok(_) => Ok(()),
         Err(e) => {
             log::error!("Failed to fill project with repo data: {:?}", e);
-            Err(e.into())  // propagate the error
+            Err(e.into()) // propagate the error
         }
     }
 }
@@ -600,12 +603,12 @@ pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> an
         true => String::from(""),
     };
 
+    let one_step_system_prompt = r#"Summarize the GitHub repository's README or description in one paragraph. Extract high-level keywords that represent broader categories or themes relevant to the project's purpose, technologies, features, and tools used. Infer plausible details based on common patterns or typical project characteristics related to the technologies or themes mentioned. These keywords should help categorize the project in a wider context and should not be too literal or specific. Expected Output: { \"summary\": \"the_summary_generated\", \"keywords\": \"keywords_list\" }, ensure you reply in RFC8259-compliant JSON format."#;
+    
     let generated_summary = if project_readme.len() < 200 {
         let raw_input_texts = format!(
             "The repository `{repo}` by owner `{owner}` {use_lang_str},`{project_descrpition}`, {project_readme_str}"
         );
-
-        let one_step_system_prompt = r#"Summarize the GitHub repository's README or description in one paragraph. Extract high-level keywords that represent broader categories or themes relevant to the project's purpose, technologies, features, and tools used. Infer plausible details based on common patterns or typical project characteristics related to the technologies or themes mentioned. These keywords should help categorize the project in a wider context and should not be too literal or specific. Expected Output: { \"summary\": \"the_summary_generated\", \"keywords\": \"keywords_list\" }, ensure you reply in RFC8259-compliant JSON format."#;
 
         chat_inner_async(one_step_system_prompt, &raw_input_texts, 250).await?
     } else {
@@ -613,15 +616,17 @@ pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> an
                 "Here is the input: The repository `{repo}`  by owner `{owner}` {use_lang_str}, has a short text description: `{project_descrpition}`, mentioned more details in readme: `{project_readme}`"
             ).chars().take(8000).collect::<String>();
 
-        chain_of_chat(
-            &system_prompt,
-            &raw_input_texts,
-            "chat_id_chain_chat",
-            400,
-            &usr_prompt_2,
-            200,
-        )
-        .await?
+        chat_inner_async(one_step_system_prompt, &raw_input_texts, 250).await?
+
+        // chain_of_chat(
+        //     &system_prompt,
+        //     &raw_input_texts,
+        //     "chat_id_chain_chat",
+        //     400,
+        //     &usr_prompt_2,
+        //     200,
+        // )
+        // .await?
     };
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
 
