@@ -71,6 +71,9 @@ pub async fn chat_inner_async(
         ..Default::default()
     };
 
+    let head = user_input.chars().take(100).collect::<String>();
+    log::info!("inside chat_inner: {:?}", head);
+
     match openai.chat_completion("summarizer", user_input, &co).await {
         Ok(r) => {
             log::info!("one step summarizer: {:?}", r.choice.clone());
@@ -97,7 +100,11 @@ pub fn parse_summary_and_keywords(input: &str) -> (String, Vec<String>) {
         .map_or(Vec::new(), |m| {
             m.as_str()
                 .split(',')
-                .map(|s| s.trim().trim_matches(|c: char| c == '"' || c == '}' || c == '\n').to_string())
+                .map(|s| {
+                    s.trim()
+                        .trim_matches(|c: char| c == '"' || c == '}' || c == '\n')
+                        .to_string()
+                })
                 .filter(|s| !s.is_empty()) // Filter out empty strings after splitting.
                 .collect()
         });
