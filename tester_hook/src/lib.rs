@@ -288,7 +288,7 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
 }
 
 pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
-    let _ = popuate_dbs(pool).await?;
+    // let _ = popuate_dbs(pool).await?;
     let _ = join_ops(pool).await?;
     let _ = cleanup_ops(pool).await?;
     let _ = populate_vector_db(pool).await;
@@ -360,10 +360,13 @@ pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
     // let _ = sum_budget_to_project(&pool).await?;
 
     let query_repos: String = get_projects_as_repo_list(pool, 1).await?;
+    log::info!("repos list: {:?}", query_repos.clone());
 
     let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await?;
 
     for repo_data in repo_data_vec {
+        log::info!("repo : {:?}", repo_data.project_id.clone());
+
         let _ = fill_project_w_repo_data(&pool, repo_data.clone()).await?;
         let _ = summarize_project_add_in_db_one_step(&pool, repo_data).await?;
     }

@@ -520,6 +520,7 @@ pub async fn summarize_project_add_in_db_one_step(
 
     let generated_summary = chat_inner_async(system_prompt, &raw_input_texts, 250).await?;
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
+    log::info!("project keywords: {:?}", keyword_tags.clone());
 
     let _ =
         add_or_update_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
