@@ -289,8 +289,8 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
 
 pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     // let _ = popuate_dbs(pool).await?;
-    let _ = join_ops(pool).await?;
-    let _ = cleanup_ops(pool).await?;
+    // let _ = join_ops(pool).await?;
+    // let _ = cleanup_ops(pool).await?;
     let _ = populate_vector_db(pool).await;
     Ok(())
 }
