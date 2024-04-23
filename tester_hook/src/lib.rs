@@ -296,7 +296,7 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
 }
 pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     let query_open =
-        "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-12..2023-10-18 -label:spam -label:invalid";
+        "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-18..2023-10-20 -label:spam -label:invalid";
 
     let open_issue_obj: Vec<IssueOpen> = search_issues_open(&query_open).await?;
     let len = open_issue_obj.len();
@@ -328,7 +328,7 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     // }
 
     let query_closed =
-        "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-12..2023-10-18 -label:spam -label:invalid";
+        "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-18..2023-10-20 -label:spam -label:invalid";
     let close_issue_obj = search_issues_closed(&query_closed).await?;
     let len = close_issue_obj.len();
     log::info!("Closed issues recorded: {:?}", len);

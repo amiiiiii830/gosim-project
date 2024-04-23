@@ -73,7 +73,7 @@ pub async fn chat_inner_async(
 
     match openai.chat_completion("summarizer", user_input, &co).await {
         Ok(r) => {
-            log::info!("one step summarizer: {:?}", r);
+            log::info!("one step summarizer: {:?}", r.choice.clone());
             return Ok(r.choice);
         }
         Err(_e) => {

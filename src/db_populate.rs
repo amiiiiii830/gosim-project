@@ -328,7 +328,7 @@ pub async fn add_or_update_summary_and_id(
 ) -> Result<()> {
     let mut conn = pool.get_conn().await?;
     let keyword_tags_json_str = json!(keyword_tags).to_string();
-    
+
     let query = r"INSERT INTO issues_repos_summarized (issue_or_project_id, issue_or_project_summary, keyword_tags)
                   VALUES (:issue_or_project_id, :issue_or_project_summary, :keyword_tags_json_str)
                   ON DUPLICATE KEY UPDATE
@@ -379,7 +379,6 @@ pub async fn add_or_update_summary_and_id(
 
     Ok(())
 } */
-
 
 pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
     let mut conn = pool.get_conn().await?;
@@ -471,14 +470,10 @@ pub async fn summarize_issue_add_in_db(pool: &Pool, issue: &IssueOpen) -> anyhow
                 "Here is the input: The issue titled `{issue_title}` at repository `{repo}` by owner `{owner}`, states in the body text: {issue_description}"
             ).chars().take(8000).collect::<String>()
     };
-    let generated_summary = chat_inner_async(
-        system_prompt,
-        &raw_input_texts,
-        200,
-    )
-    .await?;
+    let generated_summary = chat_inner_async(system_prompt, &raw_input_texts, 200).await?;
 
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
+    log::info!("{}, {:?}", issue_id, keyword_tags.clone());
     let _ = add_or_update_summary_and_id(&pool, &issue_id, &summary, keyword_tags).await;
 
     Ok(())
@@ -526,7 +521,8 @@ pub async fn summarize_project_add_in_db_one_step(
     let generated_summary = chat_inner_async(system_prompt, &raw_input_texts, 250).await?;
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
 
-    let _ = add_or_update_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
+    let _ =
+        add_or_update_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
     Ok(())
 }
 
@@ -594,6 +590,7 @@ pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> an
     };
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
 
-    let _ = add_or_update_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
+    let _ =
+        add_or_update_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
     Ok(())
 }
