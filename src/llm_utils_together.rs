@@ -66,7 +66,7 @@ pub async fn chat_inner_async(
     };
 
     // stop: ['</s>', '[/INST]'],
-    let model = "mistralai/Mixtral-8x7B-Instruct-v0.1";
+    let model = "meta-llama/Llama-3-8b-chat-hf";
     let client = OpenAIClient::with_config(config);
     let messages = vec![
         ChatCompletionRequestSystemMessageArgs::default()
