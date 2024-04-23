@@ -90,6 +90,40 @@ pub async fn project_exists(pool: &mysql_async::Pool, project_id: &str) -> anyho
 pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
+    let project_description = if !repo_data.repo_description.is_empty() {
+        repo_data.repo_description.clone()
+    } else if !repo_data.repo_readme.is_empty() {
+        repo_data.repo_readme.chars().take(1000).collect::<String>()
+    } else {
+        String::from("No description available")
+    };
+
+    let res = conn.exec_drop(
+        r"INSERT INTO projects (project_id, project_logo, repo_stars, project_description)
+        VALUES (:project_id, :project_logo, :repo_stars, :project_description)
+        ON DUPLICATE KEY UPDATE
+        project_logo = VALUES(project_logo),
+        repo_stars = VALUES(repo_stars),
+        project_description = VALUES(project_description);",
+        params! {
+            "project_id" => &repo_data.project_id,
+            "project_logo" => &repo_data.project_logo,
+            "repo_stars" => repo_data.repo_stars,
+            "project_description" => project_description,
+        },
+    ).await;
+
+    match res {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            log::error!("Failed to fill project with repo data: {:?}", e);
+            Err(e.into())  // propagate the error
+        }
+    }
+}
+/* pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyhow::Result<()> {
+    let mut conn = pool.get_conn().await?;
+
     let project_id = repo_data.project_id;
     let project_logo = repo_data.project_logo;
     let repo_stars = repo_data.repo_stars;
@@ -121,7 +155,7 @@ pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyho
         log::error!("Failed to fill project with repo data: {:?}", e);
     };
     Ok(())
-}
+} */
 
 pub async fn issue_exists(pool: &mysql_async::Pool, issue_id: &str) -> anyhow::Result<bool> {
     let mut conn = pool.get_conn().await?;
