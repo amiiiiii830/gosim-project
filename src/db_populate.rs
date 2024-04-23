@@ -179,7 +179,7 @@ pub async fn add_issues_open(pool: &Pool, issue: &IssueOpen) -> Result<()> {
         )
         .await
     {
-        log::error!("Error add issues_open: {:?}", e);
+        // log::error!("Error add issues_open: {:?}", e);
     };
 
     Ok(())
@@ -320,7 +320,39 @@ pub async fn mark_id_indexed(pool: &Pool, issue_or_project_id: &str) -> Result<(
     Ok(())
 }
 
-pub async fn add_summary_and_id(
+pub async fn add_or_update_summary_and_id(
+    pool: &Pool,
+    issue_or_project_id: &str,
+    issue_or_project_summary: &str,
+    keyword_tags: Vec<String>,
+) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+    let keyword_tags_json_str = json!(keyword_tags).to_string();
+    
+    let query = r"INSERT INTO issues_repos_summarized (issue_or_project_id, issue_or_project_summary, keyword_tags)
+                  VALUES (:issue_or_project_id, :issue_or_project_summary, :keyword_tags_json_str)
+                  ON DUPLICATE KEY UPDATE
+                  keyword_tags = IF(JSON_LENGTH(keyword_tags) = 0 AND LENGTH(:keyword_tags_json_str) > 0, :keyword_tags_json_str, keyword_tags)";
+
+    if let Err(e) = conn
+        .exec_drop(
+            query,
+            params! {
+                "issue_or_project_id" => &issue_or_project_id,
+                "issue_or_project_summary" => &issue_or_project_summary,
+                "keyword_tags_json_str" => &keyword_tags_json_str,
+            },
+        )
+        .await
+    {
+        // Log the error if the query fails
+        log::error!("Error adding or updating issue_or_project_id: {:?}", e);
+        return Err(e);
+    };
+
+    Ok(())
+}
+/* pub async fn add_summary_and_id(
     pool: &Pool,
     issue_or_project_id: &str,
     issue_or_project_summary: &str,
@@ -342,11 +374,11 @@ pub async fn add_summary_and_id(
         )
         .await
     {
-        log::error!("Error adding issue_or_project_id: {:?}", e);
+        // log::error!("Error adding issue_or_project_id: {:?}", e);
     };
 
     Ok(())
-}
+} */
 
 
 pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
@@ -424,10 +456,10 @@ pub async fn summarize_issue_add_in_db(pool: &Pool, issue: &IssueOpen) -> anyhow
     let repo = parts[4].to_string();
 
     let system_prompt = r#"
-        Summarize the GitHub issue in one paragraph without mentioning the issue number. Highlight the key problem and any signature information provided. The summary should be concise, informative, and easy to understand, prioritizing clarity and brevity. Additionally, extract high-level keywords that represent broader categories or themes relevant to the issue's purpose, features, and tools used. These keywords should help categorize the issue in a wider context and should not be too literal or specific.
+        Summarize the GitHub issue in one paragraph without mentioning the issue number. Highlight the key problem and any signature information provided. The summary should be concise, informative, and easy to understand, prioritizing clarity and brevity. Additionally, extract high-level keywords that represent broader categories or themes relevant to the issue's purpose, features, and tools used. These keywords should help categorize the issue in a wider context and should not be too literal or specific, avoiding overly long phrases unless absolutely necessary.
         Expected Output:
         { \"summary\": \"the_summary_generated, a short paragraph summarizing the issue, including its purpose and features, without referencing the issue number.\",
-          \"keywords\": \"keywords_list, a list of high-level keywords that encapsulate the broader context, categories, or themes of the issue, excluding specific details and issue numbers.\" }
+          \"keywords\": [\"keywords_list, a list of high-level keywords that encapsulate the broader context, categories, or themes of the issue, excluding specific details and issue numbers.\"] }
         Ensure you reply in RFC8259-compliant JSON format."#;
 
     let raw_input_texts = if issue_description.len() < 200 {
@@ -447,7 +479,7 @@ pub async fn summarize_issue_add_in_db(pool: &Pool, issue: &IssueOpen) -> anyhow
     .await?;
 
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
-    let _ = add_summary_and_id(&pool, &issue_id, &summary, keyword_tags).await;
+    let _ = add_or_update_summary_and_id(&pool, &issue_id, &summary, keyword_tags).await;
 
     Ok(())
 }
@@ -494,7 +526,7 @@ pub async fn summarize_project_add_in_db_one_step(
     let generated_summary = chat_inner_async(system_prompt, &raw_input_texts, 250).await?;
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
 
-    let _ = add_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
+    let _ = add_or_update_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
     Ok(())
 }
 
@@ -562,6 +594,6 @@ pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> an
     };
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
 
-    let _ = add_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
+    let _ = add_or_update_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
     Ok(())
 }

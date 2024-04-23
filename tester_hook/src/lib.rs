@@ -1,7 +1,7 @@
 use dotenv::dotenv;
 use flowsnet_platform_sdk::logger;
-use gosim_project::db_manipulate::*;
 use gosim_project::db_join::*;
+use gosim_project::db_manipulate::*;
 use gosim_project::db_populate::*;
 use gosim_project::issue_tracker::*;
 use gosim_project::llm_utils::chat_inner_async;
@@ -291,11 +291,12 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let _ = popuate_dbs(pool).await?;
     let _ = join_ops(pool).await?;
     let _ = cleanup_ops(pool).await?;
+    let _ = populate_vector_db(pool).await;
     Ok(())
 }
 pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     let query_open =
-        "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-05..2023-10-15 -label:spam -label:invalid";
+        "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-12..2023-10-18 -label:spam -label:invalid";
 
     let open_issue_obj: Vec<IssueOpen> = search_issues_open(&query_open).await?;
     let len = open_issue_obj.len();
@@ -307,7 +308,7 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     }
 
     // let query_comment =
-    //     "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-05..2023-10-15 -label:spam -label:invalid";
+    //     "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-12..2023-10-18 -label:spam -label:invalid";
     // log::info!("query_open: {:?}", query_open);
 
     // let issue_comment_obj: Vec<IssueComment> = search_issues_comment(&query_comment).await?;
@@ -318,7 +319,7 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     // }
 
     // let _query_assigned =
-    //     "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-05..2023-10-15 -label:spam -label:invalid";
+    //     "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-12..2023-10-18 -label:spam -label:invalid";
     // let issues_assigned_obj: Vec<IssueAssigned> = search_issues_assigned(&_query_assigned).await?;
     // let len = issues_assigned_obj.len();
     // log::info!("Assigned issues recorded: {:?}", len);
@@ -327,7 +328,7 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     // }
 
     let query_closed =
-        "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-05..2023-10-15 -label:spam -label:invalid";
+        "label:hacktoberfest label:hacktoberfest-accepted is:issue closed:2023-10-12..2023-10-18 -label:spam -label:invalid";
     let close_issue_obj = search_issues_closed(&query_closed).await?;
     let len = close_issue_obj.len();
     log::info!("Closed issues recorded: {:?}", len);
@@ -338,16 +339,16 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
-// pub async fn populate_vector_db(pool: &Pool) -> anyhow::Result<()> {
-//     for item in get_issues_repos_from_db().await.expect("msg") {
-//         log::info!("uploading to vector_db: {:?}", item.0);
-//         let _ = upload_to_collection(&item.0, item.1.clone()).await;
-//         let _ = mark_id_indexed(&pool, &item.0).await;
-//     }
-//     let _ = check_vector_db("gosim_search").await;
+pub async fn populate_vector_db(pool: &Pool) -> anyhow::Result<()> {
+    for item in get_issues_repos_from_db().await.expect("msg") {
+        log::info!("uploading to vector_db: {:?}", item.0);
+        let _ = upload_to_collection(&item.0, item.1.clone()).await;
+        let _ = mark_id_indexed(&pool, &item.0).await;
+    }
+    let _ = check_vector_db("gosim_search").await;
 
-//     Ok(())
-// }
+    Ok(())
+}
 
 pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
     let _ = open_master(&pool).await?;

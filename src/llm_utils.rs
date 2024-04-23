@@ -65,6 +65,7 @@ pub async fn chat_inner_async(
 
     let co = ChatOptions {
         model: ChatModel::GPT35Turbo,
+        restart: true,
         system_prompt: Some(system_prompt),
         max_tokens: Some(max_token),
         ..Default::default()
@@ -83,7 +84,7 @@ pub async fn chat_inner_async(
 
 pub fn parse_summary_and_keywords(input: &str) -> (String, Vec<String>) {
     let summary_regex = Regex::new(r#""summary":\s*"([^"]*)""#).unwrap();
-    let keywords_regex = Regex::new(r#""keywords":\s*\[([^\]]*)\]"#).unwrap();
+    let keywords_regex = Regex::new(r#""keywords":\s*\[?([^}\]]*)\]?"#).unwrap();
 
     let summary = summary_regex
         .captures(input)
@@ -96,7 +97,8 @@ pub fn parse_summary_and_keywords(input: &str) -> (String, Vec<String>) {
         .map_or(Vec::new(), |m| {
             m.as_str()
                 .split(',')
-                .map(|s| s.trim().trim_matches('"').to_string())
+                .map(|s| s.trim().trim_matches(|c: char| c == '"' || c == '}' || c == '\n').to_string())
+                .filter(|s| !s.is_empty()) // Filter out empty strings after splitting.
                 .collect()
         });
 
