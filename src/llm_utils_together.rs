@@ -86,16 +86,20 @@ pub async fn chat_inner_async(
         .build()?;
 
     let chat = match client.chat().create(request).await {
-        Ok(chat) => chat,
+        Ok(chat) => {
+
+            chat},
         Err(_e) => {
-            println!("Error getting response from OpenAI: {:?}", _e);
+            log::info!("Error getting response from OpenAI: {:?}", _e);
             return Err(anyhow::anyhow!("Failed to get reply from OpenAI: {:?}", _e));
         }
     };
+            let raw = chat.choices.to_owned();
+            log::info!("Error getting response from OpenAI: {:?}", raw);
 
     match chat.choices[0].message.clone().content {
         Some(res) => {
-            // println!("{:?}", chat.choices[0].message.clone());
+            // log::info!("{:?}", chat.choices[0].message.clone());
             Ok(res)
         }
         None => Err(anyhow::anyhow!("Failed to get reply from OpenAI")),
