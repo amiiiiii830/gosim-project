@@ -418,7 +418,6 @@ async fn list_projects_handler(
     let projects_obj = list_projects(&pool, page, page_size).await.expect("msg");
 
     let projects_str = json!(projects_obj).to_string();
-    log::error!("projects_str: {}", projects_str);
 
     send_response(
         200,

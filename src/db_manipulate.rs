@@ -226,7 +226,10 @@ pub struct IssueAndComments {
     pub issue_comments: Option<Vec<(String, String)>>,
 }
 
-pub async fn get_issue_w_comments_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<IssueAndComments> {
+pub async fn get_issue_w_comments_by_id(
+    pool: &Pool,
+    issue_id: &str,
+) -> anyhow::Result<IssueAndComments> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"SELECT issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE issue_id = :issue_id";
@@ -253,36 +256,36 @@ pub async fn get_issue_w_comments_by_id(pool: &Pool, issue_id: &str) -> anyhow::
             return Err(anyhow::anyhow!("Error getting issue by issue_id"));
         }
     };
+    let comments = None;
+    // let query_comments = r"SELECT comment_creator, comment_body FROM issues_comment WHERE issue_id = :issue_id ORDER BY comment_date";
 
-    let query_comments = r"SELECT comment_creator, comment_body FROM issues_comment WHERE issue_id = :issue_id ORDER BY comment_date";
-
-    let comments: Option<Vec<(String, String)>> = match conn
-        .exec(query_comments, params! {"issue_id" => issue_id})
-        .await
-    {
-        Ok(ve) => {
-            if !ve.is_empty() {
-                Some(
-                    ve.into_iter()
-                        .map(|row: Row| {
-                            let (creator, body) = mysql_async::from_row(row);
-                            (creator, body)
-                        })
-                        .collect::<Vec<(String, String)>>(),
-                )
-            } else {
-                None
-            }
-        }
-        Err(e) => {
-            log::error!(
-                "Error getting comments by issue_id: {}. Error: {:?}",
-                issue_id,
-                e
-            );
-            None
-        }
-    };
+    // let comments: Option<Vec<(String, String)>> = match conn
+    //     .exec(query_comments, params! {"issue_id" => issue_id})
+    //     .await
+    // {
+    //     Ok(ve) => {
+    //         if !ve.is_empty() {
+    //             Some(
+    //                 ve.into_iter()
+    //                     .map(|row: Row| {
+    //                         let (creator, body) = mysql_async::from_row(row);
+    //                         (creator, body)
+    //                     })
+    //                     .collect::<Vec<(String, String)>>(),
+    //             )
+    //         } else {
+    //             None
+    //         }
+    //     }
+    //     Err(e) => {
+    //         log::error!(
+    //             "Error getting comments by issue_id: {}. Error: {:?}",
+    //             issue_id,
+    //             e
+    //         );
+    //         None
+    //     }
+    // };
 
     Ok(IssueAndComments {
         issue_id: issue.issue_id,
