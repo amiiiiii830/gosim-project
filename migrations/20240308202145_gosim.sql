@@ -13,15 +13,15 @@ CREATE TABLE issues_master (
     issue_title VARCHAR(255) NOT NULL,
     issue_creator VARCHAR(50) NOT NULL,
     issue_description TEXT NOT NULL,  -- description of the issue, could be truncated body text
-    issue_budget INT,
+    issue_budget INT DEFAULT 0,
     issue_assignees JSON,    
     date_issue_assigned DATETIME,   
     issue_linked_pr VARCHAR(255), 
     issue_status TEXT,    -- default empty, or some situation odd conditions occur
-    review_status ENUM('queue', 'approve', 'decline'),
+    review_status ENUM('queue', 'approve', 'decline') DEFAULT 'queue',
     date_approved DATETIME,
     date_declined DATETIME,
-    issue_budget_approved BOOLEAN,
+    issue_budget_approved BOOLEAN DEFAULT 0,
     date_budget_approved DATETIME
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
