@@ -312,10 +312,12 @@ async fn get_issue_by_post_handler(
     log::info!("Issue_id: {}", issue_id);
     let pool = get_pool().await;
 
-    let issue = get_issue_by_id(&pool, issue_id).await.expect("msg");
+    let issue = get_issue_w_comments_by_id(&pool, issue_id)
+        .await
+        .expect("msg");
 
     let issues_str = json!(issue).to_string();
-    // log::error!("issues_str: {}", issues_str);
+    log::info!("issues_str: {}", issues_str);
 
     send_response(
         200,
@@ -415,7 +417,7 @@ async fn list_projects_handler(
 
     let projects_obj = list_projects(&pool, page, page_size).await.expect("msg");
 
-    let projects_str = format!("{:?}", projects_obj);
+    let projects_str = json!(projects_obj).to_string();
     log::error!("projects_str: {}", projects_str);
 
     send_response(

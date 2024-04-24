@@ -148,7 +148,7 @@ pub async fn list_projects(pool: &Pool, page: usize, page_size: usize) -> Result
     let projects: Vec<Project> = conn
         .query_map(
             format!(
-                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated, total_budget_used FROM projects ORDER BY project_id LIMIT {} OFFSET {}",
+                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated FROM projects ORDER BY project_id LIMIT {} OFFSET {}",
                 page_size, offset
             ),
             |(project_id, project_logo, repo_stars, project_description, issues_list,  total_budget_allocated ): (String, Option<String>, i32, Option<String>, Option<String>,Option<i32>)| {
@@ -226,7 +226,7 @@ pub struct IssueAndComments {
     pub issue_comments: Option<Vec<(String, String)>>,
 }
 
-pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<IssueAndComments> {
+pub async fn get_issue_w_comments_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<IssueAndComments> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"SELECT issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE issue_id = :issue_id";
@@ -241,38 +241,48 @@ pub async fn get_issue_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<Issu
         .await
     {
         Ok(Some(issue)) => issue,
-        Ok(None) => return Err(anyhow::anyhow!("No issue found with the provided issue_id")),
+        Ok(None) => {
+            log::error!("No issue found with the provided issue_id: {issue_id}");
+
+            return Err(anyhow::anyhow!(
+                "No issue found with the provided issue_id: {issue_id}"
+            ));
+        }
         Err(e) => {
             log::error!("Error getting issue by issue_id: {:?}", e);
             return Err(anyhow::anyhow!("Error getting issue by issue_id"));
         }
     };
 
-    let mut comments: Option<Vec<(String, String)>> = None;
     let query_comments = r"SELECT comment_creator, comment_body FROM issues_comment WHERE issue_id = :issue_id ORDER BY comment_date";
 
-    match conn
-        .exec(
-            query_comments,
-            params! {
-                "issue_id" => issue_id,
-            },
-        )
+    let comments: Option<Vec<(String, String)>> = match conn
+        .exec(query_comments, params! {"issue_id" => issue_id})
         .await
     {
         Ok(ve) => {
             if !ve.is_empty() {
-                comments = Some(
+                Some(
                     ve.into_iter()
-                        .map(|(creator, body): (String, String)| (creator, body))
+                        .map(|row: Row| {
+                            let (creator, body) = mysql_async::from_row(row);
+                            (creator, body)
+                        })
                         .collect::<Vec<(String, String)>>(),
-                );
+                )
+            } else {
+                None
             }
         }
         Err(e) => {
-            log::error!("Error getting comments by issue_id: {:?}", e);
+            log::error!(
+                "Error getting comments by issue_id: {}. Error: {:?}",
+                issue_id,
+                e
+            );
+            None
         }
-    }
+    };
 
     Ok(IssueAndComments {
         issue_id: issue.issue_id,
@@ -518,7 +528,7 @@ pub async fn conclude_issues_batch_in_db(
 // pub async fn search_by_keyword_tags(tags_to_search: Vec<String>) -> anyhow::Result<Vec<String>> {
 //     let mut conn = pool.get_conn().await?;
 
-//     let query = r"select issue_or_project_id, keyword_tags from issues_repos_summarized 
+//     let query = r"select issue_or_project_id, keyword_tags from issues_repos_summarized
 //                   WHERE :tags_to_search in keyword_tags";
 
 //     for issue_id in issue_ids {
@@ -537,7 +547,6 @@ pub async fn conclude_issues_batch_in_db(
 
 //     Ok(())
 // }
-
 
 // pub async fn search_by_keyword_tags(pool: Pool, tags_to_search: Vec<String>) -> Result<Vec<String>> {
 //     let mut conn = pool.get_conn().await?;
@@ -564,7 +573,10 @@ pub async fn conclude_issues_batch_in_db(
 //     Ok(results)
 // }
 
-pub async fn search_by_keyword_tags(pool: Pool, tags_to_search: Vec<String>) -> Result<Vec<String>> {
+pub async fn search_by_keyword_tags(
+    pool: Pool,
+    tags_to_search: Vec<String>,
+) -> Result<Vec<String>> {
     let mut conn = pool.get_conn().await?;
     let mut results = Vec::new();
     let mut unique_ids = std::collections::HashSet::new();
@@ -573,9 +585,14 @@ pub async fn search_by_keyword_tags(pool: Pool, tags_to_search: Vec<String>) -> 
 
     let query = r"SELECT issue_or_project_id FROM issues_repos_summarized WHERE MATCH(keyword_tags_text) AGAINST(:tags IN BOOLEAN MODE)";
 
-    let rows: Vec<Row> = conn.exec(query, params! {
-        "tags" => &search_string,
-    }).await?;
+    let rows: Vec<Row> = conn
+        .exec(
+            query,
+            params! {
+                "tags" => &search_string,
+            },
+        )
+        .await?;
 
     for row in rows {
         let issue_id: String = row.get("issue_or_project_id").unwrap();
