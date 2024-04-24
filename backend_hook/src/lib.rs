@@ -387,7 +387,6 @@ async fn list_issues_handler(
         }
     };
     log::error!("page: {}, page_size: {}", page, page_size);
-    let pool = get_pool().await;
 
     let list_by = _qry.get("list_by").and_then(|v| v.as_str());
     log::info!(
@@ -397,38 +396,51 @@ async fn list_issues_handler(
         list_by
     );
 
-    let mut issues_obj = Vec::<IssueSubset>::new();
-
     let pool = get_pool().await;
     match list_by {
-        Some("repo_stars") | Some("total_budget_allocated") => {
-            issues_obj = list_issues_by(&pool, page, page_size, list_by.unwrap())
+        // Some("repo_stars")  => {
+        //     issues_obj = list_issues_by_issues_count(&pool, page, page_size, list_by.unwrap())
+        //         .await
+        //         .expect("msg")
+        // }
+        Some(review_status) => {
+            let issues_obj = list_issues_by_status(&pool, review_status, page, page_size)
                 .await
-                .expect("msg")
+                .expect("msg");
+            let issues_str = json!(issues_obj).to_string();
+
+            send_response(
+                200,
+                vec![
+                    (String::from("content-type"), String::from("text/html")),
+                    (
+                        String::from("Access-Control-Allow-Origin"),
+                        String::from("*"),
+                    ),
+                ],
+                issues_str.as_bytes().to_vec(),
+            );
         }
 
-        Some("issues_count") => {
-            issues_obj = list_issues_by_issues_count(&pool, page, page_size)
+        _ => {
+            let issues_obj = list_issues_quick(&pool, page, page_size)
                 .await
-                .expect("msg")
-        }
+                .expect("msg");
+            let issues_str = json!(issues_obj).to_string();
 
-        _ => issues_obj = list_issues_quick(&pool, page, page_size).await.expect("msg"),
+            send_response(
+                200,
+                vec![
+                    (String::from("content-type"), String::from("text/html")),
+                    (
+                        String::from("Access-Control-Allow-Origin"),
+                        String::from("*"),
+                    ),
+                ],
+                issues_str.as_bytes().to_vec(),
+            );
+        }
     };
-
-    let issues_str = json!(issues_obj).to_string();
-
-    send_response(
-        200,
-        vec![
-            (String::from("content-type"), String::from("text/html")),
-            (
-                String::from("Access-Control-Allow-Origin"),
-                String::from("*"),
-            ),
-        ],
-        issues_str.as_bytes().to_vec(),
-    );
 }
 
 async fn list_projects_handler(
