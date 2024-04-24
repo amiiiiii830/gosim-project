@@ -94,6 +94,26 @@ pub async fn comment_master(pool: &mysql_async::Pool) -> Result<()> {
     Ok(())
 }
 
+pub async fn project_master_back_sync(pool: &mysql_async::Pool) -> Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"
+    UPDATE issues_master im
+    JOIN projects p ON im.project_id = p.project_id
+    SET im.main_language = p.main_language,
+        im.repo_stars = p.repo_stars;
+        ";
+
+    if let Err(e) = conn.query_drop(query).await {
+        log::error!(
+            "Error syncing main_language, repo_stars to issues_master: {:?}",
+            e
+        );
+    };
+
+    Ok(())
+}
+
 pub async fn remove_pull_by_issued_linked_pr(pool: &mysql_async::Pool) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 

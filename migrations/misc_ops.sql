@@ -81,6 +81,15 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- randomly assign budgets to 20% of the projects
+SET @total_rows = (SELECT COUNT(*) FROM projects);
+SET @rows_to_update = ROUND(@total_rows * 0.2);
+SET @sql = CONCAT('UPDATE projects SET total_budget_allocated = FLOOR(350 + RAND() * 51) ORDER BY RAND() LIMIT ', @rows_to_update);
+
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
+
 -- assign 30% of the issues to a decline
 SET @total_rows = (SELECT COUNT(*) FROM issues_master);
 SET @rows_to_update = ROUND(@total_rows * 0.3);
@@ -90,6 +99,25 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
+-- Calculate the total number of rows and the number of rows to update
+SET @total_rows = (SELECT COUNT(*) FROM projects);
+SET @rows_to_update = ROUND(@total_rows * 0.3);
+
+-- Prepare a statement to update the projects table
+SET @sql = CONCAT('UPDATE projects SET main_language = CASE 
+    WHEN RAND() <= 0.1667 THEN ''Rust'' 
+    WHEN RAND() > 0.1667 AND RAND() <= 0.3334 THEN ''Javascript''
+    WHEN RAND() > 0.3334 AND RAND() <= 0.5001 THEN ''html''
+    WHEN RAND() > 0.5001 AND RAND() <= 0.6668 THEN ''cplusplus''
+    WHEN RAND() > 0.6668 AND RAND() <= 0.8335 THEN ''typescript''
+    ELSE ''Go''
+    END 
+ORDER BY RAND() LIMIT ', @rows_to_update);
+
+-- Execute the prepared statement
+PREPARE stmt FROM @sql;
+EXECUTE stmt;
+DEALLOCATE PREPARE stmt;
 
 -- assign 20% to be budget approved
 SET @total_rows = (SELECT COUNT(*) FROM issues_master);

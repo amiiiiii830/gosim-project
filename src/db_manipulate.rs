@@ -53,39 +53,39 @@ pub async fn list_issues_by_status(
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
     let issues: Vec<IssueOut> = conn
-        .query_map(
-            format!(
-                "SELECT issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master where review_status = '{}' ORDER BY issue_id LIMIT {} OFFSET {}",
-                review_status, page_size, offset
-            ),
-            |(issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees_value, issue_linked_pr, issue_status, review_status, issue_budget_approved): (String, String, String, String, Option<i32>, Option<String>, Option<String>, Option<String>, String, Option<bool>)| {
-                let issue_assignees = match &issue_assignees_value {
-                    Some(value) => {
-                        let vec: Vec<String> = serde_json::from_str(value).unwrap_or_default();
-                        Some(vec)
-                    }
-                    None => None,
-                };
-                IssueOut {
-                    issue_id,
-                    project_id,
-                    issue_title,
-                    issue_description,
-                    issue_budget,
-                    issue_assignees,
-                    issue_linked_pr,
-                    issue_status: issue_status,
-                    review_status,
-                    issue_budget_approved: issue_budget_approved.unwrap_or_default(),
-                }
-            },
-        )
-        .await?;
+    .query_map(
+        format!(
+            "SELECT issue_id, project_id, main_language, repo_stars, issue_title, issue_creator, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE review_status = ? ORDER BY issue_id LIMIT ? OFFSET ?",
+            review_status, page_size, offset
+        ),
+        |(issue_id, project_id, main_language, repo_stars, issue_title, issue_creator, issue_description, issue_budget, issue_assignees_value, issue_linked_pr, issue_status, review_status, issue_budget_approved): (String, String, String, i32, String, String, String, Option<i32>, Option<JsonValue>, Option<String>, Option<String>, String, Option<bool>)| {
+            let issue_assignees = issue_assignees_value
+                .as_ref()
+                .and_then(|json| serde_json::from_value(json.clone()).ok())
+                .unwrap_or_default();
+            IssueOut {
+                issue_id,
+                project_id,
+                main_language,
+                repo_stars,
+                issue_title,
+                issue_creator,
+                issue_description,
+                issue_budget,
+                issue_assignees,
+                issue_linked_pr,
+                issue_status,
+                review_status,
+                issue_budget_approved: issue_budget_approved.unwrap_or_default(),
+            }
+        },
+    )
+    .await?;
 
-    Ok(issues)
+Ok(issues)
 }
 
-pub async fn list_issues(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<IssueSubset>> {
+pub async fn list_issues_quick(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<IssueSubset>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
     let issues: Vec<IssueSubset> = conn
@@ -222,45 +222,46 @@ use mysql_async::prelude::FromRow;
 use mysql_async::Row;
 use mysql_async::Value;
 
-impl FromRow for IssueOut {
-    fn from_row_opt(row: Row) -> std::result::Result<Self, mysql_async::FromRowError> {
-        let (
-            issue_id,
-            project_id,
-            issue_title,
-            issue_description,
-            issue_budget,
-            issue_assignees_value,
-            issue_linked_pr,
-            issue_status,
-            review_status,
-            issue_budget_approved,
-        ) = mysql_async::from_row_opt(row)?;
+/* impl FromRow for IssueOut {
+    fn from_row_opt(row: Row) -> Result<Self> {
+        let result: (
+            String, String, String, i32, String, String, String,
+            Option<i32>, Option<Vec<u8>>, Option<String>, Option<String>, String, bool,
+        ) = from_row_opt(row)?;
 
-        // Convert issue_assignees_value into Vec<String>
-        let issue_assignees = match issue_assignees_value {
-            Value::Bytes(bytes) => {
-                let s = String::from_utf8_lossy(&bytes);
-                let vec: Vec<String> = serde_json::from_str(&s).unwrap_or_default();
-                Some(vec)
-            }
-            _ => None,
-        };
+        match result {
+            Ok((
+                issue_id, project_id, main_language, repo_stars, issue_title, issue_creator, issue_description,
+                issue_budget, issue_assignees_value, issue_linked_pr, issue_status, review_status, issue_budget_approved,
+            )) => {
+                let issue_assignees = match issue_assignees_value {
+                    Some(bytes) => {
+                        let s = String::from_utf8_lossy(&bytes);
+                        serde_json::from_str(&s).ok()
+                    },
+                    None => None,
+                };
 
-        Ok(IssueOut {
-            issue_id,
-            project_id,
-            issue_title,
-            issue_description,
-            issue_budget,
-            issue_assignees,
-            issue_linked_pr,
-            issue_status,
-            review_status,
-            issue_budget_approved,
-        })
+                Ok(IssueOut {
+                    issue_id,
+                    project_id,
+                    main_language,
+                    repo_stars,
+                    issue_title,
+                    issue_creator,
+                    issue_description,
+                    issue_budget,
+                    issue_assignees,
+                    issue_linked_pr,
+                    issue_status,
+                    review_status,
+                    issue_budget_approved,
+                })
+            },
+            Err(e) => Err(mysql_async::Error::from(e)),
+        }
     }
-}
+} */
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct IssueAndComments {

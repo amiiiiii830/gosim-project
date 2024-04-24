@@ -1,4 +1,4 @@
-use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_tracker::*};
+use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_tracker::*, vector_search::*};
 use crate::{ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
 
 use anyhow::Ok;
@@ -40,13 +40,40 @@ pub fn inner_query_1_hour(
 }
 
 pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
-    let _ = popuate_dbs(pool).await?;
-    let _ = join_ops(pool).await?;
-    let _ = cleanup_ops(pool).await?;
+    let _ = popuate_dbs_save_issues_open(pool).await?;
+
+    let _ = open_master(pool).await?;
+
+    let _ = popuate_dbs_save_issues_assigned(pool).await?;
+
+    let _ = assigned_master(pool).await?;
+
+    let _ = popuate_dbs_save_issues_closed(pool).await?;
+
+    let _ = closed_master(pool).await?;
+
+    let _ = popuate_dbs_fill_projects(pool).await?;
+
+    let _ = master_project(&pool).await?;
+
+    let _ = popuate_dbs_save_pull_requests(pool).await?;
+
+    let _ = project_master_back_sync(&pool).await?;
+
+    let _ = populate_vector_db(pool).await?;
+
+    let _ = popuate_dbs_save_issues_comment(pool).await?;
+
+    let _ = sum_budget_to_project(&pool).await?;
+
+    let _ = remove_pull_by_issued_linked_pr(&pool).await?;
+    let _ = delete_issues_open_assigned_closed(&pool).await?;
+
     // let _ = note_issues(pool).await?;
+
     Ok(())
 }
-pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
+pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
     let query_open = inner_query_1_hour(
         &START_DATE,
         &THIS_HOUR,
@@ -67,7 +94,8 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
 
         let _ = summarize_issue_add_in_db(pool, &issue).await;
     }
-
+}
+pub async fn popuate_dbs_save_issues_comment(pool: &Pool) -> anyhow::Result<()> {
     let query_comment =
         "label:hacktoberfest-accepted is:issue updated:>2024-01-01 -label:spam -label:invalid";
     log::info!("query_open: {:?}", query_open);
@@ -78,7 +106,8 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     for issue in issue_comment_obj {
         let _ = add_issues_comment(pool, issue).await;
     }
-
+}
+pub async fn popuate_dbs_save_issues_assigned(pool: &Pool) -> anyhow::Result<()> {
     let _query_assigned = inner_query_1_hour(
         &START_DATE,
         &THIS_HOUR,
@@ -97,7 +126,8 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     for issue in issues_assigned_obj {
         let _ = add_issues_assigned(pool, issue).await;
     }
-
+}
+pub async fn popuate_dbs_save_issues_closed(pool: &Pool) -> anyhow::Result<()> {
     let query_closed = inner_query_1_hour(
         &START_DATE,
         &THIS_HOUR,
@@ -116,6 +146,10 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
         let _ = add_issues_closed(pool, issue).await;
     }
 
+    Ok(())
+}
+
+pub async fn popuate_dbs_save_pull_requests(pool: &Pool) -> anyhow::Result<()> {
     let query_pull_request = inner_query_1_hour(
         &START_DATE,
         &THIS_HOUR,
@@ -137,26 +171,7 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
-// pub async fn populate_vector_db(pool: &Pool) -> anyhow::Result<()> {
-//     for item in get_issues_repos_from_db().await.expect("msg") {
-//         log::info!("uploading to vector_db: {:?}", item.0);
-//         let _ = upload_to_collection(&item.0, item.1.clone()).await;
-//         let _ = mark_id_indexed(&pool, &item.0).await;
-//     }
-//     let _ = check_vector_db("gosim_search").await;
-
-//     Ok(())
-// }
-
-pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
-    let _ = open_master(&pool).await?;
-    let _ = assigned_master(&pool).await?;
-
-    let _ = closed_master(&pool).await?;
-
-    let _ = master_project(&pool).await?;
-    let _ = sum_budget_to_project(&pool).await?;
-
+pub async fn popuate_dbs_fill_projects(pool: &Pool) -> anyhow::Result<()> {
     let query_repos: String = get_projects_as_repo_list(pool, 1).await?;
 
     let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await?;
@@ -165,14 +180,16 @@ pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
         let _ = fill_project_w_repo_data(&pool, repo_data.clone()).await?;
         let _ = summarize_project_add_in_db(&pool, repo_data).await?;
     }
-    let _ = project_master_back_sync(&pool).await?;
-
     Ok(())
 }
 
-pub async fn cleanup_ops(pool: &Pool) -> anyhow::Result<()> {
-    let _ = remove_pull_by_issued_linked_pr(&pool).await?;
-    let _ = delete_issues_open_assigned_closed(&pool).await?;
+pub async fn populate_vector_db(pool: &Pool) -> anyhow::Result<()> {
+    for item in get_issues_repos_from_db().await.expect("msg") {
+        log::info!("uploading to vector_db: {:?}", item.0);
+        let _ = upload_to_collection(&item.0, item.1.clone()).await;
+        let _ = mark_id_indexed(&pool, &item.0).await;
+    }
+    let _ = check_vector_db("gosim_search").await;
 
     Ok(())
 }

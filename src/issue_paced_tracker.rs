@@ -290,7 +290,7 @@ pub async fn search_issues_assigned(query: &str) -> anyhow::Result<Vec<IssueAssi
     let mut all_issues = Vec::new();
     let mut after_cursor: Option<String> = None;
 
-    for _ in 0..10 {
+    for _ in 0..1 {
         let query_str = format!(
             r#"
                 query {{
@@ -426,7 +426,7 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
     let mut all_issues = Vec::new();
     let mut after_cursor: Option<String> = None;
 
-    for _ in 0..10 {
+    for _ in 0..1 {
         let query_str = format!(
             r#"
             query {{
@@ -578,7 +578,7 @@ pub async fn search_issues_comment(query: &str) -> anyhow::Result<Vec<IssueComme
     // let last_hour = Utc::now() - Duration::try_hours(1).unwrap();
     let last_hour = Utc::now() - Duration::try_days(5).unwrap();
 
-    for _ in 0..10 {
+    for _ in 0..1 {
         let query_str = format!(
             r#"
             query {{
@@ -778,7 +778,7 @@ pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<IssueClosed
     let mut all_issues = Vec::new();
     let mut after_cursor: Option<String> = None;
 
-    for _ in 0..10 {
+    for _ in 0..1 {
         let query_str = format!(
             r#"
             query {{
@@ -1000,7 +1000,7 @@ pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>>
     let mut all_pulls = Vec::new();
     let mut after_cursor: Option<String> = None;
 
-    for _n in 0..10 {
+    for _n in 0..1 {
         let query_str = format!(
             r#"
             query {{
@@ -1138,7 +1138,7 @@ pub async fn search_mock_user(query: &str) -> anyhow::Result<Vec<(String, String
     let mut all_issues = Vec::new();
     let mut after_cursor: Option<String> = None;
 
-    for _ in 0..10 {
+    for _ in 0..1 {
         let query_str = format!(
             r#"
             query {{

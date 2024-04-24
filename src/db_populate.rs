@@ -7,20 +7,25 @@ use mysql_async::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
+
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct IssueOut {
     pub issue_id: String,
     pub project_id: String,
+    pub main_language: String, // Added to match the SQL structure
+    pub repo_stars: i32,       // Added to match the SQL structure
     pub issue_title: String,
+    pub issue_creator: String, // Added to match the SQL structure
     pub issue_description: String,
     pub issue_budget: Option<i32>,
-    pub issue_assignees: Option<Vec<String>>, // or a more specific type if you know the structure of the JSON
+    pub issue_assignees: Option<Vec<String>>, // Assuming assignees as a map of ID to name
     pub issue_linked_pr: Option<String>,
     pub issue_status: Option<String>,
     pub review_status: String,
     #[serde(default = "default_value")]
     pub issue_budget_approved: bool,
 }
+
 fn default_value() -> bool {
     false
 }
@@ -101,15 +106,17 @@ pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyho
 
     let res = conn
         .exec_drop(
-            r"INSERT INTO projects (project_id, project_logo, repo_stars, project_description)
-        VALUES (:project_id, :project_logo, :repo_stars, :project_description)
+            r"INSERT INTO projects (project_id, project_logo, main_language, repo_stars, project_description)
+        VALUES (:project_id, :project_logo, :main_language, :repo_stars, :project_description)
         ON DUPLICATE KEY UPDATE
         project_logo = VALUES(project_logo),
+        main_language = VALUES(main_language),
         repo_stars = VALUES(repo_stars),
         project_description = VALUES(project_description);",
             params! {
                 "project_id" => &repo_data.project_id,
                 "project_logo" => &repo_data.project_logo,
+                "main_language" => &repo_data.main_language,
                 "repo_stars" => repo_data.repo_stars,
                 "project_description" => project_description,
             },
@@ -604,7 +611,7 @@ pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> an
     };
 
     let one_step_system_prompt = r#"Summarize the GitHub repository's README or description in one paragraph. Extract high-level keywords that represent broader categories or themes relevant to the project's purpose, technologies, features, and tools used. Infer plausible details based on common patterns or typical project characteristics related to the technologies or themes mentioned. These keywords should help categorize the project in a wider context and should not be too literal or specific. Expected Output: { \"summary\": \"the_summary_generated\", \"keywords\": \"keywords_list\" }, ensure you reply in RFC8259-compliant JSON format."#;
-    
+
     let generated_summary = if project_readme.len() < 200 {
         let raw_input_texts = format!(
             "The repository `{repo}` by owner `{owner}` {use_lang_str},`{project_descrpition}`, {project_readme_str}"

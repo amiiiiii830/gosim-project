@@ -1,6 +1,7 @@
 CREATE TABLE projects (
     project_id VARCHAR(255) PRIMARY KEY,  -- url of a project repo
     project_logo VARCHAR(255),
+    main_language VARCHAR(50) DEFAULT '',
     repo_stars INT DEFAULT 0,
     project_description TEXT,  -- description of the project, summary of its readme, etc.
     issues_list JSON,
@@ -9,7 +10,9 @@ CREATE TABLE projects (
 
 CREATE TABLE issues_master (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
-    project_id VARCHAR(255) NOT NULL,
+    project_id VARCHAR(255) NOT NULL,   
+    main_language VARCHAR(50) DEFAULT '',
+    repo_stars INT DEFAULT 0,
     issue_title VARCHAR(255) NOT NULL,
     issue_creator VARCHAR(50) NOT NULL,
     issue_description TEXT NOT NULL,  -- description of the issue, could be truncated body text
@@ -74,6 +77,12 @@ CREATE TABLE pull_requests (
     project_id VARCHAR(255) NOT NULL,
     date_merged DATETIME
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+
+UPDATE issues_master im
+JOIN projects p ON im.project_id = p.project_id
+SET im.main_language = p.main_language,
+    im.repo_stars = p.repo_stars;
 
 
 -- Add a generated column that converts the JSON array to a comma-separated string

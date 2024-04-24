@@ -389,10 +389,34 @@ async fn list_issues_handler(
     log::error!("page: {}, page_size: {}", page, page_size);
     let pool = get_pool().await;
 
-    let issues_obj = list_issues(&pool, page, page_size).await.expect("msg");
+    let list_by = _qry.get("list_by").and_then(|v| v.as_str());
+    log::info!(
+        "page: {} page_size: {}, list_by: {:?}",
+        page,
+        page_size,
+        list_by
+    );
+
+    let mut issues_obj = Vec::<IssueSubset>::new();
+
+    let pool = get_pool().await;
+    match list_by {
+        Some("repo_stars") | Some("total_budget_allocated") => {
+            issues_obj = list_issues_by(&pool, page, page_size, list_by.unwrap())
+                .await
+                .expect("msg")
+        }
+
+        Some("issues_count") => {
+            issues_obj = list_issues_by_issues_count(&pool, page, page_size)
+                .await
+                .expect("msg")
+        }
+
+        _ => issues_obj = list_issues_quick(&pool, page, page_size).await.expect("msg"),
+    };
 
     let issues_str = json!(issues_obj).to_string();
-    // log::error!("issues_str: {}", issues_str);
 
     send_response(
         200,
