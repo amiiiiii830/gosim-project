@@ -405,27 +405,41 @@ pub async fn assign_issue_budget_in_db(
     pool: &mysql_async::Pool,
     issue_id: &str,
     issue_budget: i64,
-) -> Result<()> {
-    let mut conn = pool.get_conn().await?;
-
-    let query = r"UPDATE issues_master 
-                  SET issue_budget = :issue_budget, 
-                      review_status = 'approve',
-                      date_approved = NOW() 
-                  WHERE issue_id = :issue_id";
-
-    if let Err(e) = conn
-        .exec_drop(
-            query,
+) -> anyhow::Result<(), String> {
+    let mut conn = pool.get_conn().await.expect("failed to get mysql pool");
+    let exists_query = r"SELECT 1 FROM issues_master WHERE issue_id = :issue_id";
+    let exists: Option<u8> = conn
+        .exec_first(
+            exists_query,
             params! {
                 "issue_id" => issue_id,
-                "issue_budget" => issue_budget,
             },
         )
         .await
-    {
-        log::error!("Error assign issue_budget: {:?}", e);
-    };
+        .map_err(|e| e.to_string())?;
+
+    if exists.is_none() {
+        return Err(format!("Issue with ID {} doesn't exist", issue_id));
+    }
+
+    let update_query = r"UPDATE issues_master 
+                     SET issue_budget = :issue_budget, 
+                         review_status = 'approve',
+                         date_approved = NOW() 
+                     WHERE issue_id = :issue_id";
+
+    conn.exec_drop(
+        update_query,
+        params! {
+            "issue_id" => issue_id,
+            "issue_budget" => issue_budget,
+        },
+    )
+    .await
+    .map_err(|e| {
+        log::error!("Error assigning issue budget: {:?}", e);
+        format!("Error assigning issue budget: {:?}", e)
+    })?;
 
     Ok(())
 }
