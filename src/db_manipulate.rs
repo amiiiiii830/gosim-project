@@ -174,7 +174,7 @@ pub async fn list_projects_by_issues_count(pool: &Pool, page: usize, page_size: 
     let projects: Vec<Project> = conn
         .query_map(
             format!(
-                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated FROM projects ORDER BY JSON_LENGTH(issues_list) LIMIT {} OFFSET {}",
+                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated FROM projects ORDER BY JSON_LENGTH(issues_list) DESC LIMIT {} OFFSET {}",
                 page_size, offset
             ),
             |(project_id, project_logo, repo_stars, project_description, issues_list,  total_budget_allocated ): (String, Option<String>, i32, Option<String>, Option<String>,Option<i32>)| {
@@ -199,7 +199,7 @@ pub async fn list_projects_by(pool: &Pool, page: usize, page_size: usize, list_b
     let projects: Vec<Project> = conn
         .query_map(
             format!(
-                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated FROM projects ORDER BY {} LIMIT {} OFFSET {}",
+                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated FROM projects ORDER BY {} DESC LIMIT {} OFFSET {}",
                list_by, page_size, offset
             ),
             |(project_id, project_logo, repo_stars, project_description, issues_list,  total_budget_allocated ): (String, Option<String>, i32, Option<String>, Option<String>,Option<i32>)| {
