@@ -435,10 +435,30 @@ async fn list_projects_handler(
             return;
         }
     };
-    log::error!("page: {}, page_size: {}", page, page_size);
-    let pool = get_pool().await;
+    let list_by = _qry.get("list_by").and_then(|v| v.as_str());
+    log::info!(
+        "page: {} page_size: {}, list_by: {:?}",
+        page,
+        page_size,
+        list_by
+    );
 
-    let projects_obj = list_projects(&pool, page, page_size).await.expect("msg");
+    let mut projects_obj = Vec::<Project>::new();
+
+    let pool = get_pool().await;
+    match list_by {
+        Some("repo_stars") | Some("total_budget_allocated") => {
+            projects_obj = list_projects_by(&pool, page, page_size, list_by.unwrap())
+                .await
+                .expect("msg")
+        }
+        Some("issues_count") => {
+            projects_obj = list_projects_by_issues_count(&pool, page, page_size)
+                .await
+                .expect("msg")
+        }
+        _ => projects_obj = list_projects(&pool, page, page_size).await.expect("msg"),
+    };
 
     let projects_str = json!(projects_obj).to_string();
 

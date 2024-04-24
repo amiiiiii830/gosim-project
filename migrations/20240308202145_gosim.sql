@@ -1,10 +1,10 @@
 CREATE TABLE projects (
     project_id VARCHAR(255) PRIMARY KEY,  -- url of a project repo
     project_logo VARCHAR(255),
-    repo_stars INT,
+    repo_stars INT DEFAULT 0,
     project_description TEXT,  -- description of the project, summary of its readme, etc.
     issues_list JSON,
-    total_budget_allocated INT
+    total_budget_allocated INT DEFAULT 0
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE issues_master (
@@ -30,7 +30,7 @@ CREATE TABLE issues_open (
     project_id VARCHAR(255) NOT NULL,
     issue_creator VARCHAR(50) NOT NULL,
     issue_title VARCHAR(255) NOT NULL,
-    issue_budget INT,
+    issue_budget INT DEFAULT 0,
     issue_description TEXT NOT NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -42,7 +42,7 @@ CREATE TABLE issues_repos_summarized (
     issue_or_project_id VARCHAR(255) PRIMARY KEY, -- url of an issue
     issue_or_project_summary TEXT NOT NULL,
     keyword_tags JSON,
-    indexed BOOLEAN NOT NULL
+    indexed BOOLEAN DEFAULT 0
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 
@@ -90,7 +90,7 @@ CREATE TABLE issues_repos_summarized (
     keyword_tags JSON,
     keyword_tags_text TEXT GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(keyword_tags, '$'))) STORED,
     keyword_tags_text FULLTEXT,
-    indexed BOOLEAN NOT NULL
+    indexed BOOLEAN  DEFAULT 0
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 

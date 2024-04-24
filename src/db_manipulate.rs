@@ -168,6 +168,55 @@ pub async fn list_projects(pool: &Pool, page: usize, page_size: usize) -> Result
 
     Ok(projects)
 }
+pub async fn list_projects_by_issues_count(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<Project>> {
+    let mut conn = pool.get_conn().await?;
+    let offset = (page - 1) * page_size;
+    let projects: Vec<Project> = conn
+        .query_map(
+            format!(
+                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated FROM projects ORDER BY JSON_LENGTH(issues_list) LIMIT {} OFFSET {}",
+                page_size, offset
+            ),
+            |(project_id, project_logo, repo_stars, project_description, issues_list,  total_budget_allocated ): (String, Option<String>, i32, Option<String>, Option<String>,Option<i32>)| {
+                Project {
+                    project_id,
+                    project_logo,
+                    repo_stars,
+                    project_description,
+                    issues_list: issues_list.map_or(Some(Vec::new()), |s| serde_json::from_str(&s).ok()),
+                    total_budget_allocated
+                }
+            },
+        )
+        .await?;
+
+    Ok(projects)
+}
+
+pub async fn list_projects_by(pool: &Pool, page: usize, page_size: usize, list_by: &str) -> Result<Vec<Project>> {
+    let mut conn = pool.get_conn().await?;
+    let offset = (page - 1) * page_size;
+    let projects: Vec<Project> = conn
+        .query_map(
+            format!(
+                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated FROM projects ORDER BY {} LIMIT {} OFFSET {}",
+               list_by, page_size, offset
+            ),
+            |(project_id, project_logo, repo_stars, project_description, issues_list,  total_budget_allocated ): (String, Option<String>, i32, Option<String>, Option<String>,Option<i32>)| {
+                Project {
+                    project_id,
+                    project_logo,
+                    repo_stars,
+                    project_description,
+                    issues_list: issues_list.map_or(Some(Vec::new()), |s| serde_json::from_str(&s).ok()),
+                    total_budget_allocated
+                }
+            },
+        )
+        .await?;
+
+    Ok(projects)
+}
 
 use mysql_async::prelude::FromRow;
 use mysql_async::Row;
