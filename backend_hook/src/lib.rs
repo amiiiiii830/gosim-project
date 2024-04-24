@@ -46,7 +46,7 @@ async fn handler(
         )
         .unwrap();
     router
-        .insert("/issue", vec![post(get_issue_by_post_handler)])
+        .insert("/issue", vec![post(get_issue_w_comments_by_post_handler)])
         .unwrap();
     router
         .insert("/projects", vec![get(list_projects_handler)])
@@ -93,7 +93,38 @@ async fn approve_issue_budget_handler(
     let issue_budget = load.issue_budget.unwrap_or_default();
     let issue_id = load.issue_id.unwrap_or_default();
     let pool = get_pool().await;
-    let _ = assign_issue_budget_in_db(&pool, &issue_id, issue_budget).await;
+    let success_str = format!("{issue_id} approved for budget: {issue_budget}");
+    let fail_str = format!("budget approval operation failed on {issue_id}");
+    match assign_issue_budget_in_db(&pool, &issue_id, issue_budget).await {
+        Ok(()) => send_response(
+            200,
+            vec![
+                (
+                    String::from("content-type"),
+                    String::from("application/json"),
+                ),
+                (
+                    String::from("Access-Control-Allow-Origin"),
+                    String::from("*"),
+                ),
+            ],
+            success_str.as_bytes().to_vec(),
+        ),
+        Err(_) => send_response(
+            500,
+            vec![
+                (
+                    String::from("content-type"),
+                    String::from("application/json"),
+                ),
+                (
+                    String::from("Access-Control-Allow-Origin"),
+                    String::from("*"),
+                ),
+            ],
+            fail_str.as_bytes().to_vec(),
+        ),
+    }
 }
 
 async fn search_handler(
@@ -106,12 +137,6 @@ async fn search_handler(
         pub query: String,
     }
 
-    // #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-    // pub struct SearchResult {
-    //     pub issue_or_project_id: String,
-    //     pub text: String,
-    // }
-
     let load: SearchLoad = match serde_json::from_slice(&_body) {
         Ok(obj) => obj,
         Err(_e) => {
@@ -123,9 +148,7 @@ async fn search_handler(
     let query = load.query;
     match search_collection(&query, "gosim_search").await {
         Ok(search_result) => {
-            let search_result_obj = search_result[0].clone();
-            // let search_result_obj: SearchResult = serde_json::from_slice(&search_result).unwrap();
-            let search_result_str = json!(search_result_obj.0).to_string();
+            let search_result_str = json!(search_result).to_string();
 
             send_response(
                 200,
@@ -143,7 +166,7 @@ async fn search_handler(
             );
         }
         Err(e) => {
-            log::error!("Error: {:?}", e);
+            log::error!("Error searching vector db: {:?}", e);
         }
     }
 }
@@ -204,7 +227,7 @@ async fn batch_decline_issue_handler(
         }
         Err(failed_ids) => {
             log::error!("Error, failed processing these: {:?}", failed_ids);
-
+            let fail_str = json!(failed_ids).to_string();
             send_response(
                 500,
                 vec![
@@ -217,7 +240,7 @@ async fn batch_decline_issue_handler(
                         String::from("*"),
                     ),
                 ],
-                format!("{:?}", failed_ids).as_bytes().to_vec(),
+                fail_str.as_bytes().to_vec(),
             );
         }
     }
@@ -290,7 +313,7 @@ async fn list_issues_by_status_handler(
     }
 }
 
-async fn get_issue_by_post_handler(
+async fn get_issue_w_comments_by_post_handler(
     _headers: Vec<(String, String)>,
     _qry: HashMap<String, Value>,
     _body: Vec<u8>,
@@ -368,7 +391,7 @@ async fn list_issues_handler(
 
     let issues_obj = list_issues(&pool, page, page_size).await.expect("msg");
 
-    let issues_str = format!("{:?}", issues_obj);
+    let issues_str = json!(issues_obj).to_string();
     // log::error!("issues_str: {}", issues_str);
 
     send_response(

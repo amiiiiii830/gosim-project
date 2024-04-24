@@ -23,7 +23,9 @@ pub async fn batch_decline_issues_in_db(
     for issue_id in issue_ids {
         if let Err(e) = conn
             .exec_drop(
-                r"UPDATE issues_master SET review_status = 'decline' WHERE issue_id = :issue_id",
+                r"UPDATE issues_master SET review_status = 'decline',
+                date_declined = NOW() 
+                 WHERE issue_id = :issue_id",
                 params! {
                     "issue_id" => &issue_id
                 },
@@ -408,7 +410,8 @@ pub async fn assign_issue_budget_in_db(
 
     let query = r"UPDATE issues_master 
                   SET issue_budget = :issue_budget, 
-                      review_status = 'approve'
+                      review_status = 'approve',
+                      date_approved = NOW() 
                   WHERE issue_id = :issue_id";
 
     if let Err(e) = conn
@@ -458,7 +461,8 @@ pub async fn decline_issues_batch_in_db(
 
     let query = r"UPDATE issues_master 
                   SET issue_budget = null, 
-                      review_status = 'decline'
+                      review_status = 'decline',
+                      date_declined = NOW() 
                   WHERE issue_id = :issue_id";
 
     for issue_id in issue_ids {
