@@ -1,5 +1,7 @@
 use crate::db_populate::*;
+use anyhow::anyhow;
 use mysql_async::prelude::*;
+use mysql_async::Row;
 use mysql_async::*;
 use serde::{Deserialize, Serialize};
 
@@ -8,10 +10,18 @@ pub struct IssueSubset {
     pub issue_id: String,
     pub project_id: String,
     pub issue_title: String,
+    pub issue_creator: String,
+    pub main_language: String,
+    pub repo_stars: i32,
     pub issue_budget: Option<i32>,
     pub issue_status: Option<String>,
-    pub review_status: ReviewStatus,
+    pub review_status: String,
+    #[serde(default = "default_value")]
     pub issue_budget_approved: bool,
+}
+
+fn default_value() -> bool {
+    false
 }
 
 pub async fn batch_decline_issues_in_db(
@@ -52,61 +62,62 @@ pub async fn list_issues_by_status(
 ) -> Result<Vec<IssueOut>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
-    let issues: Vec<IssueOut> = conn
-    .query_map(
-        format!(
-            "SELECT issue_id, project_id, main_language, repo_stars, issue_title, issue_creator, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE review_status = ? ORDER BY issue_id LIMIT ? OFFSET ?",
-            review_status, page_size, offset
-        ),
-        |(issue_id, project_id, main_language, repo_stars, issue_title, issue_creator, issue_description, issue_budget, issue_assignees_value, issue_linked_pr, issue_status, review_status, issue_budget_approved): (String, String, String, i32, String, String, String, Option<i32>, Option<JsonValue>, Option<String>, Option<String>, String, Option<bool>)| {
-            let issue_assignees = issue_assignees_value
-                .as_ref()
-                .and_then(|json| serde_json::from_value(json.clone()).ok())
-                .unwrap_or_default();
-            IssueOut {
-                issue_id,
-                project_id,
-                main_language,
-                repo_stars,
-                issue_title,
-                issue_creator,
-                issue_description,
-                issue_budget,
-                issue_assignees,
-                issue_linked_pr,
-                issue_status,
-                review_status,
-                issue_budget_approved: issue_budget_approved.unwrap_or_default(),
-            }
-        },
-    )
-    .await?;
+    let query = format!(
+        "SELECT issue_id, project_id, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_description, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE review_status = '{}' ORDER BY issue_id LIMIT {} OFFSET {}",
+        review_status, page_size, offset
+    );
 
-Ok(issues)
+    let rows: Vec<mysql_async::Row> = conn.query(query).await?;
+
+    let mut issues = Vec::new();
+    for row in rows {
+        let issue = IssueOut {
+            issue_id: row.get("issue_id").unwrap_or_default(),
+            project_id: row.get("project_id").unwrap_or_default(),
+            issue_title: row.get("issue_title").unwrap_or_default(),
+            main_language: row.get("main_language").unwrap_or_default(),
+            repo_stars: row.get::<i32, _>("repo_stars").unwrap_or_default(),
+            issue_budget: row.get::<Option<i32>, _>("issue_budget").unwrap_or(None),
+            issue_creator: row.get("issue_creator").unwrap_or_default(),
+            issue_description: row.get("issue_description").unwrap_or_default(),
+            issue_assignees: row.get::<Option<String>, _>("issue_assignees").unwrap_or(None),
+            issue_linked_pr: row.get::<Option<String>, _>("issue_linked_pr").unwrap_or(None),
+            issue_status: row.get::<Option<String>, _>("issue_status").unwrap_or(None),
+            review_status: row.get("review_status").unwrap_or_default(),
+            issue_budget_approved: row.get::<bool, _>("issue_budget_approved").unwrap_or_default(),
+        };
+
+        issues.push(issue);
+    }
+
+    Ok(issues)
 }
 
-pub async fn list_issues_quick(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<IssueSubset>> {
+
+pub async fn list_issues_quick(
+    pool: &Pool,
+    page: usize,
+    page_size: usize,
+) -> Result<Vec<IssueSubset>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
     let issues: Vec<IssueSubset> = conn
         .query_map(
             format!(
-                "SELECT issue_id, project_id, issue_title, issue_budget, issue_status, review_status, issue_budget_approved FROM issues_master ORDER BY issue_id LIMIT {} OFFSET {}",
+                "SELECT issue_id, project_id, issue_title, main_language, repo_stars, issue_budget,issue_creator, issue_status, review_status, issue_budget_approved FROM issues_master ORDER BY issue_id LIMIT {} OFFSET {}",
                 page_size, offset
             ),
-            |(issue_id, project_id, issue_title, issue_budget, issue_status, review_status, issue_budget_approved): (String, String, String, Option<i32>, Option<String>, Option<String>, Option<bool>)| {
+            |(issue_id, project_id, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_status, review_status, issue_budget_approved): (String, String, String, String, i32, Option<i32>, String, Option<String>, Option<String>, Option<bool>)| {
                 IssueSubset {
                     issue_id,
                     project_id,
                     issue_title,
+                    main_language,
+                    repo_stars,
                     issue_budget,
+                    issue_creator,
                     issue_status,
-                    review_status: match review_status.unwrap_or_default().as_str() {
-                        "queue" => ReviewStatus::Queue,
-                        "approve" => ReviewStatus::Approve,
-                        "decline" => ReviewStatus::Decline,
-                        _ => ReviewStatus::Queue,
-                    },
+                    review_status: review_status.unwrap_or_default(),
                     issue_budget_approved: issue_budget_approved.unwrap_or_default(),
                 }
             },
@@ -168,7 +179,11 @@ pub async fn list_projects(pool: &Pool, page: usize, page_size: usize) -> Result
 
     Ok(projects)
 }
-pub async fn list_projects_by_issues_count(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<Project>> {
+pub async fn list_projects_by_issues_count(
+    pool: &Pool,
+    page: usize,
+    page_size: usize,
+) -> Result<Vec<Project>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
     let projects: Vec<Project> = conn
@@ -193,7 +208,12 @@ pub async fn list_projects_by_issues_count(pool: &Pool, page: usize, page_size: 
     Ok(projects)
 }
 
-pub async fn list_projects_by(pool: &Pool, page: usize, page_size: usize, list_by: &str) -> Result<Vec<Project>> {
+pub async fn list_projects_by(
+    pool: &Pool,
+    page: usize,
+    page_size: usize,
+    list_by: &str,
+) -> Result<Vec<Project>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
     let projects: Vec<Project> = conn
@@ -217,10 +237,6 @@ pub async fn list_projects_by(pool: &Pool, page: usize, page_size: usize, list_b
 
     Ok(projects)
 }
-
-use mysql_async::prelude::FromRow;
-use mysql_async::Row;
-use mysql_async::Value;
 
 /* impl FromRow for IssueOut {
     fn from_row_opt(row: Row) -> Result<Self> {
@@ -270,7 +286,7 @@ pub struct IssueAndComments {
     pub issue_title: String,
     pub issue_description: String,
     pub issue_budget: Option<i32>,
-    pub issue_assignees: Option<Vec<String>>, // or a more specific type if you know the structure of the JSON
+    pub issue_assignees: Option<String>, // or a more specific type if you know the structure of the JSON
     pub issue_linked_pr: Option<String>,
     pub issue_status: Option<String>,
     pub review_status: String,
@@ -278,65 +294,53 @@ pub struct IssueAndComments {
     pub issue_comments: Option<Vec<(String, String)>>,
 }
 
-pub async fn get_issue_w_comments_by_id(
-    pool: &Pool,
-    issue_id: &str,
-) -> anyhow::Result<IssueAndComments> {
+
+pub async fn get_issue_w_comments_by_id(pool: &Pool, issue_id: &str) -> anyhow::Result<IssueAndComments> {
     let mut conn = pool.get_conn().await?;
 
-    let query = r"SELECT issue_id, project_id, issue_title, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE issue_id = :issue_id";
+    let issue_query = format!(
+        "SELECT issue_id, project_id, main_language, repo_stars, issue_title, issue_creator, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE issue_id = '{}'",
+        issue_id
+    );
 
-    let issue: IssueOut = match conn
-        .exec_first(
-            query,
-            params! {
-                "issue_id" => issue_id,
-            },
+    let comments_query = format!(
+        "SELECT comment_creator, comment_body FROM issues_comment WHERE issue_id = '{}' ORDER BY comment_date",
+        issue_id
+    );
+
+    // Fetch the issue
+    let issue_rows: Vec<mysql_async::Row> = conn.query(issue_query).await?;
+    let issue_row = issue_rows
+        .first()
+        .ok_or_else(|| anyhow!("No issue found with the provided issue_id: {}", issue_id))
+        .map_err(|_e| anyhow::anyhow!("discard mysql error: {_e}"))?;
+        // .map_err(|e| mysql_async::Error::DriverError(mysql_async::DriverError::Other(format!("Failed to fetch issue: {}", e))))?;
+
+
+    let issue = IssueOut {
+        issue_id: issue_row.get("issue_id").unwrap_or_default(),
+        project_id: issue_row.get("project_id").unwrap_or_default(),
+        main_language: issue_row.get("main_language").unwrap_or_default(),
+        repo_stars: issue_row.get::<i32, _>("repo_stars").unwrap_or_default(),
+        issue_title: issue_row.get("issue_title").unwrap_or_default(),
+        issue_creator: issue_row.get("issue_creator").unwrap_or_default(),
+        issue_description: issue_row.get("issue_description").unwrap_or_default(),
+        issue_budget: issue_row.get::<Option<i32>, _>("issue_budget").unwrap_or(None),
+        issue_assignees: issue_row.get::<Option<String>, _>("issue_assignees").unwrap_or(None),
+        issue_linked_pr: issue_row.get::<Option<String>, _>("issue_linked_pr").unwrap_or(None),
+        issue_status: issue_row.get::<Option<String>, _>("issue_status").unwrap_or(None),
+        review_status: issue_row.get("review_status").unwrap_or_default(),
+        issue_budget_approved: issue_row.get::<bool, _>("issue_budget_approved").unwrap_or_default(),
+    };
+
+    // Fetch the comments
+    let comments_rows: Vec<mysql_async::Row> = conn.query(comments_query).await?;
+    let comments: Vec<(String, String)> = comments_rows.into_iter().map(|row| {
+        (
+            row.get("comment_creator").unwrap_or_default(),
+            row.get("comment_body").unwrap_or_default()
         )
-        .await
-    {
-        Ok(Some(issue)) => issue,
-        Ok(None) => {
-            log::error!("No issue found with the provided issue_id: {issue_id}");
-
-            return Err(anyhow::anyhow!(
-                "No issue found with the provided issue_id: {issue_id}"
-            ));
-        }
-        Err(e) => {
-            log::error!("Error getting issue by issue_id: {:?}", e);
-            return Err(anyhow::anyhow!("Error getting issue by issue_id"));
-        }
-    };
-    let query_comments = r"SELECT comment_creator, comment_body FROM issues_comment WHERE issue_id = :issue_id ORDER BY comment_date";
-
-    let comments: Option<Vec<(String, String)>> = match conn
-        .exec(query_comments, params! {"issue_id" => issue_id})
-        .await
-    {
-        Ok(ve) => {
-            if !ve.is_empty() {
-                Some(
-                    ve.into_iter()
-                        .map(|row: Row| {
-                            let (creator, body) = mysql_async::from_row(row);
-                            (creator, body)
-                        })
-                        .collect::<Vec<(String, String)>>(),
-                )
-            } else {
-                None
-            }
-        }
-        Err(e) => {
-            log::error!(
-                "Error getting comments by issue_id: {}. Error: {:?}",
-                issue_id,
-                e
-            );
-            None
-        }
-    };
+    }).collect();
 
     Ok(IssueAndComments {
         issue_id: issue.issue_id,
@@ -349,9 +353,52 @@ pub async fn get_issue_w_comments_by_id(
         issue_status: issue.issue_status,
         review_status: issue.review_status,
         issue_budget_approved: issue.issue_budget_approved,
-        issue_comments: comments,
+        issue_comments: if comments.is_empty() { None } else { Some(comments) },
     })
 }
+/* async fn get_issue_w_comments_by_id(pool: &Pool, issue_id: &str) -> Result<IssueAndComments> {
+    let mut conn = pool.get_conn().await?;
+
+    let issue_query = format!(
+        "SELECT issue_id, project_id, main_language, repo_stars, issue_title, issue_creator, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE issue_id = '{}'",
+        issue_id
+    );
+
+    let comments_query = format!(
+        "SELECT comment_creator, comment_body FROM issues_comment WHERE issue_id = '{}' ORDER BY comment_date",
+        issue_id
+    );
+
+    let issue: IssueOut = conn
+        .query_first(issue_query)
+        .await?
+        .ok_or_else(|| anyhow!("No issue found with the provided issue_id: {}", issue_id))?;
+
+    let comments: Vec<(String, String)> = conn
+        .query_map(comments_query, |(comment_creator, comment_body)| {
+            (comment_creator, comment_body)
+        })
+        .await?;
+
+    Ok(IssueAndComments {
+        issue_id: issue.issue_id,
+        project_id: issue.project_id,
+        issue_title: issue.issue_title,
+        issue_description: issue.issue_description,
+        issue_budget: issue.issue_budget,
+        issue_assignees: issue.issue_assignees,
+        issue_linked_pr: issue.issue_linked_pr,
+        issue_status: issue.issue_status,
+        review_status: issue.review_status,
+        issue_budget_approved: issue.issue_budget_approved,
+        issue_comments: if comments.is_empty() {
+            None
+        } else {
+            Some(comments)
+        },
+    })
+} */
+
 pub async fn get_comments_by_issue_id(
     pool: &Pool,
     issue_id: &str,

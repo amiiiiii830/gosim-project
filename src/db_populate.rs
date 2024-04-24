@@ -12,13 +12,13 @@ use serde_json::{json, Value};
 pub struct IssueOut {
     pub issue_id: String,
     pub project_id: String,
-    pub main_language: String, // Added to match the SQL structure
-    pub repo_stars: i32,       // Added to match the SQL structure
+    pub main_language: String, 
+    pub repo_stars: i32,       
     pub issue_title: String,
-    pub issue_creator: String, // Added to match the SQL structure
+    pub issue_creator: String, 
     pub issue_description: String,
     pub issue_budget: Option<i32>,
-    pub issue_assignees: Option<Vec<String>>, // Assuming assignees as a map of ID to name
+    pub issue_assignees: Option<String>, 
     pub issue_linked_pr: Option<String>,
     pub issue_status: Option<String>,
     pub review_status: String,
@@ -28,20 +28,6 @@ pub struct IssueOut {
 
 fn default_value() -> bool {
     false
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct IssueMaster {
-    pub issue_id: String,
-    pub project_id: String,
-    pub issue_title: String,
-    pub issue_description: String,
-    pub issue_budget: Option<i32>,
-    pub issue_assignees: Option<Vec<String>>, // or a more specific type if you know the structure of the JSON
-    pub issue_linked_pr: Option<String>,
-    pub issue_status: String,
-    pub review_status: ReviewStatus,
-    pub issue_budget_approved: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
