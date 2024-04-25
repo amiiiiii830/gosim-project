@@ -301,15 +301,15 @@ pub async fn list_projects_by(
     let offset = (page - 1) * page_size;
 
     let schema_array = [
-        ("issues_count", "ORDER BY JSON_LENGTH(issues_list) DESC"),
+        ("issues_count", "ORDER BY JSON_LENGTH(fp.issues_list) DESC"),
         (
             "total_budget_allocated",
-            "ORDER BY total_budget_allocated DESC",
+            "ORDER BY fp.total_budget_allocated DESC",
         ),
-        ("repo_stars", "ORDER BY repo_stars DESC"),
+        ("repo_stars", "ORDER BY fp.repo_stars DESC"),
         (
             "main_language",
-            "WHERE LENGTH(main_language) > 0 ORDER BY main_language ASC",
+            "WHERE LENGTH(fp.main_language) > 0 ORDER BY fp.main_language ASC",
         ),
     ];
 
@@ -334,7 +334,6 @@ pub async fn list_projects_by(
                     total_budget_allocated
                 FROM 
                     projects
-                {}
             ),
             TotalCount AS (
                 SELECT COUNT(*) AS total_count FROM FilteredProjects
@@ -350,6 +349,7 @@ pub async fn list_projects_by(
                 tc.total_count
             FROM 
                 FilteredProjects fp, TotalCount tc
+                            {}
             LIMIT {} OFFSET {}",
                 filter_str, page_size, offset
             ),
