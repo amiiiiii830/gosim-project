@@ -218,6 +218,7 @@ pub async fn list_issues_by_single(
         None => String::new(),
         Some(list_by) => build_query_clause(vec![&list_by]),
     };
+    log::info!("filter_str: {:?}", filter_str);
 
     let (total_budget, total_budget_allocated, budget_balance) = count_budget_by_status(&pool)
         .await
