@@ -273,7 +273,7 @@ async fn list_issues_by_get_handler(
         }
     };
 
-    let list_by = _qry.get("list_by").and_then(|v| v.as_str());
+    let list_by: Option<&str> = _qry.get("list_by").and_then(|v| v.as_str());
     log::info!(
         "page: {} page_size: {}, list_by: {:?}",
         page,

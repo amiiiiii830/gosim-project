@@ -207,7 +207,7 @@ pub async fn list_issues_by_multi(
 
 pub async fn list_issues_by_single(
     pool: &Pool,
-    list_by: Option<String>,
+    list_by: Option<&str>,
     page: usize,
     page_size: usize,
 ) -> Result<Vec<IssueSubset>> {
@@ -216,8 +216,12 @@ pub async fn list_issues_by_single(
 
     let filter_str = match list_by {
         None => String::new(),
-        Some(list_by) => build_query_clause(vec![&list_by]),
+        Some(list_by) => {
+            let list_by_str = list_by.to_string();
+            build_query_clause(vec![&list_by_str])
+        }
     };
+
     log::info!("filter_str: {:?}", filter_str);
 
     let (total_budget, total_budget_allocated, budget_balance) = count_budget_by_status(&pool)
