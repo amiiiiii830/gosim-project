@@ -452,10 +452,11 @@ async fn list_issues_multi_by_post_handler(
     );
 
     let pool = get_pool().await;
-    let issues_obj = list_issues_by_multi(&pool, filter_strs, page, page_size)
+
+    let filter_str_slices: Vec<&str> = filter_strs.iter().map(|s| s.as_str()).collect();
+    let issues_obj = list_issues_by_multi(&pool, filter_str_slices, page, page_size)
         .await
-        .expect("msg");
-    let issues_str = json!(issues_obj).to_string();
+        .expect("Failed to list issues");    let issues_str = json!(issues_obj).to_string();
 
     send_response(
         200,

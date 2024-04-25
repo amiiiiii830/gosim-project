@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::db_populate::*;
 use crate::TOTAL_BUDGET;
 use anyhow::anyhow;
@@ -100,9 +102,57 @@ pub async fn count_budget_by_status(pool: &Pool) -> anyhow::Result<(i32, i32, i3
     Ok((TOTAL_BUDGET, total_budget_allocated, budget_balance))
 }
 
+fn build_query_clause(filters: Vec<&str>) -> String {
+    let schema_array = [
+        ("issues_count", "ORDER BY JSON_LENGTH(issues_list) DESC"),
+        (
+            "total_budget_allocated",
+            "ORDER BY total_budget_allocated DESC",
+        ),
+        ("main_language", "main_language ASC"),
+        ("repo_stars", "repo_stars DESC"),
+        ("issue_title", "issue_title ASC"),
+        ("issue_creator", "issue_creator ASC"),
+        ("issue_budget", "issue_budget DESC"),
+        ("issue_assignees", "issue_assignees ASC"),
+        ("date_issue_assigned", "date_issue_assigned ASC"),
+        ("issue_budget_approved", "issue_budget_approved ASC"),
+    ];
+
+    let special_conditions = [
+        ("queue", "review_status = 'queue'"),
+        ("approve", "review_status = 'approve'"),
+        ("decline", "review_status = 'decline'"),
+    ];
+
+    let schema_map: HashMap<&str, &str> = schema_array.into_iter().collect();
+    let condition_map: HashMap<&str, &str> = special_conditions.into_iter().collect();
+
+    let mut where_clause = String::new();
+    let mut order_bys = Vec::new();
+
+    for &filter in &filters {
+        if let Some(&condition) = condition_map.get(filter) {
+            where_clause = format!("WHERE {}", condition);
+        } else if let Some(&order_by) = schema_map.get(filter) {
+            order_bys.push(order_by);
+        }
+    }
+
+    let order_by_clause = if order_bys.is_empty() {
+        String::new()
+    } else {
+        format!("ORDER BY {}", order_bys.join(", "))
+    };
+
+    format!("{} {}", where_clause, order_by_clause)
+        .trim()
+        .to_string()
+}
+
 pub async fn list_issues_by_multi(
     pool: &Pool,
-    filters: &Vec<String>,
+    filters: Vec<&str>,
     page: usize,
     page_size: usize,
 ) -> Result<Vec<IssueOut>> {
@@ -113,13 +163,8 @@ pub async fn list_issues_by_multi(
         .expect("budget counting failure");
 
     let offset = (page - 1) * page_size;
-    let _filter = filters
-        .into_iter()
-        .map(|column| format!("{} DESC", column))
-        .collect::<Vec<String>>()
-        .join(", ");
 
-    let filter_str = format!("ORDER BY {}", _filter);
+    let filter_str = build_query_clause(filters);
 
     let query = format!(
         "SELECT issue_id, project_id, project_logo, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_description, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master {} LIMIT {} OFFSET {}",
@@ -133,7 +178,7 @@ pub async fn list_issues_by_multi(
         let issue = IssueOut {
             issue_id: row.get("issue_id").unwrap_or_default(),
             project_id: row.get("project_id").unwrap_or_default(),
-            project_logo: row.get("project_logo").unwrap_or_default(), 
+            project_logo: row.get("project_logo").unwrap_or_default(),
             issue_title: row.get("issue_title").unwrap_or_default(),
             main_language: row.get("main_language").unwrap_or_default(),
             repo_stars: row.get::<i32, _>("repo_stars").unwrap_or_default(),
@@ -169,20 +214,11 @@ pub async fn list_issues_by_single(
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
 
+    let filter_str = build_query_clause(vec![list_by]);
+
     let (total_budget, total_budget_allocated, budget_balance) = count_budget_by_status(&pool)
         .await
         .expect("budget counting failure");
-
-    let filter_str = match list_by {
-        "issues_count" => String::from("ORDER BY JSON_LENGTH(issues_list) DESC"),
-        "main_language" => String::from("ORDER BY main_language ASC"),
-        "repo_stars" => String::from("ORDER BY repo_stars DESC"),
-        "issue_creator" => String::from("ORDER BY issue_creator ASC"),
-        "review_status_queue" => String::from("WHERE review_status='queue'"),
-        "review_status_approve" => String::from("WHERE review_status='approve'"),
-        "review_status_decline" => String::from("WHERE review_status='decline'"),
-        _ => String::new(),
-    };
 
     let issues: Vec<IssueSubset> = conn
         .query_map(
@@ -290,14 +326,10 @@ pub async fn list_projects_by(
     let offset = (page - 1) * page_size;
 
     let filter_str = match list_by {
-        Some("issues_count") => String::from("ORDER BY JSON_LENGTH(issues_list) DESC"),
-        Some("main_language") => {
-            String::from("WHERE LENGTH(main_language) > 0 ORDER BY main_language ASC")
-        }
-        Some("repo_stars") => String::from("ORDER BY repo_stars DESC"),
-        Some("total_budget_allocated") => String::from("ORDER BY total_budget_allocated DESC"),
-        _ => String::new(),
+        None => String::new(),
+        Some(list_by) => build_query_clause(vec![list_by]),
     };
+
     let projects: Vec<ProjectOut> = conn
         .query_map(
             format!(
