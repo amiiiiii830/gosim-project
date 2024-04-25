@@ -109,3 +109,30 @@ ALTER TABLE issues_repos_summarized
 ADD FULLTEXT(keyword_tags_text);
 
 
+WITH FilteredProjects AS (
+                SELECT 
+                    project_id, 
+                    project_logo, 
+                    repo_stars, 
+                    main_language, 
+                    project_description, 
+                    issues_list,   
+                    total_budget_allocated
+                FROM 
+                    projects
+                WHERE LENGTH(main_language) > 0 ORDER BY main_language ASC
+            ),
+            TotalCount AS (
+                SELECT COUNT(*) AS total_count FROM FilteredProjects
+            )
+            SELECT 
+                fp.project_id, 
+                fp.project_logo, 
+                fp.repo_stars, 
+                fp.main_language, 
+                fp.project_description, 
+                fp.issues_list,   
+                fp.total_budget_allocated,
+                tc.total_count
+            FROM 
+                FilteredProjects fp, TotalCount tc
