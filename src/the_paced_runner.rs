@@ -94,11 +94,12 @@ pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
 
         let _ = summarize_issue_add_in_db(pool, &issue).await;
     }
+    Ok(())
 }
 pub async fn popuate_dbs_save_issues_comment(pool: &Pool) -> anyhow::Result<()> {
     let query_comment =
         "label:hacktoberfest-accepted is:issue updated:>2024-01-01 -label:spam -label:invalid";
-    log::info!("query_open: {:?}", query_open);
+    log::info!("query_open: {:?}", query_comment);
 
     let issue_comment_obj: Vec<IssueComment> = search_issues_comment(&query_comment).await?;
     let len = issue_comment_obj.len();
@@ -106,6 +107,7 @@ pub async fn popuate_dbs_save_issues_comment(pool: &Pool) -> anyhow::Result<()> 
     for issue in issue_comment_obj {
         let _ = add_issues_comment(pool, issue).await;
     }
+    Ok(())
 }
 pub async fn popuate_dbs_save_issues_assigned(pool: &Pool) -> anyhow::Result<()> {
     let _query_assigned = inner_query_1_hour(
@@ -126,6 +128,7 @@ pub async fn popuate_dbs_save_issues_assigned(pool: &Pool) -> anyhow::Result<()>
     for issue in issues_assigned_obj {
         let _ = add_issues_assigned(pool, issue).await;
     }
+    Ok(())
 }
 pub async fn popuate_dbs_save_issues_closed(pool: &Pool) -> anyhow::Result<()> {
     let query_closed = inner_query_1_hour(

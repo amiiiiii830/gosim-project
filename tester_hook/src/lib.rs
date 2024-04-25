@@ -5,6 +5,7 @@ use gosim_project::db_manipulate::*;
 use gosim_project::db_populate::*;
 use gosim_project::issue_tracker::*;
 use gosim_project::llm_utils::chat_inner_async;
+use gosim_project::the_paced_runner::*;
 use gosim_project::vector_search::*;
 use mysql_async::*;
 use serde::{Deserialize, Serialize};
@@ -34,7 +35,7 @@ async fn handler(
     logger::init();
 
     let mut router = Router::new();
-    router.insert("/run", vec![get(trigger)]).unwrap();
+    router.insert("/run", vec![post(trigger)]).unwrap();
     // router
     //     .insert("/deep", vec![post(check_deep_handler)])
     //     .unwrap();
@@ -283,8 +284,40 @@ async fn create_vdb_handler(
     }
 }
 async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, _body: Vec<u8>) {
+    #[derive(Serialize, Deserialize, Clone, Debug, Default)]
+    pub struct FuncLoad {
+        pub func_ids: Vec<String>,
+    }
+
+    let load: FuncLoad = match serde_json::from_slice(&_body) {
+        Ok(obj) => obj,
+        Err(_e) => {
+            log::error!("failed to parse body: {}", _e);
+            return;
+        }
+    };
     let pool: Pool = get_pool().await;
-    let _ = run_hourly(&pool).await;
+
+    for func_id in load.func_ids {
+        let _ = match func_id.as_str() {
+            "1" => popuate_dbs_save_issues_open(&pool).await,
+            "2" => open_master(&pool).await,
+            "3" => popuate_dbs_save_issues_assigned(&pool).await,
+            "4" => assigned_master(&pool).await,
+            "5" => popuate_dbs_save_issues_closed(&pool).await,
+            "6" => closed_master(&pool).await,
+            "7" => popuate_dbs_fill_projects(&pool).await,
+            "8" => master_project(&pool).await,
+            "9" => popuate_dbs_save_pull_requests(&pool).await,
+            "10" => project_master_back_sync(&&pool).await,
+            "11" => populate_vector_db(&pool).await,
+            "12" => popuate_dbs_save_issues_comment(&pool).await,
+            "13" => sum_budget_to_project(&pool).await,
+            "14" => remove_pull_by_issued_linked_pr(&pool).await,
+            "15" => delete_issues_open_assigned_closed(&pool).await,
+            _ => panic!(),
+        };
+    }
 }
 
 pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {

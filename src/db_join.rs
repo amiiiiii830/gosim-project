@@ -1,7 +1,7 @@
 use mysql_async::prelude::*;
 use mysql_async::*;
 
-pub async fn open_master(pool: &mysql_async::Pool) -> Result<()> {
+pub async fn open_master(pool: &mysql_async::Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"
@@ -34,7 +34,7 @@ pub async fn open_master(pool: &mysql_async::Pool) -> Result<()> {
     Ok(())
 }
 
-pub async fn assigned_master(pool: &mysql_async::Pool) -> Result<()> {
+pub async fn assigned_master(pool: &mysql_async::Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"
@@ -54,7 +54,7 @@ SET im.date_issue_assigned = ia.date_assigned,
     Ok(())
 }
 
-pub async fn closed_master(pool: &mysql_async::Pool) -> Result<()> {
+pub async fn closed_master(pool: &mysql_async::Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"
@@ -94,7 +94,7 @@ pub async fn comment_master(pool: &mysql_async::Pool) -> Result<()> {
     Ok(())
 }
 
-pub async fn project_master_back_sync(pool: &mysql_async::Pool) -> Result<()> {
+pub async fn project_master_back_sync(pool: &mysql_async::Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"
@@ -114,7 +114,7 @@ pub async fn project_master_back_sync(pool: &mysql_async::Pool) -> Result<()> {
     Ok(())
 }
 
-pub async fn remove_pull_by_issued_linked_pr(pool: &mysql_async::Pool) -> Result<()> {
+pub async fn remove_pull_by_issued_linked_pr(pool: &mysql_async::Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r#"
@@ -134,7 +134,7 @@ pub async fn remove_pull_by_issued_linked_pr(pool: &mysql_async::Pool) -> Result
     Ok(())
 }
 
-pub async fn delete_issues_open_assigned_closed(pool: &mysql_async::Pool) -> Result<()> {
+pub async fn delete_issues_open_assigned_closed(pool: &mysql_async::Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let queries = vec![
@@ -169,7 +169,7 @@ pub async fn delete_issues_open_assigned_closed(pool: &mysql_async::Pool) -> Res
 
     Ok(())
 }
-pub async fn master_project(pool: &mysql_async::Pool) -> Result<()> {
+pub async fn master_project(pool: &mysql_async::Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"
@@ -192,7 +192,7 @@ pub async fn master_project(pool: &mysql_async::Pool) -> Result<()> {
     Ok(())
 }
 
-pub async fn sum_budget_to_project(pool: &mysql_async::Pool) -> Result<()> {
+pub async fn sum_budget_to_project(pool: &mysql_async::Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"

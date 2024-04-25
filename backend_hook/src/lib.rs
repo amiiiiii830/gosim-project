@@ -40,8 +40,8 @@ async fn handler(
         .insert(
             "/issues",
             vec![
-                get(list_issues_handler),
-                post(list_issues_by_status_handler),
+                get(list_issues_by_get_handler),
+                post(list_issues_multi_by_post_handler),
             ],
         )
         .unwrap();
@@ -246,7 +246,7 @@ async fn batch_decline_issue_handler(
     }
 }
 
-async fn list_issues_by_status_handler(
+async fn list_issues_by_get_handler(
     _headers: Vec<(String, String)>,
     _qry: HashMap<String, Value>,
     _body: Vec<u8>,
@@ -258,7 +258,7 @@ async fn list_issues_by_status_handler(
         Some(m) if m > 0 => m,
         _ => {
             log::error!("Invalid or missing 'page' parameter");
-            return;
+            1
         }
     };
 
@@ -269,48 +269,47 @@ async fn list_issues_by_status_handler(
         Some(m) if m > 0 => m,
         _ => {
             log::error!("Invalid or missing 'page_size' parameter");
-            return;
-        }
-    };
-    log::error!("page: {}, page_size: {}", page, page_size);
-
-    #[derive(Serialize, Deserialize)]
-    struct ReviewStatus {
-        review_status: String,
-    }
-    let load: ReviewStatus = match serde_json::from_slice(&_body) {
-        Ok(obj) => obj,
-        Err(_e) => {
-            log::error!("failed to parse IssueSubset: {}", _e);
-            return;
+            5
         }
     };
 
-    let review_status = load.review_status;
+    let list_by = _qry.get("list_by").and_then(|v| v.as_str());
+    log::info!(
+        "page: {} page_size: {}, list_by: {:?}",
+        page,
+        page_size,
+        list_by
+    );
+
     let pool = get_pool().await;
-    match list_issues_by_status(&pool, &review_status, page, page_size).await {
-        Ok(issues_obj) => {
-            let issues_str = json!(issues_obj).to_string();
+    let mut issues_obj = Vec::new();
+    match list_by {
+        Some(list_by) => {
+            issues_obj = list_issues_by_single(&pool, list_by, page, page_size)
+                .await
+                .expect("msg")
+        }
 
-            send_response(
-                200,
-                vec![
-                    (
-                        String::from("content-type"),
-                        String::from("application/json"),
-                    ),
-                    (
-                        String::from("Access-Control-Allow-Origin"),
-                        String::from("*"),
-                    ),
-                ],
-                issues_str.as_bytes().to_vec(),
-            );
+        _ => {
+            issues_obj = list_issues_quick(&pool, page, page_size)
+                .await
+                .expect("msg")
         }
-        Err(e) => {
-            log::error!("Error: {:?}", e);
-        }
-    }
+    };
+
+    let issues_str = json!(issues_obj).to_string();
+
+    send_response(
+        200,
+        vec![
+            (String::from("content-type"), String::from("text/html")),
+            (
+                String::from("Access-Control-Allow-Origin"),
+                String::from("*"),
+            ),
+        ],
+        issues_str.as_bytes().to_vec(),
+    );
 }
 
 async fn get_issue_w_comments_by_post_handler(
@@ -356,91 +355,6 @@ async fn get_issue_w_comments_by_post_handler(
         ],
         issues_str.as_bytes().to_vec(),
     );
-}
-
-async fn list_issues_handler(
-    _headers: Vec<(String, String)>,
-    _qry: HashMap<String, Value>,
-    _body: Vec<u8>,
-) {
-    log::info!("Received query parameters: {:?}", _qry);
-
-    let page = match _qry
-        .get("page")
-        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
-    {
-        Some(m) if m > 0 => m,
-        _ => {
-            log::error!("Invalid or missing 'page' parameter");
-            return;
-        }
-    };
-
-    let page_size = match _qry
-        .get("page_size")
-        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
-    {
-        Some(m) if m > 0 => m,
-        _ => {
-            log::error!("Invalid or missing 'page_size' parameter");
-            return;
-        }
-    };
-    log::error!("page: {}, page_size: {}", page, page_size);
-
-    let list_by = _qry.get("list_by").and_then(|v| v.as_str());
-    log::info!(
-        "page: {} page_size: {}, list_by: {:?}",
-        page,
-        page_size,
-        list_by
-    );
-
-    let pool = get_pool().await;
-    match list_by {
-        // Some("repo_stars")  => {
-        //     issues_obj = list_issues_by_issues_count(&pool, page, page_size, list_by.unwrap())
-        //         .await
-        //         .expect("msg")
-        // }
-        Some(review_status) => {
-            let issues_obj = list_issues_by_status(&pool, review_status, page, page_size)
-                .await
-                .expect("msg");
-            let issues_str = json!(issues_obj).to_string();
-
-            send_response(
-                200,
-                vec![
-                    (String::from("content-type"), String::from("text/html")),
-                    (
-                        String::from("Access-Control-Allow-Origin"),
-                        String::from("*"),
-                    ),
-                ],
-                issues_str.as_bytes().to_vec(),
-            );
-        }
-
-        _ => {
-            let issues_obj = list_issues_quick(&pool, page, page_size)
-                .await
-                .expect("msg");
-            let issues_str = json!(issues_obj).to_string();
-
-            send_response(
-                200,
-                vec![
-                    (String::from("content-type"), String::from("text/html")),
-                    (
-                        String::from("Access-Control-Allow-Origin"),
-                        String::from("*"),
-                    ),
-                ],
-                issues_str.as_bytes().to_vec(),
-            );
-        }
-    };
 }
 
 async fn list_projects_handler(
@@ -502,5 +416,73 @@ async fn list_projects_handler(
         200,
         vec![(String::from("content-type"), String::from("text/html"))],
         projects_str.as_bytes().to_vec(),
+    );
+}
+
+async fn list_issues_multi_by_post_handler(
+    _headers: Vec<(String, String)>,
+    _qry: HashMap<String, Value>,
+    _body: Vec<u8>,
+) {
+    let page = match _qry
+        .get("page")
+        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
+    {
+        Some(m) if m > 0 => m,
+        _ => {
+            log::error!("Invalid or missing 'page' parameter");
+            1
+        }
+    };
+
+    let page_size = match _qry
+        .get("page_size")
+        .and_then(|v| v.as_str().and_then(|s| s.parse::<usize>().ok()))
+    {
+        Some(m) if m > 0 => m,
+        _ => {
+            log::error!("Invalid or missing 'page_size' parameter");
+            5
+        }
+    };
+    log::info!("page: {}, page_size: {}", page, page_size);
+
+    #[derive(Serialize, Deserialize)]
+    struct Filters {
+        filter_strs: Vec<String>,
+    }
+    let load: Filters = match serde_json::from_slice(&_body) {
+        Ok(obj) => obj,
+        Err(_e) => {
+            log::error!("failed to parse IssueSubset: {}", _e);
+            return;
+        }
+    };
+
+    let filter_strs = &load.filter_strs;
+
+    log::info!(
+        "page: {} page_size: {}, list_by: {:?}",
+        page,
+        page_size,
+        filter_strs
+    );
+
+    let pool = get_pool().await;
+    let issues_obj = list_issues_by_multi(&pool, filter_strs, page, page_size)
+        .await
+        .expect("msg");
+    let issues_str = json!(issues_obj).to_string();
+
+    send_response(
+        200,
+        vec![
+            (String::from("content-type"), String::from("text/html")),
+            (
+                String::from("Access-Control-Allow-Origin"),
+                String::from("*"),
+            ),
+        ],
+        issues_str.as_bytes().to_vec(),
     );
 }
