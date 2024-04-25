@@ -12,6 +12,7 @@ pub mod vector_search;
 use chrono::{NaiveDate, Timelike, Utc};
 use lazy_static::lazy_static;
 
+pub static TOTAL_BUDGET: i32 = 50_000;
 pub static ISSUE_LABEL: &str = "hacktoberfest";
 pub static PR_LABEL: &str = "hacktoberfest-accepted";
 pub static START_DATE: &str = "2023-10-01";

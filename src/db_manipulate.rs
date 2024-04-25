@@ -1,4 +1,5 @@
 use crate::db_populate::*;
+use crate::TOTAL_BUDGET;
 use anyhow::anyhow;
 use mysql_async::prelude::*;
 use mysql_async::Row;
@@ -9,11 +10,13 @@ use serde::{Deserialize, Serialize};
 pub struct IssueSubset {
     pub issue_id: String,
     pub project_id: String,
+    pub project_logo: String,
     pub issue_title: String,
     pub issue_creator: String,
     pub main_language: String,
     pub repo_stars: i32,
     pub issue_budget: Option<i32>,
+    pub running_budget: (i32, i32, i32),
     pub issue_status: Option<String>,
     pub review_status: String,
     #[serde(default = "default_value")]
@@ -54,49 +57,47 @@ pub async fn batch_decline_issues_in_db(
     }
 }
 
-pub async fn list_issues_by_status(
-    pool: &Pool,
-    review_status: &str,
-    page: usize,
-    page_size: usize,
-) -> Result<Vec<IssueOut>> {
+pub async fn count_issues_by_status(pool: &Pool) -> anyhow::Result<(i32, i32, i32, i32)> {
     let mut conn = pool.get_conn().await?;
-    let offset = (page - 1) * page_size;
-    let query = format!(
-        "SELECT issue_id, project_id, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_description, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE review_status = '{}' ORDER BY issue_id LIMIT {} OFFSET {}",
-        review_status, page_size, offset
+    let counts_query = format!(
+        "SELECT
+            (SELECT COUNT(*) FROM issues_master) as total_count,
+            (SELECT COUNT(*) FROM issues_master WHERE review_status = 'approve') as approve_count,
+            (SELECT COUNT(*) FROM issues_master WHERE review_status = 'decline') as decline_count"
     );
 
-    let rows: Vec<mysql_async::Row> = conn.query(query).await?;
+    let counts_rows: Vec<mysql_async::Row> = conn.query(counts_query).await?;
+    let (total_count, approve_count, decline_count): (i32, i32, i32) = counts_rows
+        .into_iter()
+        .map(|row| {
+            (
+                row.get("total_count").unwrap_or_default(),
+                row.get("approve_count").unwrap_or_default(),
+                row.get("decline_count").unwrap_or_default(),
+            )
+        })
+        .next() // There should be exactly one row
+        .unwrap_or((0, 0, 0));
 
-    let mut issues = Vec::new();
-    for row in rows {
-        let issue = IssueOut {
-            issue_id: row.get("issue_id").unwrap_or_default(),
-            project_id: row.get("project_id").unwrap_or_default(),
-            issue_title: row.get("issue_title").unwrap_or_default(),
-            main_language: row.get("main_language").unwrap_or_default(),
-            repo_stars: row.get::<i32, _>("repo_stars").unwrap_or_default(),
-            issue_budget: row.get::<Option<i32>, _>("issue_budget").unwrap_or(None),
-            issue_creator: row.get("issue_creator").unwrap_or_default(),
-            issue_description: row.get("issue_description").unwrap_or_default(),
-            issue_assignees: row
-                .get::<Option<String>, _>("issue_assignees")
-                .unwrap_or(None),
-            issue_linked_pr: row
-                .get::<Option<String>, _>("issue_linked_pr")
-                .unwrap_or(None),
-            issue_status: row.get::<Option<String>, _>("issue_status").unwrap_or(None),
-            review_status: row.get("review_status").unwrap_or_default(),
-            issue_budget_approved: row
-                .get::<bool, _>("issue_budget_approved")
-                .unwrap_or_default(),
-        };
+    let queue_count = total_count - (approve_count + decline_count);
 
-        issues.push(issue);
-    }
+    Ok((total_count, queue_count, approve_count, decline_count))
+}
 
-    Ok(issues)
+pub async fn count_budget_by_status(pool: &Pool) -> anyhow::Result<(i32, i32, i32)> {
+    let mut conn = pool.get_conn().await?;
+    let counts_query =
+        "SELECT SUM(total_budget_allocated) as total_budget_allocated FROM projects;";
+
+    let total_budget_allocated: i32 = conn
+        .query_first(counts_query)
+        .await?
+        .unwrap_or(None) // Handle the case where no rows are returned
+        .unwrap_or(0);
+
+    let budget_balance = TOTAL_BUDGET - total_budget_allocated;
+
+    Ok((TOTAL_BUDGET, total_budget_allocated, budget_balance))
 }
 
 pub async fn list_issues_by_multi(
@@ -106,6 +107,11 @@ pub async fn list_issues_by_multi(
     page_size: usize,
 ) -> Result<Vec<IssueOut>> {
     let mut conn = pool.get_conn().await?;
+
+    let (total_budget, total_budget_allocated, budget_balance) = count_budget_by_status(&pool)
+        .await
+        .expect("budget counting failure");
+
     let offset = (page - 1) * page_size;
     let _filter = filters
         .into_iter()
@@ -116,7 +122,7 @@ pub async fn list_issues_by_multi(
     let filter_str = format!("ORDER BY {}", _filter);
 
     let query = format!(
-        "SELECT issue_id, project_id, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_description, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master {} LIMIT {} OFFSET {}",
+        "SELECT issue_id, project_id, project_logo, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_description, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master {} LIMIT {} OFFSET {}",
         filter_str, page_size, offset
     );
 
@@ -127,6 +133,7 @@ pub async fn list_issues_by_multi(
         let issue = IssueOut {
             issue_id: row.get("issue_id").unwrap_or_default(),
             project_id: row.get("project_id").unwrap_or_default(),
+            project_logo: row.get("project_logo").unwrap_or_default(), 
             issue_title: row.get("issue_title").unwrap_or_default(),
             main_language: row.get("main_language").unwrap_or_default(),
             repo_stars: row.get::<i32, _>("repo_stars").unwrap_or_default(),
@@ -144,6 +151,7 @@ pub async fn list_issues_by_multi(
             issue_budget_approved: row
                 .get::<bool, _>("issue_budget_approved")
                 .unwrap_or_default(),
+            running_budget: (total_budget, total_budget_allocated, budget_balance),
         };
 
         issues.push(issue);
@@ -161,6 +169,10 @@ pub async fn list_issues_by_single(
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
 
+    let (total_budget, total_budget_allocated, budget_balance) = count_budget_by_status(&pool)
+        .await
+        .expect("budget counting failure");
+
     let filter_str = match list_by {
         "issues_count" => String::from("ORDER BY JSON_LENGTH(issues_list) DESC"),
         "main_language" => String::from("ORDER BY main_language ASC"),
@@ -175,13 +187,14 @@ pub async fn list_issues_by_single(
     let issues: Vec<IssueSubset> = conn
         .query_map(
             format!(
-                "SELECT issue_id, project_id, issue_title, main_language, repo_stars, issue_budget,issue_creator, issue_status, review_status, issue_budget_approved FROM issues_master {} LIMIT {} OFFSET {}",
+                "SELECT issue_id, project_id, project_logo, issue_title, main_language, repo_stars, issue_budget,issue_creator, issue_status, review_status, issue_budget_approved FROM issues_master {} LIMIT {} OFFSET {}",
                 filter_str, page_size, offset
             ),
-            |(issue_id, project_id, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_status, review_status, issue_budget_approved): (String, String, String, String, i32, Option<i32>, String, Option<String>, Option<String>, Option<bool>)| {
+            |(issue_id, project_id, project_logo, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_status, review_status, issue_budget_approved): (String, String, String, String, String, i32, Option<i32>, String, Option<String>, Option<String>, Option<bool>)| {
                 IssueSubset {
                     issue_id,
                     project_id,
+                    project_logo,
                     issue_title,
                     main_language,
                     repo_stars,
@@ -190,6 +203,7 @@ pub async fn list_issues_by_single(
                     issue_status,
                     review_status: review_status.unwrap_or_default(),
                     issue_budget_approved: issue_budget_approved.unwrap_or_default(),
+                    running_budget: (total_budget, total_budget_allocated, budget_balance),
                 }
             },
         )
@@ -204,16 +218,22 @@ pub async fn list_issues_quick(
 ) -> Result<Vec<IssueSubset>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
+
+    let (total_budget, total_budget_allocated, budget_balance) = count_budget_by_status(&pool)
+        .await
+        .expect("budget counting failure");
+
     let issues: Vec<IssueSubset> = conn
         .query_map(
             format!(
                 "SELECT issue_id, project_id, issue_title, main_language, repo_stars, issue_budget,issue_creator, issue_status, review_status, issue_budget_approved FROM issues_master ORDER BY issue_id LIMIT {} OFFSET {}",
                 page_size, offset
             ),
-            |(issue_id, project_id, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_status, review_status, issue_budget_approved): (String, String, String, String, i32, Option<i32>, String, Option<String>, Option<String>, Option<bool>)| {
+            |(issue_id, project_id, project_logo, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_status, review_status, issue_budget_approved): (String, String, String, String, String, i32, Option<i32>, String, Option<String>, Option<String>, Option<bool>)| {
                 IssueSubset {
                     issue_id,
                     project_id,
+                    project_logo,
                     issue_title,
                     main_language,
                     repo_stars,
@@ -222,6 +242,8 @@ pub async fn list_issues_quick(
                     issue_status,
                     review_status: review_status.unwrap_or_default(),
                     issue_budget_approved: issue_budget_approved.unwrap_or_default(),
+                    running_budget: (total_budget, total_budget_allocated, budget_balance),
+
                 }
             },
         )
@@ -349,8 +371,11 @@ pub async fn list_projects_by(
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct IssueAndComments {
     pub issue_id: String,
-    pub project_id: String,
     pub issue_title: String,
+    pub project_id: String,
+    pub main_language: String,
+    pub repo_stars: i32,
+    pub issue_creator: String,
     pub issue_description: String,
     pub issue_budget: Option<i32>,
     pub issue_assignees: Option<String>, // or a more specific type if you know the structure of the JSON
@@ -388,6 +413,7 @@ pub async fn get_issue_w_comments_by_id(
     let issue = IssueOut {
         issue_id: issue_row.get("issue_id").unwrap_or_default(),
         project_id: issue_row.get("project_id").unwrap_or_default(),
+        project_logo: issue_row.get("project_logo").unwrap_or_default(),
         main_language: issue_row.get("main_language").unwrap_or_default(),
         repo_stars: issue_row.get::<i32, _>("repo_stars").unwrap_or_default(),
         issue_title: issue_row.get("issue_title").unwrap_or_default(),
@@ -409,6 +435,7 @@ pub async fn get_issue_w_comments_by_id(
         issue_budget_approved: issue_row
             .get::<bool, _>("issue_budget_approved")
             .unwrap_or_default(),
+        running_budget: (99999, 99999, 99999),
     };
 
     // Fetch the comments
@@ -427,6 +454,9 @@ pub async fn get_issue_w_comments_by_id(
         issue_id: issue.issue_id,
         project_id: issue.project_id,
         issue_title: issue.issue_title,
+        main_language: issue.main_language,
+        repo_stars: issue.repo_stars,
+        issue_creator: issue.issue_creator,
         issue_description: issue.issue_description,
         issue_budget: issue.issue_budget,
         issue_assignees: issue.issue_assignees,
@@ -441,48 +471,6 @@ pub async fn get_issue_w_comments_by_id(
         },
     })
 }
-/* async fn get_issue_w_comments_by_id(pool: &Pool, issue_id: &str) -> Result<IssueAndComments> {
-    let mut conn = pool.get_conn().await?;
-
-    let issue_query = format!(
-        "SELECT issue_id, project_id, main_language, repo_stars, issue_title, issue_creator, issue_description, issue_budget, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master WHERE issue_id = '{}'",
-        issue_id
-    );
-
-    let comments_query = format!(
-        "SELECT comment_creator, comment_body FROM issues_comment WHERE issue_id = '{}' ORDER BY comment_date",
-        issue_id
-    );
-
-    let issue: IssueOut = conn
-        .query_first(issue_query)
-        .await?
-        .ok_or_else(|| anyhow!("No issue found with the provided issue_id: {}", issue_id))?;
-
-    let comments: Vec<(String, String)> = conn
-        .query_map(comments_query, |(comment_creator, comment_body)| {
-            (comment_creator, comment_body)
-        })
-        .await?;
-
-    Ok(IssueAndComments {
-        issue_id: issue.issue_id,
-        project_id: issue.project_id,
-        issue_title: issue.issue_title,
-        issue_description: issue.issue_description,
-        issue_budget: issue.issue_budget,
-        issue_assignees: issue.issue_assignees,
-        issue_linked_pr: issue.issue_linked_pr,
-        issue_status: issue.issue_status,
-        review_status: issue.review_status,
-        issue_budget_approved: issue.issue_budget_approved,
-        issue_comments: if comments.is_empty() {
-            None
-        } else {
-            Some(comments)
-        },
-    })
-} */
 
 pub async fn get_comments_by_issue_id(
     pool: &Pool,

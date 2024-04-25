@@ -11,6 +11,7 @@ use serde_json::{json, Value};
 pub struct IssueOut {
     pub issue_id: String,
     pub project_id: String,
+    pub project_logo: String,
     pub main_language: String,
     pub repo_stars: i32,
     pub issue_title: String,
@@ -23,6 +24,7 @@ pub struct IssueOut {
     pub review_status: String,
     #[serde(default = "default_value")]
     pub issue_budget_approved: bool,
+    pub running_budget: (i32, i32, i32),
 }
 
 fn default_value() -> bool {
