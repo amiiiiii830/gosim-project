@@ -42,6 +42,7 @@ pub enum ReviewStatus {
 pub struct Project {
     pub project_id: String,
     pub project_logo: Option<String>,
+    pub main_language: Option<String>,
     pub repo_stars: i32,
     pub project_description: Option<String>,
     pub issues_list: Option<Vec<String>>,

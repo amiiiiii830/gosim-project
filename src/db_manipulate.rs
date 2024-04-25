@@ -163,9 +163,9 @@ pub async fn list_issues_by_single(
 
     let filter_str = match list_by {
         "issues_count" => String::from("ORDER BY JSON_LENGTH(issues_list) DESC"),
-        "main_language" => String::from("ORDER BY main_language DESC"),
+        "main_language" => String::from("ORDER BY main_language ASC"),
         "repo_stars" => String::from("ORDER BY repo_stars DESC"),
-        "issue_creator" => String::from("ORDER BY issue_creator DESC"),
+        "issue_creator" => String::from("ORDER BY issue_creator ASC"),
         "review_status_queue" => String::from("WHERE review_status='queue'"),
         "review_status_approve" => String::from("WHERE review_status='approve'"),
         "review_status_decline" => String::from("WHERE review_status='decline'"),
@@ -258,78 +258,34 @@ pub async fn get_projects_as_repo_list(pool: &Pool, page: u32) -> Result<String>
     Ok(res.join(" "))
 }
 
-pub async fn list_projects(pool: &Pool, page: usize, page_size: usize) -> Result<Vec<Project>> {
-    let mut conn = pool.get_conn().await?;
-    let offset = (page - 1) * page_size;
-    let projects: Vec<Project> = conn
-        .query_map(
-            format!(
-                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated FROM projects ORDER BY project_id LIMIT {} OFFSET {}",
-                page_size, offset
-            ),
-            |(project_id, project_logo, repo_stars, project_description, issues_list,  total_budget_allocated ): (String, Option<String>, i32, Option<String>, Option<String>,Option<i32>)| {
-                Project {
-                    project_id,
-                    project_logo,
-                    repo_stars,
-                    project_description,
-                    issues_list: issues_list.map_or(Some(Vec::new()), |s| serde_json::from_str(&s).ok()),
-                    total_budget_allocated
-                }
-            },
-        )
-        .await?;
-
-    Ok(projects)
-}
-pub async fn list_projects_by_issues_count(
-    pool: &Pool,
-    page: usize,
-    page_size: usize,
-) -> Result<Vec<Project>> {
-    let mut conn = pool.get_conn().await?;
-    let offset = (page - 1) * page_size;
-    let projects: Vec<Project> = conn
-        .query_map(
-            format!(
-                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated FROM projects ORDER BY JSON_LENGTH(issues_list) DESC LIMIT {} OFFSET {}",
-                page_size, offset
-            ),
-            |(project_id, project_logo, repo_stars, project_description, issues_list,  total_budget_allocated ): (String, Option<String>, i32, Option<String>, Option<String>,Option<i32>)| {
-                Project {
-                    project_id,
-                    project_logo,
-                    repo_stars,
-                    project_description,
-                    issues_list: issues_list.map_or(Some(Vec::new()), |s| serde_json::from_str(&s).ok()),
-                    total_budget_allocated
-                }
-            },
-        )
-        .await?;
-
-    Ok(projects)
-}
-
 pub async fn list_projects_by(
     pool: &Pool,
+    list_by: Option<&str>,
     page: usize,
     page_size: usize,
-    list_by: &str,
 ) -> Result<Vec<Project>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
+
+    let filter_str = match list_by {
+        Some("issues_count") => String::from("ORDER BY JSON_LENGTH(issues_list) DESC"),
+        Some("main_language") => String::from("ORDER BY main_language ASC"),
+        Some("repo_stars") => String::from("ORDER BY repo_stars DESC"),
+        Some("total_budget_allocated") => String::from("ORDER BY total_budget_allocated DESC"),
+        _ => String::new(),
+    };
     let projects: Vec<Project> = conn
         .query_map(
             format!(
-                "SELECT project_id, project_logo, repo_stars, project_description, issues_list,   total_budget_allocated FROM projects ORDER BY {} DESC LIMIT {} OFFSET {}",
-               list_by, page_size, offset
+                "SELECT project_id, project_logo, repo_stars, main_language, project_description, issues_list,   total_budget_allocated FROM projects {} LIMIT {} OFFSET {}",
+                filter_str, page_size, offset
             ),
-            |(project_id, project_logo, repo_stars, project_description, issues_list,  total_budget_allocated ): (String, Option<String>, i32, Option<String>, Option<String>,Option<i32>)| {
+            |(project_id, project_logo, repo_stars, main_language, project_description, issues_list,  total_budget_allocated ): (String, Option<String>, i32, Option<String>,Option<String>, Option<String>,Option<i32>)| {
                 Project {
                     project_id,
                     project_logo,
                     repo_stars,
+                    main_language,
                     project_description,
                     issues_list: issues_list.map_or(Some(Vec::new()), |s| serde_json::from_str(&s).ok()),
                     total_budget_allocated
@@ -340,47 +296,6 @@ pub async fn list_projects_by(
 
     Ok(projects)
 }
-
-/* impl FromRow for IssueOut {
-    fn from_row_opt(row: Row) -> Result<Self> {
-        let result: (
-            String, String, String, i32, String, String, String,
-            Option<i32>, Option<Vec<u8>>, Option<String>, Option<String>, String, bool,
-        ) = from_row_opt(row)?;
-
-        match result {
-            Ok((
-                issue_id, project_id, main_language, repo_stars, issue_title, issue_creator, issue_description,
-                issue_budget, issue_assignees_value, issue_linked_pr, issue_status, review_status, issue_budget_approved,
-            )) => {
-                let issue_assignees = match issue_assignees_value {
-                    Some(bytes) => {
-                        let s = String::from_utf8_lossy(&bytes);
-                        serde_json::from_str(&s).ok()
-                    },
-                    None => None,
-                };
-
-                Ok(IssueOut {
-                    issue_id,
-                    project_id,
-                    main_language,
-                    repo_stars,
-                    issue_title,
-                    issue_creator,
-                    issue_description,
-                    issue_budget,
-                    issue_assignees,
-                    issue_linked_pr,
-                    issue_status,
-                    review_status,
-                    issue_budget_approved,
-                })
-            },
-            Err(e) => Err(mysql_async::Error::from(e)),
-        }
-    }
-} */
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct IssueAndComments {

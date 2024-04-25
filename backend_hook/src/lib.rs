@@ -282,19 +282,14 @@ async fn list_issues_by_get_handler(
     );
 
     let pool = get_pool().await;
-    let mut issues_obj = Vec::new();
-    match list_by {
-        Some(list_by) => {
-            issues_obj = list_issues_by_single(&pool, list_by, page, page_size)
-                .await
-                .expect("msg")
-        }
+    let issues_obj = match list_by {
+        Some(list_by) => list_issues_by_single(&pool, list_by, page, page_size)
+            .await
+            .expect("msg"),
 
-        _ => {
-            issues_obj = list_issues_quick(&pool, page, page_size)
-                .await
-                .expect("msg")
-        }
+        _ => list_issues_quick(&pool, page, page_size)
+            .await
+            .expect("msg"),
     };
 
     let issues_str = json!(issues_obj).to_string();
@@ -393,22 +388,10 @@ async fn list_projects_handler(
         list_by
     );
 
-    let mut projects_obj = Vec::<Project>::new();
-
     let pool = get_pool().await;
-    match list_by {
-        Some("repo_stars") | Some("total_budget_allocated") => {
-            projects_obj = list_projects_by(&pool, page, page_size, list_by.unwrap())
-                .await
-                .expect("msg")
-        }
-        Some("issues_count") => {
-            projects_obj = list_projects_by_issues_count(&pool, page, page_size)
-                .await
-                .expect("msg")
-        }
-        _ => projects_obj = list_projects(&pool, page, page_size).await.expect("msg"),
-    };
+    let projects_obj = list_projects_by(&pool, list_by, page, page_size)
+        .await
+        .expect("msg");
 
     let projects_str = json!(projects_obj).to_string();
 
