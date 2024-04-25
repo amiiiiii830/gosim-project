@@ -300,9 +300,24 @@ pub async fn list_projects_by(
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
 
+    let schema_array = [
+        ("issues_count", "ORDER BY JSON_LENGTH(issues_list) DESC"),
+        (
+            "total_budget_allocated",
+            "ORDER BY total_budget_allocated DESC",
+        ),
+        ("repo_stars", "ORDER BY repo_stars DESC"),
+        (
+            "main_language",
+            "WHERE LENGTH(main_language) > 0 ORDER BY main_language ASC",
+        ),
+    ];
+
+    let schema_map: HashMap<&str, &str> = schema_array.into_iter().collect();
+
     let filter_str = match list_by {
-        None => String::new(),
-        Some(list_by) => build_query_clause(vec![list_by]),
+        None => &"",
+        Some(list_by) => schema_map.get(list_by).unwrap_or(&""),
     };
 
     let projects: Vec<ProjectOut> = conn
