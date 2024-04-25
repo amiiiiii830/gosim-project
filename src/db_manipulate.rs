@@ -116,6 +116,7 @@ fn build_query_clause(filters: Vec<&str>) -> String {
 
     let special_conditions = [
         ("main_language", "LENGTH(main_language) > 0"),
+        ("issue_assignees", "issue_assignees IS NOT NULL"),
         ("queue", "review_status = 'queue'"),
         ("approve", "review_status = 'approve'"),
         ("decline", "review_status = 'decline'"),
