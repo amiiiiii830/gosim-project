@@ -25,6 +25,7 @@ pub struct IssueOut {
     #[serde(default = "default_value")]
     pub issue_budget_approved: bool,
     pub running_budget: (i32, i32, i32),
+    pub issue_stats: (i32, i32, i32, i32),
 }
 
 fn default_value() -> bool {

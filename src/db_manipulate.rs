@@ -19,6 +19,7 @@ pub struct IssueSubset {
     pub repo_stars: i32,
     pub issue_budget: Option<i32>,
     pub running_budget: (i32, i32, i32),
+    pub issue_stats: (i32, i32, i32, i32),
     pub issue_status: Option<String>,
     pub review_status: String,
     #[serde(default = "default_value")]
@@ -104,11 +105,8 @@ pub async fn count_budget_by_status(pool: &Pool) -> anyhow::Result<(i32, i32, i3
 
 fn build_query_clause(filters: Vec<&str>) -> String {
     let schema_array = [
-        ("issues_count", "ORDER BY JSON_LENGTH(issues_list) DESC"),
-        (
-            "total_budget_allocated",
-            "ORDER BY total_budget_allocated DESC",
-        ),
+        ("issues_count", "JSON_LENGTH(issues_list) DESC"),
+        ("total_budget_allocated", "total_budget_allocated DESC"),
         ("main_language", "main_language ASC"),
         ("repo_stars", "repo_stars DESC"),
         ("issue_title", "issue_title ASC"),
@@ -172,6 +170,9 @@ pub async fn list_issues_by_multi(
     );
 
     let rows: Vec<mysql_async::Row> = conn.query(query).await?;
+    let (total_count, queue_count, approve_count, decline_count) = count_issues_by_status(&pool)
+        .await
+        .expect("failed to get issue stats");
 
     let mut issues = Vec::new();
     for row in rows {
@@ -197,6 +198,7 @@ pub async fn list_issues_by_multi(
                 .get::<bool, _>("issue_budget_approved")
                 .unwrap_or_default(),
             running_budget: (total_budget, total_budget_allocated, budget_balance),
+            issue_stats: (total_count, queue_count, approve_count, decline_count),
         };
 
         issues.push(issue);
@@ -228,6 +230,9 @@ pub async fn list_issues_by_single(
         .await
         .expect("budget counting failure");
 
+    let (total_count, queue_count, approve_count, decline_count) = count_issues_by_status(&pool)
+        .await
+        .expect("failed to get issue stats");
     let issues: Vec<IssueSubset> = conn
         .query_map(
             format!(
@@ -248,6 +253,7 @@ pub async fn list_issues_by_single(
                     review_status: review_status.unwrap_or_default(),
                     issue_budget_approved: issue_budget_approved.unwrap_or_default(),
                     running_budget: (total_budget, total_budget_allocated, budget_balance),
+                    issue_stats: (total_count, queue_count, approve_count, decline_count),
                 }
             },
         )
@@ -436,6 +442,7 @@ pub async fn get_issue_w_comments_by_id(
             .get::<bool, _>("issue_budget_approved")
             .unwrap_or_default(),
         running_budget: (99999, 99999, 99999),
+        issue_stats: (99999, 99999, 99999, 99999),
     };
 
     // Fetch the comments
