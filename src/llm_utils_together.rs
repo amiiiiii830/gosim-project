@@ -68,7 +68,8 @@ pub async fn chat_inner_async(
     if response.status().is_success() {
         let response_body = response.text().await?;
         if let Ok(chat_response) = serde_json::from_str::<ChatResponse>(&response_body) {
-            let finish_reason = &chat_response.choices[0].clone()
+            let finish_reason = &chat_response.choices[0]
+                .clone()
                 .finish_reason
                 .unwrap_or("no finish reason found".to_string());
             log::info!("input: {}, finish_reason: {}", input_head, finish_reason);

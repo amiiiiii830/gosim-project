@@ -263,32 +263,35 @@ pub async fn list_projects_by(
     list_by: Option<&str>,
     page: usize,
     page_size: usize,
-) -> Result<Vec<Project>> {
+) -> Result<Vec<ProjectOut>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
 
     let filter_str = match list_by {
         Some("issues_count") => String::from("ORDER BY JSON_LENGTH(issues_list) DESC"),
-        Some("main_language") => String::from("ORDER BY main_language ASC"),
+        Some("main_language") => String::from("WHERE main_language IS NOT NULL ORDER BY main_language ASC"),
         Some("repo_stars") => String::from("ORDER BY repo_stars DESC"),
         Some("total_budget_allocated") => String::from("ORDER BY total_budget_allocated DESC"),
         _ => String::new(),
     };
-    let projects: Vec<Project> = conn
+    let projects: Vec<ProjectOut> = conn
         .query_map(
             format!(
-                "SELECT project_id, project_logo, repo_stars, main_language, project_description, issues_list,   total_budget_allocated FROM projects {} LIMIT {} OFFSET {}",
+                "SELECT project_id, project_logo, repo_stars, main_language, project_description, issues_list,   total_budget_allocated 
+                COUNT(*) OVER() AS total_count
+                FROM projects {} LIMIT {} OFFSET {}",
                 filter_str, page_size, offset
             ),
-            |(project_id, project_logo, repo_stars, main_language, project_description, issues_list,  total_budget_allocated ): (String, Option<String>, i32, Option<String>,Option<String>, Option<String>,Option<i32>)| {
-                Project {
+            |(project_id, project_logo, repo_stars, main_language, project_description, issues_list,  total_budget_allocated, total_count ): (String, Option<String>, i32, Option<String>,Option<String>, Option<String>,Option<i32>, i32)| {
+                ProjectOut {
                     project_id,
                     project_logo,
                     repo_stars,
                     main_language,
                     project_description,
                     issues_list: issues_list.map_or(Some(Vec::new()), |s| serde_json::from_str(&s).ok()),
-                    total_budget_allocated
+                    total_budget_allocated,
+                    total_count
                 }
             },
         )

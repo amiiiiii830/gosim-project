@@ -11,6 +11,7 @@ CREATE TABLE projects (
 CREATE TABLE issues_master (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
     project_id VARCHAR(255) NOT NULL,   
+    project_logo VARCHAR(255),
     main_language VARCHAR(50) DEFAULT '',
     repo_stars INT DEFAULT 0,
     issue_title VARCHAR(255) NOT NULL,
@@ -46,6 +47,15 @@ CREATE TABLE issues_repos_summarized (
     issue_or_project_summary TEXT NOT NULL,
     keyword_tags JSON,
     indexed BOOLEAN DEFAULT 0
+) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+CREATE TABLE issues_repos_summarized (
+    issue_or_project_id VARCHAR(255) PRIMARY KEY, -- url of an issue
+    issue_or_project_summary TEXT NOT NULL,
+    keyword_tags JSON,
+    keyword_tags_text TEXT GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(keyword_tags, '$'))) STORED,
+    keyword_tags_text FULLTEXT,
+    indexed BOOLEAN  DEFAULT 0
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 
@@ -85,6 +95,11 @@ SET im.main_language = p.main_language,
     im.repo_stars = p.repo_stars;
 
 
+UPDATE issues_master im
+JOIN projects p ON im.project_id = p.project_id
+SET im.project_logo = p.project_logo
+
+
 -- Add a generated column that converts the JSON array to a comma-separated string
 ALTER TABLE issues_repos_summarized
 ADD COLUMN keyword_tags_text TEXT GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(keyword_tags, '$'))) STORED;
@@ -92,14 +107,5 @@ ADD COLUMN keyword_tags_text TEXT GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT
 -- Add a full-text index to the generated column
 ALTER TABLE issues_repos_summarized
 ADD FULLTEXT(keyword_tags_text);
-
-CREATE TABLE issues_repos_summarized (
-    issue_or_project_id VARCHAR(255) PRIMARY KEY, -- url of an issue
-    issue_or_project_summary TEXT NOT NULL,
-    keyword_tags JSON,
-    keyword_tags_text TEXT GENERATED ALWAYS AS (JSON_UNQUOTE(JSON_EXTRACT(keyword_tags, '$'))) STORED,
-    keyword_tags_text FULLTEXT,
-    indexed BOOLEAN  DEFAULT 0
-) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 

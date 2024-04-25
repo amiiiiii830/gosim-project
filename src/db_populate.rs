@@ -7,18 +7,17 @@ use mysql_async::*;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct IssueOut {
     pub issue_id: String,
     pub project_id: String,
-    pub main_language: String, 
-    pub repo_stars: i32,       
+    pub main_language: String,
+    pub repo_stars: i32,
     pub issue_title: String,
-    pub issue_creator: String, 
+    pub issue_creator: String,
     pub issue_description: String,
     pub issue_budget: Option<i32>,
-    pub issue_assignees: Option<String>, 
+    pub issue_assignees: Option<String>,
     pub issue_linked_pr: Option<String>,
     pub issue_status: Option<String>,
     pub review_status: String,
@@ -39,7 +38,7 @@ pub enum ReviewStatus {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct Project {
+pub struct ProjectOut {
     pub project_id: String,
     pub project_logo: Option<String>,
     pub main_language: Option<String>,
@@ -47,6 +46,7 @@ pub struct Project {
     pub project_description: Option<String>,
     pub issues_list: Option<Vec<String>>,
     pub total_budget_allocated: Option<i32>,
+    pub total_count: i32,
 }
 
 pub async fn get_pool() -> Pool {
@@ -91,7 +91,7 @@ pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyho
         String::from("No description available")
     };
 
-    let res = conn
+    if   let Err(e) = conn
         .exec_drop(
             r"INSERT INTO projects (project_id, project_logo, main_language, repo_stars, project_description)
         VALUES (:project_id, :project_logo, :main_language, :repo_stars, :project_description)
@@ -108,51 +108,14 @@ pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyho
                 "project_description" => project_description,
             },
         )
-        .await;
-
-    match res {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            log::error!("Failed to fill project with repo data: {:?}", e);
-            Err(e.into()) // propagate the error
-        }
-    }
-}
-/* pub async fn fill_project_w_repo_data(pool: &Pool, repo_data: RepoData) -> anyhow::Result<()> {
-    let mut conn = pool.get_conn().await?;
-
-    let project_id = repo_data.project_id;
-    let project_logo = repo_data.project_logo;
-    let repo_stars = repo_data.repo_stars;
-
-    let project_description = if !repo_data.repo_description.is_empty() {
-        repo_data.repo_description.clone()
-    } else if !repo_data.repo_readme.is_empty() {
-        repo_data.repo_readme.chars().take(1000).collect()
-    } else {
-        String::from("No description available")
-    };
-
-    if let Err(e) = conn
-        .exec_drop(
-            r"UPDATE projects SET
-            project_logo = :project_logo,
-            repo_stars = :repo_stars,
-            project_description = :project_description
-        WHERE project_id = :project_id;",
-            params! {
-                "project_id" => project_id,
-                "project_logo" => project_logo,
-                "repo_stars" => repo_stars,
-                "project_description" => project_description,
-            },
-        )
         .await
+
     {
-        log::error!("Failed to fill project with repo data: {:?}", e);
-    };
+            log::error!("Failed to fill project with repo data: {:?}", e);
+    }
+
     Ok(())
-} */
+}
 
 pub async fn issue_exists(pool: &mysql_async::Pool, issue_id: &str) -> anyhow::Result<bool> {
     let mut conn = pool.get_conn().await?;

@@ -183,3 +183,7 @@ select project_id, project_description from projects where  project_id not in (S
 SELECT COUNT(DISTINCT issue_id) FROM issues_comment;
 
 
+        SELECT issue_id, project_id, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_description, issue_assignees, issue_linked_pr, issue_status, review_status, issue_budget_approved FROM issues_master  LIMIT 50 OFFSET 1
+
+
+COUNT(*) OVER() AS total_count

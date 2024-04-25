@@ -101,6 +101,7 @@ pub async fn project_master_back_sync(pool: &mysql_async::Pool) -> anyhow::Resul
     UPDATE issues_master im
     JOIN projects p ON im.project_id = p.project_id
     SET im.main_language = p.main_language,
+        im.project_logo = p.project_logo,
         im.repo_stars = p.repo_stars;
         ";
 
