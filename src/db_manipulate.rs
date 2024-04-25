@@ -277,7 +277,7 @@ pub async fn list_projects_by(
     let projects: Vec<ProjectOut> = conn
         .query_map(
             format!(
-                "SELECT project_id, project_logo, repo_stars, main_language, project_description, issues_list,   total_budget_allocated 
+                "SELECT project_id, project_logo, repo_stars, main_language, project_description, issues_list,   total_budget_allocated, 
                 COUNT(*) OVER() AS total_count
                 FROM projects {} LIMIT {} OFFSET {}",
                 filter_str, page_size, offset
