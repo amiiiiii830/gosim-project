@@ -105,7 +105,8 @@ pub async fn count_budget_by_status(pool: &Pool) -> anyhow::Result<(i32, i32, i3
 
 fn build_query_clause(filters: Vec<&str>) -> String {
     let schema_array = [
-        ("issues_count", "JSON_LENGTH(issues_list) DESC"),
+        ("issues_count", "JSON_LENGTH(issues_list) ASC"),
+        // ("issues_count", "JSON_LENGTH(issues_list) DESC"),
         ("total_budget_allocated", "total_budget_allocated DESC"),
         ("main_language", "main_language ASC"),
         ("repo_stars", "repo_stars DESC"),
