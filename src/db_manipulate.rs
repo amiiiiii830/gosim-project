@@ -207,14 +207,17 @@ pub async fn list_issues_by_multi(
 
 pub async fn list_issues_by_single(
     pool: &Pool,
-    list_by: &str,
+    list_by: Option<String>,
     page: usize,
     page_size: usize,
 ) -> Result<Vec<IssueSubset>> {
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
 
-    let filter_str = build_query_clause(vec![list_by]);
+    let filter_str = match list_by {
+        None => String::new(),
+        Some(list_by) => build_query_clause(vec![&list_by]),
+    };
 
     let (total_budget, total_budget_allocated, budget_balance) = count_budget_by_status(&pool)
         .await
@@ -247,46 +250,6 @@ pub async fn list_issues_by_single(
     Ok(issues)
 }
 
-pub async fn list_issues_quick(
-    pool: &Pool,
-    page: usize,
-    page_size: usize,
-) -> Result<Vec<IssueSubset>> {
-    let mut conn = pool.get_conn().await?;
-    let offset = (page - 1) * page_size;
-
-    let (total_budget, total_budget_allocated, budget_balance) = count_budget_by_status(&pool)
-        .await
-        .expect("budget counting failure");
-
-    let issues: Vec<IssueSubset> = conn
-        .query_map(
-            format!(
-                "SELECT issue_id, project_id, issue_title, main_language, repo_stars, issue_budget,issue_creator, issue_status, review_status, issue_budget_approved FROM issues_master ORDER BY issue_id LIMIT {} OFFSET {}",
-                page_size, offset
-            ),
-            |(issue_id, project_id, project_logo, issue_title, main_language, repo_stars, issue_budget, issue_creator, issue_status, review_status, issue_budget_approved): (String, String, String, String, String, i32, Option<i32>, String, Option<String>, Option<String>, Option<bool>)| {
-                IssueSubset {
-                    issue_id,
-                    project_id,
-                    project_logo,
-                    issue_title,
-                    main_language,
-                    repo_stars,
-                    issue_budget,
-                    issue_creator,
-                    issue_status,
-                    review_status: review_status.unwrap_or_default(),
-                    issue_budget_approved: issue_budget_approved.unwrap_or_default(),
-                    running_budget: (total_budget, total_budget_allocated, budget_balance),
-
-                }
-            },
-        )
-        .await?;
-
-    Ok(issues)
-}
 // "SELECT project_id FROM projects WHERE project_logo is NULL ORDER BY project_id LIMIT :limit OFFSET :offset",
 
 pub async fn get_projects_as_repo_list(pool: &Pool, page: u32) -> Result<String> {
