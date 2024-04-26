@@ -136,3 +136,11 @@ WITH FilteredProjects AS (
                 tc.total_count
             FROM 
                 FilteredProjects fp, TotalCount tc
+
+
+
+SELECT keyword, COUNT(*) as frequency
+FROM issues_repos_summarized,
+     JSON_TABLE(keyword_tags, '$[*]' COLUMNS(keyword VARCHAR(255) PATH '$')) AS keywords
+GROUP BY keyword
+ORDER BY frequency DESC;

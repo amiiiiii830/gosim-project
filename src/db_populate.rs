@@ -327,9 +327,9 @@ pub async fn add_or_update_summary_and_id(
     let keyword_tags_json_str = json!(keyword_tags).to_string();
 
     let query = r"INSERT INTO issues_repos_summarized (issue_or_project_id, issue_or_project_summary, keyword_tags)
-                  VALUES (:issue_or_project_id, :issue_or_project_summary, :keyword_tags_json_str)
-                  ON DUPLICATE KEY UPDATE
-                  keyword_tags = IF(JSON_LENGTH(keyword_tags) = 0 AND LENGTH(:keyword_tags_json_str) > 0, :keyword_tags_json_str, keyword_tags)";
+    VALUES (:issue_or_project_id, :issue_or_project_summary, :keyword_tags_json_str)
+    ON DUPLICATE KEY UPDATE
+    keyword_tags = :keyword_tags_json_str;";
 
     if let Err(e) = conn
         .exec_drop(
