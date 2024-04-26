@@ -465,7 +465,7 @@ pub async fn summarize_issue_add_in_db(pool: &Pool, issue: &IssueOpen) -> anyhow
     } else {
         format!(
                 "Here is the input: The issue titled `{issue_title}` at repository `{repo}` by owner `{owner}`, states in the body text: {issue_description}"
-            ).chars().take(8000).collect::<String>()
+            ).chars().take(4000).collect::<String>()
     };
     let generated_summary = chat_inner_async(system_prompt, &raw_input_texts, 200).await?;
 

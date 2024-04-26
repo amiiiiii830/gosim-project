@@ -75,6 +75,8 @@ pub async fn chat_inner_async(
             log::info!("input: {}, finish_reason: {}", input_head, finish_reason);
 
             if let Some(content) = &chat_response.choices[0].message.content {
+                log::info!("together summary: {}", content.to_string());
+
                 return Ok(content.to_string());
             }
         }
