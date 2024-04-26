@@ -98,5 +98,5 @@ pub async fn chat_inner_async(
 
         return Ok(chat_response.choices[0].clone().message.content.unwrap_or_default());
     }
-    Err(anyhow::anyhow!("error deserialize ChatResponse"))
+    Err(anyhow::anyhow!("error deserialize ChatResponse"))?
 }

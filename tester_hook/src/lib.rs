@@ -402,7 +402,7 @@ pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
         log::info!("repo : {:?}", repo_data.project_id.clone());
 
         let _ = fill_project_w_repo_data(&pool, repo_data.clone()).await?;
-        let _ = summarize_project_add_in_db_one_step(&pool, repo_data).await?;
+        let _ = summarize_project_add_in_db(&pool, repo_data).await?;
     }
 
     Ok(())

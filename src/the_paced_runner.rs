@@ -179,6 +179,16 @@ pub async fn popuate_dbs_fill_projects(pool: &Pool) -> anyhow::Result<()> {
 
     let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await?;
 
+    let repo_ids_vec = repo_data_vec
+        .clone()
+        .into_iter()
+        .map(|r| r.project_id)
+        .collect::<Vec<String>>();
+    let len = repo_data_vec.len();
+    let repo_ids = repo_ids_vec.join("\n");
+
+    log::info!("{len} repo_ids: {:?}", repo_ids);
+
     for repo_data in repo_data_vec {
         let _ = fill_project_w_repo_data(&pool, repo_data.clone()).await?;
         let _ = summarize_project_add_in_db(&pool, repo_data).await?;

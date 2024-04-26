@@ -446,28 +446,35 @@ pub async fn summarize_issue_add_in_db(pool: &Pool, issue: &IssueOpen) -> anyhow
     let issue_title = issue_clone.issue_title;
     let issue_id = issue_clone.issue_id;
     let issue_description = issue_clone.issue_description;
+    log::info!("Summarizing issue: {}",issue_id);
 
     let parts: Vec<&str> = issue_id.split('/').collect();
     let owner = parts[3].to_string();
     let repo = parts[4].to_string();
 
-    let system_prompt = r#"
-        Summarize the GitHub issue in one paragraph without mentioning the issue number. Highlight the key problem and any signature information provided. The summary should be concise, informative, and easy to understand, prioritizing clarity and brevity. Additionally, extract high-level keywords that represent broader categories or themes relevant to the issue's purpose, features, and tools used. These keywords should help categorize the issue in a wider context and should not be too literal or specific, avoiding overly long phrases unless absolutely necessary.
-        Expected Output:
+    let system_prompt_long_input = r#"
+        Summarize the GitHub issue in one paragraph without mentioning the issue number. Highlight the key problem and any signature information provided. The summary should be concise, informative, and easy to understand, prioritizing clarity and brevity. Additionally, extract high-level keywords that represent broader categories or themes relevant to the issue's purpose, features, and tools used. These keywords should help categorize the issue in a wider context and should not be too literal or specific, avoiding overly long phrases unless absolutely necessary. Expected Output:
         { \"summary\": \"the_summary_generated, a short paragraph summarizing the issue, including its purpose and features, without referencing the issue number.\",
-          \"keywords\": [\"keywords_list, a list of high-level keywords that encapsulate the broader context, categories, or themes of the issue, excluding specific details and issue numbers.\"] }
+          \"keywords\": [\"a list of high-level keywords that encapsulate the broader context, categories, or themes of the issue, excluding specific details and issue numbers.\"] }
         Ensure you reply in RFC8259-compliant JSON format."#;
 
-    let raw_input_texts = if issue_description.len() < 200 {
-        format!(
-                "`{issue_title}` at repository `{repo}` by owner `{owner}`, states: {issue_description}"
-            )
+        let system_prompt_short_input = r#"
+        Given the limited information available, summarize the GitHub issue in one paragraph without mentioning the issue number. Highlight the key problem and any signature information that can be inferred. The summary should be concise, informative, and easy to understand, prioritizing clarity and brevity even with scant details. Additionally, extract high-level keywords that represent broader categories or themes relevant to the issue's inferred purpose, features, and tools used. These keywords should help categorize the issue in a wider context and should not be too literal or specific, avoiding overly long phrases unless absolutely necessary. Expected Output:
+        { \"summary\": \"The summary generated should be a concise paragraph that highlights any discernible purpose, technologies, or features from the limited information.\",
+          \"keywords\": [\"A list of inferred high-level keywords that broadly categorize the repository based on the scant details available.\"] }
+        Ensure you reply in RFC8259-compliant JSON format."#;
+
+    let generated_summary = if issue_description.len() < 200 {
+        let raw_input_texts = format!(
+                "Here is the input: `{issue_title}` at repository `{repo}` by owner `{owner}`, states: {issue_description}"
+            );
+        chat_inner_async(system_prompt_short_input, &raw_input_texts, 180).await?
     } else {
-        format!(
+        let raw_input_texts=  format!(
                 "Here is the input: The issue titled `{issue_title}` at repository `{repo}` by owner `{owner}`, states in the body text: {issue_description}"
-            ).chars().take(4000).collect::<String>()
+            ).chars().take(4000).collect::<String>();
+        chat_inner_async(system_prompt_long_input, &raw_input_texts, 250).await?
     };
-    let generated_summary = chat_inner_async(system_prompt, &raw_input_texts, 200).await?;
 
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
     log::info!("{}, {:?}", issue_id, keyword_tags.clone());
@@ -475,82 +482,16 @@ pub async fn summarize_issue_add_in_db(pool: &Pool, issue: &IssueOpen) -> anyhow
 
     Ok(())
 }
-pub async fn summarize_project_add_in_db_one_step(
-    pool: &Pool,
-    repo_data: RepoData,
-) -> anyhow::Result<()> {
-    let parts: Vec<&str> = repo_data.project_id.split('/').collect();
-    let owner = parts[3].to_string();
-    let repo = parts[4].to_string();
-
-    let project_descrpition = repo_data.repo_description;
-    let project_readme = repo_data.repo_readme;
-    let main_language = repo_data.main_language;
-    let system_prompt = r#"
-    Summarize the GitHub repository's README or description in one paragraph. Highlight the project's key mission, tech stack, features, and essential tools used. The summary should be concise, informative, and easy to understand, prioritizing clarity and brevity. Focus on the core technological aspects and user benefits, excluding operational details like a project's upkeeping information or procedural guidelines. Additionally, extract high-level keywords that represent broader categories or themes relevant to the project's purpose, tech stack, features, and tools used. These keywords should help categorize the project in a wider context and should not be too literal or specific. Ensure that the keywords list includes broad terms that encapsulate the project's overarching themes and are reflective of the words used in the summary. 
-    Expected Output: 
-    { \"summary\": \"the_summary_generated, a short paragraph summarizing the project, including its purpose, tech stack, and features.\", 
-      \"keywords\": \"keywords_list, a list of high-level keywords that encapsulate the broader context, categories, or themes of the project, excluding specific details.\" },
-    ensure you reply in RFC8259-compliant JSON format.
-    "#;
-
-    let use_lang_str = if main_language.is_empty() {
-        String::from("")
-    } else {
-        format!("mainly uses `{main_language}` in the project")
-    };
-
-    let project_readme_str = match project_readme.is_empty() {
-        false => format!("states in readme: {project_readme}"),
-        true => String::from(""),
-    };
-
-    let raw_input_texts = if project_readme.len() < 200 {
-        format!(
-            "The repository `{repo}` by owner `{owner}` {use_lang_str},`{project_descrpition}`, {project_readme_str}"
-        )
-    } else {
-        format!(
-                "Here is the input: The repository `{repo}`  by owner `{owner}` {use_lang_str}, has a short text description: `{project_descrpition}`, mentioned more details in readme: `{project_readme}`"
-            ).chars().take(4000).collect::<String>()
-    };
-
-    let generated_summary = chat_inner_async(system_prompt, &raw_input_texts, 250).await?;
-    let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
-    log::info!("project keywords: {:?}", keyword_tags.clone());
-
-    let _ =
-        add_or_update_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
-    Ok(())
-}
 
 pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> anyhow::Result<()> {
     let parts: Vec<&str> = repo_data.project_id.split('/').collect();
     let owner = parts[3].to_string();
     let repo = parts[4].to_string();
+     log::info!("Summarizing repo: {}",repo_data.project_id);
 
     let project_descrpition = repo_data.repo_description;
     let project_readme = repo_data.repo_readme;
     let main_language = repo_data.main_language;
-    let system_prompt = r#"
-    Summarize the GitHub repository's README or description in one paragraph. Highlight the project's key mission, tech stack, features, and essential tools used. The summary should be concise, informative, and easy to understand, prioritizing clarity and brevity. Focus on the core technological aspects and user benefits, excluding operational details like a project's upkeeping information or procedural guidelines. Additionally, extract high-level keywords that represent broader categories or themes relevant to the project's purpose, tech stack, features, and tools used. These keywords should help categorize the project in a wider context and should not be too literal or specific. Ensure that the keywords list includes broad terms that encapsulate the project's overarching themes and are reflective of the words used in the summary. 
-    Expected Output: 
-    - A short paragraph summarizing the project, including its purpose, tech stack, and features. 
-    - A list of high-level keywords that encapsulate the broader context, categories, or themes of the project, excluding specific details. Reply in JSON format:
-    { \"summary\": \"the_summary_generated\", 
-        \"keywords\": \"keywords_list\" }
-    "#;
-
-    let usr_prompt_2 = r#"
-    fit the information you received into a RFC8259-compliant JSON:
-```json
-    { 
-        \"summary\": \"the_summary_generated\", 
-        \"keywords\": \"keywords_list\"
-    }
-    ```
-    Ensure that the JSON is properly formatted, with correct escaping of special characters. Avoid adding any non-JSON content or formatting    
-    "#;
 
     let use_lang_str = if main_language.is_empty() {
         String::from("")
@@ -563,35 +504,33 @@ pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> an
         true => String::from(""),
     };
 
-    let one_step_system_prompt = r#"Summarize the GitHub repository's README or description in one paragraph. Extract high-level keywords that represent broader categories or themes relevant to the project's purpose, technologies, features, and tools used. Infer plausible details based on common patterns or typical project characteristics related to the technologies or themes mentioned. These keywords should help categorize the project in a wider context and should not be too literal or specific. Expected Output: { \"summary\": \"the_summary_generated\", \"keywords\": \"keywords_list\" }, ensure you reply in RFC8259-compliant JSON format."#;
+    let system_prompt_long_input = r#"Summarize the GitHub repository's README or description in one paragraph. Utilize all available information to provide a detailed and comprehensive summary. Extract high-level keywords that represent broader categories or themes relevant to the project's purpose, technologies, features, and tools used. These keywords should help categorize the project in a wider context and should not be too literal or specific. Expected Output:
+    { \"summary\": \"the_summary_generated, a short paragraph summarizing the issue, including its purpose and features, without referencing the issue number.\",
+      \"keywords\": [\"keywords_list, a list of high-level keywords that encapsulate the broader context, categories, or themes of the issue, excluding specific details and issue numbers.\"] }
+    Ensure you reply in RFC8259-compliant JSON format."#;
+
+    let system_prompt_short_input = r#"When information is limited, summarize the GitHub repository's README or description in one concise paragraph without commenting on the brevity or insufficiency of the information. Focus on extracting whatever essential information is available and infer plausible details based on common patterns or typical characteristics associated with any mentioned technologies or themes. Extract high-level keywords that represent broader categories or themes, even if based on minimal data. These keywords should help provide a general categorization of the project. Expected Output:
+    { \"summary\": \"The summary generated should be a concise paragraph that highlights any discernible purpose, technologies, or features from the limited information.\",
+      \"keywords\": [\"A list of inferred high-level keywords that broadly categorize the repository based on the scant details available.\"] }
+    Ensure you reply in RFC8259-compliant JSON format."#;
 
     let generated_summary = if project_readme.len() < 200 {
         let raw_input_texts = format!(
-            "The repository `{repo}` by owner `{owner}` {use_lang_str},`{project_descrpition}`, {project_readme_str}"
+            "Here is the input: The repository `{repo}` by owner `{owner}` {use_lang_str},`{project_descrpition}`, {project_readme_str}"
         );
 
-        chat_inner_async(one_step_system_prompt, &raw_input_texts, 250).await?
+        chat_inner_async(system_prompt_short_input, &raw_input_texts, 180).await?
     } else {
         let raw_input_texts = format!(
                 "Here is the input: The repository `{repo}`  by owner `{owner}` {use_lang_str}, has a short text description: `{project_descrpition}`, mentioned more details in readme: `{project_readme}`"
-            ).chars().take(8000).collect::<String>();
+            ).chars().take(4000).collect::<String>();
 
-        chat_inner_async(one_step_system_prompt, &raw_input_texts, 250).await?
-
-        // chain_of_chat(
-        //     &system_prompt,
-        //     &raw_input_texts,
-        //     "chat_id_chain_chat",
-        //     400,
-        //     &usr_prompt_2,
-        //     200,
-        // )
-        // .await?
+        chat_inner_async(system_prompt_long_input, &raw_input_texts, 250).await?
     };
-                //  log::info!("generated summary: {}", generated_summary.to_string());
+    //  log::info!("generated summary: {}", generated_summary.to_string());
 
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
-                //  log::info!("keywords: {:?}", &keyword_tags);
+    //  log::info!("keywords: {:?}", &keyword_tags);
 
     let _ =
         add_or_update_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
