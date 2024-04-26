@@ -297,6 +297,7 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
         }
     };
     let pool: Pool = get_pool().await;
+    log::info!("func_id to run: {:?}", load.func_ids);
 
     for func_id in load.func_ids {
         let _ = match func_id.as_str() {
