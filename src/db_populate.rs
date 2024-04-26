@@ -504,12 +504,14 @@ pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> an
         true => String::from(""),
     };
 
-    let system_prompt_long_input = r#"Summarize the GitHub repository's README or description in one paragraph. Utilize all available information to provide a detailed and comprehensive summary. Extract high-level keywords that represent broader categories or themes relevant to the project's purpose, technologies, features, and tools used. These keywords should help categorize the project in a wider context and should not be too literal or specific. Expected Output:
-    { \"summary\": \"the_summary_generated, a short paragraph summarizing the issue, including its purpose and features, without referencing the issue number.\",
-      \"keywords\": [\"keywords_list, a list of high-level keywords that encapsulate the broader context, categories, or themes of the issue, excluding specific details and issue numbers.\"] }
-    Ensure you reply in RFC8259-compliant JSON format."#;
+    let system_prompt_long_input = r#"
+    Summarize the GitHub repository's README or description in one detailed paragraph, focusing solely on the essential aspects such as the project's purpose, technologies used, and notable features. Do not include non-essential elements like personal appeals or donation links. Extract high-level keywords that represent broader categories or themes relevant to the project. These keywords should categorize the project in a wider context and not be overly specific or literal. Expected Output:
+    { \"summary\": \"A comprehensive paragraph that succinctly summarizes the repository, highlighting its purpose, technologies, and key features, without including extraneous details.\",
+      \"keywords\": [\"A list of high-level keywords that encapsulate the broader context, categories, or themes of the repository, focusing on essential aspects only.\"] }
+    Ensure your reply is in RFC8259-compliant JSON format.
+    "#;
 
-    let system_prompt_short_input = r#"When information is limited, summarize the GitHub repository's README or description in one concise paragraph without commenting on the brevity or insufficiency of the information. Focus on extracting whatever essential information is available and infer plausible details based on common patterns or typical characteristics associated with any mentioned technologies or themes. Extract high-level keywords that represent broader categories or themes, even if based on minimal data. These keywords should help provide a general categorization of the project. Expected Output:
+    let system_prompt_short_input = r#"When summarizing a GitHub repository's README or description, concentrate on the core content. Provide a concise paragraph that captures the primary purpose, technologies used, and notable features. Avoid mentioning non-essential elements such as donation links or personal appeals. Deduce and include high-level keywords that broadly categorize the repository, focusing on the technologies, functionality, and scope based on the available information. These keywords should reflect the main themes or categories relevant to the project. Expected Output:
     { \"summary\": \"The summary generated should be a concise paragraph that highlights any discernible purpose, technologies, or features from the limited information.\",
       \"keywords\": [\"A list of inferred high-level keywords that broadly categorize the repository based on the scant details available.\"] }
     Ensure you reply in RFC8259-compliant JSON format."#;
