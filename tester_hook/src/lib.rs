@@ -316,6 +316,7 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
             "13" => sum_budget_to_project(&pool).await,
             "14" => remove_pull_by_issued_linked_pr(&pool).await,
             "15" => delete_issues_open_assigned_closed(&pool).await,
+            "16" => force_issue_to_summary_update_db(&pool).await,
             _ => panic!(),
         };
     }

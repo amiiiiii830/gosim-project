@@ -96,6 +96,17 @@ pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
     }
     Ok(())
 }
+
+pub async fn force_issue_to_summary_update_db(pool: &Pool) -> anyhow::Result<()> {
+    let open_issue_obj: Vec<IssueOpen> = get_issues_open_from_master(pool, 1).await?;
+    let len = open_issue_obj.len();
+    log::info!("Simulate Open Issues retrieved from issues_master: {:?}", len);
+    for issue in open_issue_obj {
+        let _ = summarize_issue_add_in_db(pool, &issue).await;
+    }
+    Ok(())
+}
+
 pub async fn popuate_dbs_save_issues_comment(pool: &Pool) -> anyhow::Result<()> {
     let query_comment =
         "label:hacktoberfest-accepted is:issue updated:>2024-01-01 -label:spam -label:invalid";
@@ -176,7 +187,7 @@ pub async fn popuate_dbs_save_pull_requests(pool: &Pool) -> anyhow::Result<()> {
 
 pub async fn popuate_dbs_fill_projects(pool: &Pool) -> anyhow::Result<()> {
     let query_repos: String = get_projects_as_repo_list(pool, 1).await?;
-    let len = query_repos.split(" ").count() -1;
+    let len = query_repos.split(" ").count() - 1;
     log::info!("{len} query_repos: {:?}", query_repos);
     let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await?;
 

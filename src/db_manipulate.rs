@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::db_populate::*;
+use crate::issue_tracker::IssueOpen;
 use crate::TOTAL_BUDGET;
 use anyhow::anyhow;
 use mysql_async::prelude::*;
@@ -288,6 +289,45 @@ pub async fn get_projects_as_repo_list(pool: &Pool, page: u32) -> Result<String>
 
     let mut out = res.join(" ");
     out.push_str(" fork:true");
+    Ok(out)
+}
+
+pub async fn get_issues_open_from_master(
+    pool: &Pool,
+    page: u32,
+) -> Result<Vec<IssueOpen>> {
+    let page_size = 30u32;
+    let offset = (page - 1) * page_size;
+    let mut conn = pool.get_conn().await?;
+
+    let query = format!(
+        "SELECT issue_title, issue_id, issue_creator, issue_description, project_id FROM issues_master 
+        WHERE issue_id NOT IN (SELECT issue_or_project_id FROM issues_repos_summarized WHERE issue_or_project_summary IS NOT NULL) 
+        ORDER BY issue_id ASC
+        LIMIT {} OFFSET {}",
+        page_size, offset
+    );
+
+    let out: Vec<IssueOpen> = conn
+        .query_map(
+            query,
+            |(issue_title, issue_id, issue_creator, issue_description, project_id): (
+                String,
+                String,
+                String,
+                String,
+                String,
+            )| IssueOpen {
+                issue_title,
+                issue_id,
+                issue_creator,
+                issue_budget: 0,
+                issue_description,
+                project_id,
+            },
+        )
+        .await?;
+
     Ok(out)
 }
 
