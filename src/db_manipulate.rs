@@ -263,7 +263,7 @@ pub async fn list_issues_by_single(
 // "SELECT project_id FROM projects WHERE project_logo is NULL ORDER BY project_id LIMIT :limit OFFSET :offset",
 
 pub async fn get_projects_as_repo_list(pool: &Pool, page: u32) -> Result<String> {
-    let page_size = 30u32;
+    let page_size = 15u32;
     let mut conn = pool.get_conn().await?;
     let offset = (page - 1) * page_size;
     let project_ids: Vec<String> = conn

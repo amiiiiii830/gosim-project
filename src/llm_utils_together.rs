@@ -47,7 +47,7 @@ pub async fn chat_inner_async(
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert(USER_AGENT, HeaderValue::from_static("MyClient/1.0.0"));
     headers.insert(AUTHORIZATION, HeaderValue::from_str(&bearer_token)?);
-    let input_head = input.chars().take(50).collect::<String>();
+    let input_head = input.chars().take(150).collect::<String>();
 
     let messages = serde_json::json!([
         {"role": "system", "content": system_prompt},
