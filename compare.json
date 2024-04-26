@@ -1,0 +1,12 @@
+{
+    "level": "INFO",
+    "message": "18 repo_ids: \"https://github.com/newrelic/newrelic-ruby-agent\\nhttps://github.com/neon-mmd/websurfx\\nhttps://github.com/ngoworldcommunity/NGOWorld\\nhttps://github.com/nearbeach/NearBeach\\nhttps://github.com/muchirijane/learning-code-through-github-repos\\nhttps://github.com/neokd/NeoGPT\\nhttps://github.com/namespacecomm/NSCC-BPIT-Website\\nhttps://github.com/Niraj-1729/Hacktoberfest\\nhttps://github.com/nishaaannnt/advance-bookmarks\\nhttps://github.com/N-45div/Resilient-Response\\nhttps://github.com/NITRR-Open-Source-Community/CRM\\nhttps://github.com/nexus-lab-org/port-sniffer\\nhttps://github.com/NewtonFernandis/IssueHunter\\nhttps://github.com/NadiaIdris/ts-spreadsheet\\nhttps://github.com/mubashir72/HacktoberFest_2023\\nhttps://github.com/MSTC-DA-IICT/Hacktoberfest23-ReACTivate\\nhttps://github.com/Nitish2626/news-app\\nhttps://github.com/niirmaaltwaatii/PyScripts\"",
+    "target": "gosim_project::the_paced_runner"
+}
+
+
+{
+    "level": "INFO",
+    "message": "30 query_repos: \"repo:ContriHUB/Jodi-Makers repo:ContriHUB/PlayTopia repo:ContriHUB/SecureFace repo:ContriHUB/Tech-Mirror repo:ContriHUB/TravelBuddy repo:ContriHUB/User-management-system repo:DevSoc-Asansol2023/DevSoc-Main repo:dsc-iem/E-Commerce-Website-Hacktoberfest2023 repo:Fathima786/hacktoberfest2023 repo:HackSlashNITP/Cura repo:marcus5914/skiply repo:marcus5914/webpack-boilerplate repo:MSTC-DA-IICT/Hacktoberfest23-ReACTivate repo:mubashir72/HacktoberFest_2023 repo:muchirijane/learning-code-through-github-repos repo:N-45div/Resilient-Response repo:NadiaIdris/ts-spreadsheet repo:namespacecomm/NSCC-BPIT-Website repo:nearbeach/NearBeach repo:neokd/NeoGPT repo:neon-mmd/websurfx repo:newrelic/newrelic-ruby-agent repo:NewtonFernandis/IssueHunter repo:nexus-lab-org/port-sniffer repo:ngoworldcommunity/NGOWorld repo:niirmaaltwaatii/PyScripts repo:Niraj-1729/Hacktoberfest repo:nishaaannnt/advance-bookmarks repo:Nitish2626/news-app repo:NITRR-Open-Source-Community/CRM\"",
+    "target": "gosim_project::the_paced_runner"
+}

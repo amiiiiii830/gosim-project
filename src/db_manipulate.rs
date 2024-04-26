@@ -286,7 +286,9 @@ pub async fn get_projects_as_repo_list(pool: &Pool, page: u32) -> Result<String>
         })
         .collect::<Vec<String>>();
 
-    Ok(res.join(" "))
+    let mut out = res.join(" ");
+    out.push_str(" fork:true");
+    Ok(out)
 }
 
 pub async fn list_projects_by(
