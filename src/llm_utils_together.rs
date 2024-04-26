@@ -41,7 +41,8 @@ pub async fn chat_inner_async(
     max_token: u16,
 ) -> anyhow::Result<String> {
     let mut headers = HeaderMap::new();
-    let api_key = std::env::var("TOGETHER_API_KEY")?;
+    // let api_key = std::env::var("TOGETHER_API_KEY")?;
+    let api_key = std::env::var("AZURE_API_TOKEN")?;
     let bearer_token = format!("Bearer {}", api_key);
 
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
@@ -54,13 +55,15 @@ pub async fn chat_inner_async(
         {"role": "user", "content": input}
     ]);
 
-    let uri = "https://api.together.xyz/v1/chat/completions";
+    // let uri = "https://api.together.xyz/v1/chat/completions";
+    let uri = "https://Meta-Llama-3-8B-Instruct-ttskb-serverless.eastus2.inference.ai.azure.com/v1/chat/completions";
     let body = serde_json::to_vec(&serde_json::json!({
         "temperature": 0.7,
         "max_tokens": max_token,
-        "model": "meta-llama/Llama-3-8b-chat-hf",
+        "model": "Meta-Llama-3-8B-Instruct",
         "messages": messages,
     }))?;
+        // "model": "meta-llama/Llama-3-8b-chat-hf",
 
     let client = ClientBuilder::new().default_headers(headers).build()?;
     let response = client.post(uri).body(body.clone()).send().await?;
