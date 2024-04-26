@@ -588,7 +588,10 @@ pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> an
         // )
         // .await?
     };
+                 log::info!("generated summary: {}", generated_summary.to_string());
+
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
+                 log::info!("keywords: {:?}", &keyword_tags);
 
     let _ =
         add_or_update_summary_and_id(&pool, &repo_data.project_id, &summary, keyword_tags).await;
