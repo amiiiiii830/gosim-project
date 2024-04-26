@@ -176,7 +176,7 @@ pub async fn popuate_dbs_save_pull_requests(pool: &Pool) -> anyhow::Result<()> {
 
 pub async fn popuate_dbs_fill_projects(pool: &Pool) -> anyhow::Result<()> {
     let query_repos: String = get_projects_as_repo_list(pool, 1).await?;
-    let len = query_repos.split(" ").count();
+    let len = query_repos.split(" ").count() -1;
     log::info!("{len} query_repos: {:?}", query_repos);
     let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await?;
 
