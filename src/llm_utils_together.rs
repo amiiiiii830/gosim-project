@@ -63,7 +63,7 @@ pub async fn chat_inner_async(
     }))?;
 
     let client = ClientBuilder::new().default_headers(headers).build()?;
-    let response = client.post(uri).body(body).send().await?;
+    let response = client.post(uri).body(body.clone()).send().await?;
 
     if response.status().is_success() {
         let response_body = response.text().await?;
@@ -80,14 +80,20 @@ pub async fn chat_inner_async(
                 return Ok(content.to_string());
             }
         }
-        Err(anyhow::anyhow!("error deserialize ChatResposne"))
 
         // Ok(response_body)
     } else {
-        let error_msg = format!(
-            "Failed to get a successful response: {:?}",
-            response.status()
-        );
-        Err(anyhow::anyhow!(error_msg))
+        let response = client.post(uri).body(body).send().await?;
+
+        let response_body = response.text().await?;
+        let chat_response = serde_json::from_str::<ChatResponse>(&response_body)?;
+        // let finish_reason = &chat_response.choices[0]
+        //     .clone()
+        //     .finish_reason
+        //     .unwrap_or("no finish reason found".to_string());
+        // log::info!("summary, second run: finish_reason: {}", finish_reason);
+
+        return Ok(chat_response.choices[0].clone().message.content.unwrap_or_default());
     }
+    Err(anyhow::anyhow!("error deserialize ChatResponse"))
 }
