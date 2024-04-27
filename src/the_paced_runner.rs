@@ -98,15 +98,18 @@ pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
 }
 
 pub async fn force_issue_to_summary_update_db(pool: &Pool) -> anyhow::Result<()> {
-    let open_issue_obj: Vec<IssueOpen> = get_issues_open_from_master(pool, 1).await?;
-    let len = open_issue_obj.len();
-    log::info!(
-        "Simulate Open Issues retrieved from issues_master: {:?}",
-        len
-    );
-    for issue in open_issue_obj {
-        let _ = summarize_issue_add_in_db(pool, &issue).await;
+    for page in 2..10 {
+        let open_issue_obj: Vec<IssueOpen> = get_issues_open_from_master(pool, page).await?;
+        let len = open_issue_obj.len();
+        log::info!(
+            "Simulate Open Issues retrieved from issues_master: {:?}",
+            len
+        );
+        for issue in open_issue_obj {
+            let _ = summarize_issue_add_in_db(pool, &issue).await;
+        }
     }
+
     Ok(())
 }
 
