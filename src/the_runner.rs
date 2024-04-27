@@ -38,6 +38,42 @@ pub fn inner_query_1_hour(
 
     query
 }
+pub fn inner_query_inject_Variable(
+    start_date: &str,
+    start_hour: &str,
+    end_hour: &str,
+    issue_label: &str,
+    pr_label: &str,
+    is_issue: bool,
+    is_assigned_issue: bool,
+    is_start: bool,
+) -> String {
+    let date_range =
+        std::env::var("DATE_RANGE").unwrap_or_else(|_| format!("{}..{}", start_hour, end_hour));
+    let signature_switch = std::env::var("SIGNATURE_SWITCH").unwrap_or_else(|_| "signature_switch".to_string());
+
+    let query = if is_issue && is_start {
+        format!("label:{issue_label} is:issue is:closed created:>{start_date} closed:{date_range} -label:spam -label:invalid")
+    } else if is_assigned_issue {
+        format!("label:{issue_label} is:issue is:closed created:>{start_date} closed:{date_range} -label:spam -label:invalid")
+    } else if is_issue && !is_start {
+        format!("label:{issue_label} is:issue is:closed created:>{start_date} closed:{date_range} -label:spam -label:invalid")
+    } else {
+        format!("label:{pr_label} is:pr is:merged merged:{date_range} review:approved -label:spam -label:invalid")
+    };
+
+    // let query = if is_issue && is_start {
+    //     format!("label:{issue_label} is:issue is:open no:assignee updated:{date_range} -label:spam -label:invalid")
+    // } else if is_assigned_issue {
+    //     format!("label:{issue_label} is:issue is:open is:assigned created:>={start_date} updated:{date_range} -label:spam -label:invalid")
+    // } else if is_issue && !is_start {
+    //     format!("label:{issue_label} is:issue is:closed closed:{date_range} -label:spam -label:invalid")
+    // } else {
+    //     format!("label:{pr_label} is:pr is:merged created:>={start_date} merged:{date_range} review:approved -label:spam -label:invalid")
+    // };
+
+    query
+}
 
 pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let _ = popuate_dbs(pool).await?;
