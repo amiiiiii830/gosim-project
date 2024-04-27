@@ -100,7 +100,10 @@ pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
 pub async fn force_issue_to_summary_update_db(pool: &Pool) -> anyhow::Result<()> {
     let open_issue_obj: Vec<IssueOpen> = get_issues_open_from_master(pool, 1).await?;
     let len = open_issue_obj.len();
-    log::info!("Simulate Open Issues retrieved from issues_master: {:?}", len);
+    log::info!(
+        "Simulate Open Issues retrieved from issues_master: {:?}",
+        len
+    );
     for issue in open_issue_obj {
         let _ = summarize_issue_add_in_db(pool, &issue).await;
     }
@@ -187,19 +190,7 @@ pub async fn popuate_dbs_save_pull_requests(pool: &Pool) -> anyhow::Result<()> {
 
 pub async fn popuate_dbs_fill_projects(pool: &Pool) -> anyhow::Result<()> {
     let query_repos: String = get_projects_as_repo_list(pool, 1).await?;
-    let len = query_repos.split(" ").count() - 1;
-    log::info!("{len} query_repos: {:?}", query_repos);
     let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await?;
-
-    let repo_ids_vec = repo_data_vec
-        .clone()
-        .into_iter()
-        .map(|r| r.project_id)
-        .collect::<Vec<String>>();
-    let len = repo_data_vec.len();
-    let repo_ids = repo_ids_vec.join("\n");
-
-    log::info!("{len} repo_ids: {:?}", repo_ids);
 
     for repo_data in repo_data_vec {
         let _ = fill_project_w_repo_data(&pool, repo_data.clone()).await?;

@@ -71,21 +71,21 @@ pub async fn chat_inner_async(
     if response.status().is_success() {
         let response_body = response.text().await?;
         if let Ok(chat_response) = serde_json::from_str::<ChatResponse>(&response_body) {
-            let finish_reason = &chat_response.choices[0]
-                .clone()
-                .finish_reason
-                .unwrap_or("no finish reason found".to_string());
-            log::info!("input: {}, finish_reason: {}", input_head, finish_reason);
+            // let finish_reason = &chat_response.choices[0]
+            //     .clone()
+            //     .finish_reason
+            //     .unwrap_or("no finish reason found".to_string());
+            // log::info!("input: {}, finish_reason: {}", input_head, finish_reason);
 
             if let Some(content) = &chat_response.choices[0].message.content {
                 // log::info!("together summary: {}", content.to_string());
-
                 return Ok(content.to_string());
             }
         }
 
-        // Ok(response_body)
     } else {
+        log::info!("LLM generation failed in first round, now retrying");
+
         let response = client.post(uri).body(body).send().await?;
 
         let response_body = response.text().await?;

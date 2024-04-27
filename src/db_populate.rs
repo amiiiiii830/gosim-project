@@ -349,33 +349,7 @@ pub async fn add_or_update_summary_and_id(
 
     Ok(())
 }
-/* pub async fn add_summary_and_id(
-    pool: &Pool,
-    issue_or_project_id: &str,
-    issue_or_project_summary: &str,
-    keyword_tags: Vec<String>,
-) -> Result<()> {
-    let mut conn = pool.get_conn().await?;
-    let keyword_tags_json_str = json!(keyword_tags).to_string();
-    let query = r"INSERT INTO issues_repos_summarized (issue_or_project_id, issue_or_project_summary, keyword_tags)
-                  VALUES (:issue_or_project_id, :issue_or_project_summary, :keyword_tags_json_str)";
 
-    if let Err(e) = conn
-        .exec_drop(
-            query,
-            params! {
-                "issue_or_project_id" => &issue_or_project_id,
-                "issue_or_project_summary" => &issue_or_project_summary,
-                "keyword_tags_json_str" => &keyword_tags_json_str, // Corrected parameter name here
-            },
-        )
-        .await
-    {
-        // log::error!("Error adding issue_or_project_id: {:?}", e);
-    };
-
-    Ok(())
-} */
 
 pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
     let mut conn = pool.get_conn().await?;
@@ -477,7 +451,7 @@ pub async fn summarize_issue_add_in_db(pool: &Pool, issue: &IssueOpen) -> anyhow
     };
 
     let (summary, keyword_tags) = parse_summary_and_keywords(&generated_summary);
-    log::info!("{}, {:?}", issue_id, keyword_tags.clone());
+    // log::info!("{}, {:?}", issue_id, keyword_tags.clone());
     let _ = add_or_update_summary_and_id(&pool, &issue_id, &summary, keyword_tags).await;
 
     Ok(())

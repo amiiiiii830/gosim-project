@@ -9,6 +9,57 @@ pub async fn upload_to_collection(
 ) -> anyhow::Result<()> {
     let collection_name = env::var("collection_name").unwrap_or("gosim_search".to_string());
 
+    let id: u64 = match collection_info(&collection_name).await {
+        Ok(ci) => ci.points_count,
+        Err(e) => {
+            return Err(anyhow::anyhow!(
+                "Cannot get collection, can not init points_count: {}",
+                e
+            ))
+        }
+    };
+
+    let mut openai = OpenAIFlows::new();
+    openai.set_retry_times(2);
+
+    let input = EmbeddingsInput::String(content.clone());
+    match openai.create_embeddings(input).await {
+        Ok(r) => {
+            let v = &r[0];
+            let p = vec![Point {
+                id: PointId::Num(id),
+                vector: v.iter().map(|n| *n as f32).collect(),
+                payload: json!({
+                        "issue_or_project_id": issue_or_project_id,
+                        "text": content})
+                .as_object()
+                .map(|m| m.to_owned()),
+            }];
+
+            if let Err(e) = upsert_points(&collection_name, p).await {
+                log::error!("Cannot upsert into database! {}", e);
+            }
+            log::debug!(
+                "Created vector {} with length {}",
+                issue_or_project_id,
+                v.len()
+            );
+
+            Ok(())
+        }
+        Err(e) => {
+            log::error!("OpenAI returned an error: {}", e);
+            Err(anyhow::anyhow!("OpenAI returned an error: {}", e))
+        }
+    }
+}
+
+/* pub async fn upload_to_collection(
+    issue_or_project_id: &str,
+    content: String,
+) -> anyhow::Result<()> {
+    let collection_name = env::var("collection_name").unwrap_or("gosim_search".to_string());
+
     let mut id: u64 = match collection_info(&collection_name).await {
         Ok(ci) => ci.points_count,
         Err(e) => {
@@ -54,7 +105,7 @@ pub async fn upload_to_collection(
             Err(anyhow::anyhow!("OpenAI returned an error: {}", e))
         }
     }
-}
+} */
 
 pub async fn check_vector_db(collection_name: &str) -> String {
     match collection_info(collection_name).await {
