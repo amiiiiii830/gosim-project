@@ -520,7 +520,7 @@ pub async fn search_issues_assign_comment(
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct Assignee {
-        name: String,
+        name: Option<String>,
     }
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -577,44 +577,49 @@ pub async fn search_issues_assign_comment(
         .await
         .map_err(|e| anyhow!("Failed to post GraphQL query: {}", e))?;
 
-    let text = String::from_utf8_lossy(&response_body);
 
-    log::info!("Issues assign, comment query Response: {:?}", text);
 
     let response: GraphQLResponse = serde_json::from_slice(&response_body)
         .map_err(|e| anyhow!("Failed to deserialize response: {}", e))?;
-
+    log::info!("Issues assign, comment query Response data: {:?}", response.data);
     let mut all_comments = Vec::new();
     if let Some(data) = response.data {
         for issue in data.nodes {
-            if let Some(comments) = &issue.comments {
-                if let Some(comment_nodes) = &comments.nodes {
-                    for comment in comment_nodes {
-                        let comment_creator = comment.author.as_ref().and_then(|a| a.login.clone());
-                        let comment_date = comment.updatedAt.clone();
-                        let comment_body = comment.body.clone();
-                        let issue_id = match issue.url {
-                            Some(ref u) => u.clone(),
-                            None => continue,
-                        };
-                        let node_id = match issue.id {
-                            Some(ref id) => id.clone(),
-                            None => continue,
-                        };
+            let issue_id = match issue.url {
+                Some(ref u) => u.clone(),
+                None => continue,
+            };
+            let node_id = match issue.id {
+                Some(ref id) => id.clone(),
+                None => continue,
+            };
 
-                        all_comments.push(IssueAssignComment {
-                            issue_id,
-                            node_id, // Assuming node_id and issue_id are the same
-                            issue_assignees: issue.assignees.as_ref().and_then(|a| {
-                                a.nodes
-                                    .as_ref()
-                                    .map(|nodes| nodes.iter().map(|x| x.name.clone()).collect())
-                            }),
-                            comment_creator,
-                            comment_date,
-                            comment_body,
-                        });
-                    }
+            let issue_assignees =
+                issue
+                    .assignees
+                    .as_ref()
+                    .and_then(|a| a.nodes.as_ref())
+                    .map(|nodes| {
+                        nodes
+                            .iter()
+                            .filter_map(|x| x.name.clone())
+                            .collect::<Vec<_>>()
+                    });
+
+            if let Some(comments) = &issue.comments {
+                for comment in comments.nodes.as_ref().unwrap_or(&vec![]) {
+                    let comment_creator = comment.author.as_ref().and_then(|a| a.login.clone());
+                    let comment_date = comment.updatedAt.clone();
+                    let comment_body = comment.body.clone();
+
+                    all_comments.push(IssueAssignComment {
+                        issue_id: issue_id.clone(),
+                        node_id: node_id.clone(),
+                        issue_assignees: issue_assignees.clone(),
+                        comment_creator,
+                        comment_date,
+                        comment_body,
+                    });
                 }
             }
         }
