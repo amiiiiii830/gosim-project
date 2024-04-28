@@ -1,4 +1,4 @@
-use crate::issue_tracker::*;
+use crate::issue_paced_tracker::*;
 
 pub async fn comment_on_issue(issue_id: &str, comment: &str) -> anyhow::Result<()> {
     // let issue_id = "https://github.com/alabulei1/a-test/issues/87";

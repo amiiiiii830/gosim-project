@@ -10,6 +10,7 @@ CREATE TABLE projects (
 
 CREATE TABLE issues_master (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
+    node_id VARCHAR(20) NOT NULL,   
     project_id VARCHAR(255) NOT NULL,   
     project_logo VARCHAR(255),
     main_language VARCHAR(50) DEFAULT '',
@@ -31,6 +32,7 @@ CREATE TABLE issues_master (
 
 CREATE TABLE issues_open (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
+    node_id VARCHAR(20) NOT NULL,   
     project_id VARCHAR(255) NOT NULL,
     issue_creator VARCHAR(50) NOT NULL,
     issue_title VARCHAR(255) NOT NULL,
@@ -38,8 +40,9 @@ CREATE TABLE issues_open (
     issue_description TEXT NOT NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-CREATE TABLE issues_repos_indexed (
-    issue_or_project_id VARCHAR(255) PRIMARY KEY  -- url of an issue
+CREATE TABLE issues_updated (
+    issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
+    node_id VARCHAR(20) NOT NULL,   
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE issues_repos_summarized (

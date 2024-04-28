@@ -2,8 +2,10 @@ query GetMultipleIssues {
     nodes(ids: ["I_kwDOKVEIrM51XBav", "I_kwDOKcZWFs51WphI"]) {
       ... on Issue {
         url
-        assignees {
-          totalCount
+        assignees(first: 5) {
+          nodes {
+            name
+          }
         }
         comments(first: 100, orderBy: {field: UPDATED_AT, direction: DESC}) {
           nodes {

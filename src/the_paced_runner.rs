@@ -1,4 +1,6 @@
-use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_tracker::*, vector_search::*};
+use crate::{
+    db_join::*, db_manipulate::*, db_populate::*, issue_paced_tracker::*, vector_search::*,
+};
 use crate::{ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
 
 use anyhow::Ok;
@@ -29,7 +31,7 @@ pub fn inner_query_1_hour(
     // let query = if is_issue && is_start {
     //     format!("label:{issue_label} is:issue is:open no:assignee created:{date_range} -label:spam -label:invalid")
     // } else if is_assigned_issue {
-    //     format!("label:{issue_label} is:issue is:open is:assigned created:>={start_date} updated:{date_range} -label:spam -label:invalid")
+    //     format!("label:{issue_label} is:issue is:open created:>={start_date} updated:{date_range} -label:spam -label:invalid")
     // } else if is_issue && !is_start {
     //     format!("label:{issue_label} is:issue is:closed updated:{date_range} -label:spam -label:invalid")
     // } else {
@@ -97,7 +99,23 @@ pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub async fn force_issue_to_summary_update_db(pool: &Pool) -> anyhow::Result<()> {
+/* pub async fn force_issue_to_summary_update_db(pool: &Pool) -> anyhow::Result<()> {
+    for page in 2..10 {
+        let open_issue_obj: Vec<IssueOpen> = get_issues_open_from_master(pool, page).await?;
+        let len = open_issue_obj.len();
+        log::info!(
+            "Simulate Open Issues retrieved from issues_master: {:?}",
+            len
+        );
+        for issue in open_issue_obj {
+            let _ = summarize_issue_add_in_db(pool, &issue).await;
+        }
+    }
+
+    Ok(())
+} */
+
+/* pub async fn force_issue_to_summary_update_db(pool: &Pool) -> anyhow::Result<()> {
     for page in 2..10 {
         let open_issue_obj: Vec<IssueOpen> = get_issues_open_from_master(pool, page).await?;
         let len = open_issue_obj.len();
@@ -112,13 +130,11 @@ pub async fn force_issue_to_summary_update_db(pool: &Pool) -> anyhow::Result<()>
 
     Ok(())
 }
-
+ */
 pub async fn popuate_dbs_save_issues_comment(pool: &Pool) -> anyhow::Result<()> {
-    let query_comment =
-        "label:hacktoberfest-accepted is:issue updated:>2024-01-01 -label:spam -label:invalid";
-    log::info!("query_open: {:?}", query_comment);
+    let node_ids_updated = get_node_ids_as_list(pool).await?;
 
-    let issue_comment_obj: Vec<IssueComment> = search_issues_comment(&query_comment).await?;
+    let issue_comment_obj: Vec<IssueComment> = search_issues_comment(node_ids_updated).await?;
     let len = issue_comment_obj.len();
     log::info!("Issues comment recorded: {:?}", len);
     for issue in issue_comment_obj {

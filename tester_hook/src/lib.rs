@@ -3,7 +3,7 @@ use flowsnet_platform_sdk::logger;
 use gosim_project::db_join::*;
 use gosim_project::db_manipulate::*;
 use gosim_project::db_populate::*;
-use gosim_project::issue_tracker::*;
+use gosim_project::issue_paced_tracker::*;
 use gosim_project::llm_utils::chat_inner_async;
 use gosim_project::the_paced_runner::*;
 use gosim_project::vector_search::*;
@@ -316,7 +316,7 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
             "13" => sum_budget_to_project(&pool).await,
             "14" => remove_pull_by_issued_linked_pr(&pool).await,
             "15" => delete_issues_open_assigned_closed(&pool).await,
-            "16" => force_issue_to_summary_update_db(&pool).await,
+            // "16" => force_issue_to_summary_update_db(&pool).await,
             _ => panic!(),
         };
     }

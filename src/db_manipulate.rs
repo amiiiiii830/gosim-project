@@ -1,7 +1,6 @@
 use std::collections::HashMap;
 
 use crate::db_populate::*;
-use crate::issue_tracker::IssueOpen;
 use crate::TOTAL_BUDGET;
 use anyhow::anyhow;
 use mysql_async::prelude::*;
@@ -292,7 +291,20 @@ pub async fn get_projects_as_repo_list(pool: &Pool, page: u32) -> Result<String>
     Ok(out)
 }
 
-pub async fn get_issues_open_from_master(
+pub async fn get_node_ids_as_list(pool: &Pool) -> Result<Vec<String>> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = format!(
+        "SELECT node_id FROM issues_master 
+        WHERE review_status='approve' AND node_id IN (SELECT node_id FROM issues_updated) 
+        ORDER BY issue_id ASC;"
+    );
+
+    let out: Vec<String> = conn.query_map(query, |node_id: String| node_id).await?;
+
+    Ok(out)
+}
+/* pub async fn get_issues_open_from_master(
     pool: &Pool,
     page: u32,
 ) -> Result<Vec<IssueOpen>> {
@@ -301,8 +313,8 @@ pub async fn get_issues_open_from_master(
     let mut conn = pool.get_conn().await?;
 
     let query = format!(
-        "SELECT issue_title, issue_id, issue_creator, issue_description, project_id FROM issues_master 
-        WHERE issue_id NOT IN (SELECT issue_or_project_id FROM issues_repos_summarized WHERE issue_or_project_summary IS NOT NULL) 
+        "SELECT issue_title, issue_id, issue_creator, issue_description, project_id FROM issues_master
+        WHERE issue_id NOT IN (SELECT issue_or_project_id FROM issues_repos_summarized WHERE issue_or_project_summary IS NOT NULL)
         ORDER BY issue_id ASC
         LIMIT {} OFFSET {}",
         page_size, offset
@@ -318,6 +330,7 @@ pub async fn get_issues_open_from_master(
                 String,
                 String,
             )| IssueOpen {
+
                 issue_title,
                 issue_id,
                 issue_creator,
@@ -329,7 +342,7 @@ pub async fn get_issues_open_from_master(
         .await?;
 
     Ok(out)
-}
+} */
 
 pub async fn list_projects_by(
     pool: &Pool,

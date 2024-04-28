@@ -1,4 +1,4 @@
-use crate::issue_tracker::*;
+use crate::issue_paced_tracker::*;
 use crate::llm_utils::parse_summary_and_keywords;
 use crate::llm_utils_together::*;
 use dotenv::dotenv;
@@ -159,13 +159,14 @@ pub async fn pull_request_exists(pool: &mysql_async::Pool, pull_id: &str) -> any
 pub async fn add_issues_open(pool: &Pool, issue: &IssueOpen) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    let query = r"INSERT INTO issues_open (issue_id, project_id, issue_title, issue_creator, issue_budget, issue_description)
-                  VALUES (:issue_id, :project_id, :issue_title, :issue_creator, :issue_budget, :issue_description)";
+    let query = r"INSERT INTO issues_open (node_id, issue_id, project_id, issue_title, issue_creator, issue_budget, issue_description)
+                  VALUES (:node_id, :issue_id, :project_id, :issue_title, :issue_creator, :issue_budget, :issue_description)";
 
     if let Err(e) = conn
         .exec_drop(
             query,
             params! {
+                "node_id" => &issue.node_id,
                 "issue_id" => &issue.issue_id,
                 "project_id" => &issue.project_id,
                 "issue_title" => &issue.issue_title,
@@ -350,7 +351,6 @@ pub async fn add_or_update_summary_and_id(
     Ok(())
 }
 
-
 pub async fn add_pull_request(pool: &Pool, pull: OuterPull) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
@@ -420,7 +420,7 @@ pub async fn summarize_issue_add_in_db(pool: &Pool, issue: &IssueOpen) -> anyhow
     let issue_title = issue_clone.issue_title;
     let issue_id = issue_clone.issue_id;
     let issue_description = issue_clone.issue_description;
-    log::info!("Summarizing issue: {}",issue_id);
+    log::info!("Summarizing issue: {}", issue_id);
 
     let parts: Vec<&str> = issue_id.split('/').collect();
     let owner = parts[3].to_string();
@@ -432,7 +432,7 @@ pub async fn summarize_issue_add_in_db(pool: &Pool, issue: &IssueOpen) -> anyhow
           \"keywords\": [\"a list of high-level keywords that encapsulate the broader context, categories, or themes of the issue, excluding specific details and issue numbers.\"] }
         Ensure you reply in RFC8259-compliant JSON format."#;
 
-        let system_prompt_short_input = r#"
+    let system_prompt_short_input = r#"
         Given the limited information available, summarize the GitHub issue in one paragraph without mentioning the issue number. Highlight the key problem and any signature information that can be inferred. The summary should be concise, informative, and easy to understand, prioritizing clarity and brevity even with scant details. Additionally, extract high-level keywords that represent broader categories or themes relevant to the issue's inferred purpose, features, and tools used. These keywords should help categorize the issue in a wider context and should not be too literal or specific, avoiding overly long phrases unless absolutely necessary. Expected Output:
         { \"summary\": \"The summary generated should be a concise paragraph that highlights any discernible purpose, technologies, or features from the limited information.\",
           \"keywords\": [\"A list of inferred high-level keywords that broadly categorize the repository based on the scant details available.\"] }
@@ -461,7 +461,7 @@ pub async fn summarize_project_add_in_db(pool: &Pool, repo_data: RepoData) -> an
     let parts: Vec<&str> = repo_data.project_id.split('/').collect();
     let owner = parts[3].to_string();
     let repo = parts[4].to_string();
-     log::info!("Summarizing repo: {}",repo_data.project_id);
+    log::info!("Summarizing repo: {}", repo_data.project_id);
 
     let project_descrpition = repo_data.repo_description;
     let project_readme = repo_data.repo_readme;

@@ -6,6 +6,7 @@ pub async fn open_master(pool: &mysql_async::Pool) -> anyhow::Result<()> {
 
     let query = r"
     INSERT IGNORE INTO issues_master (
+        node_id,
         issue_id, 
         project_id, 
         issue_title, 
@@ -14,6 +15,7 @@ pub async fn open_master(pool: &mysql_async::Pool) -> anyhow::Result<()> {
         issue_description
     )
     SELECT 
+        io.node_id, 
         io.issue_id, 
         io.project_id, 
         io.issue_title, 

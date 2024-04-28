@@ -2,13 +2,12 @@ pub mod db_join;
 pub mod db_manipulate;
 pub mod db_populate;
 pub mod issue_bot;
-pub mod issue_tracker;
+pub mod issue_paced_tracker;
 pub mod llm_utils;
 pub mod llm_utils_together;
 pub mod the_paced_runner;
 pub mod the_runner;
 pub mod vector_search;
-// pub mod issue_paced_tracker;
 use chrono::{NaiveDate, Timelike, Utc};
 use lazy_static::lazy_static;
 

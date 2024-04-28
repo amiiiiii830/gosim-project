@@ -1,4 +1,4 @@
-use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_tracker::*};
+use crate::{db_join::*, db_manipulate::*, db_populate::*, issue_paced_tracker::*};
 use crate::{ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
 
 use anyhow::Ok;
@@ -104,11 +104,9 @@ pub async fn popuate_dbs(pool: &Pool) -> anyhow::Result<()> {
         let _ = summarize_issue_add_in_db(pool, &issue).await;
     }
 
-    let query_comment =
-        "label:hacktoberfest-accepted is:issue updated:>2024-01-01 -label:spam -label:invalid";
-    log::info!("query_open: {:?}", query_open);
+    let issue_ids_updated = get_node_ids_as_list(pool).await?;
 
-    let issue_comment_obj: Vec<IssueComment> = search_issues_comment(&query_comment).await?;
+    let issue_comment_obj: Vec<IssueComment> = search_issues_comment(issue_ids_updated).await?;
     let len = issue_comment_obj.len();
     log::info!("Issues comment recorded: {:?}", len);
     for issue in issue_comment_obj {
