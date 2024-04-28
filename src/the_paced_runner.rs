@@ -133,6 +133,7 @@ pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
  */
 pub async fn popuate_dbs_save_issues_assign_comment(pool: &Pool) -> anyhow::Result<()> {
     let node_ids_updated = get_updated_approved_issues_node_ids(pool).await?;
+    log::info!("node ids updated: {:?}", node_ids_updated);
 
     let issue_comment_obj: Vec<IssueAssignComment> =
         search_issues_assign_comment(node_ids_updated).await?;

@@ -716,6 +716,7 @@ pub async fn search_issues_assign_comment(
         "#,
         ids_query
     );
+    log::info!("Issues assign, comment query: {:?}", &query_str);
 
     let response_body = github_http_post_gql(&query_str)
         .await
