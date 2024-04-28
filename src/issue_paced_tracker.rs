@@ -231,150 +231,6 @@ pub async fn search_repos_in_batch(query: &str) -> anyhow::Result<Vec<RepoData>>
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct IssueAssigned {
-    pub issue_id: String, // url of an issue
-    pub issue_assignee: String,
-    pub date_assigned: String,
-}
-
-pub async fn search_issues_assigned(query: &str) -> anyhow::Result<Vec<IssueAssigned>> {
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct GraphQLResponse {
-        data: Option<Data>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Data {
-        search: Option<Search>,
-    }
-
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Search {
-        issueCount: Option<i32>,
-        nodes: Option<Vec<IssueNode>>,
-        pageInfo: Option<PageInfo>,
-    }
-
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct PageInfo {
-        endCursor: Option<String>,
-        hasNextPage: bool,
-    }
-
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct IssueNode {
-        url: Option<String>,
-        timelineItems: Option<TimelineItems>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Assignee {
-        login: Option<String>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct TimelineItems {
-        nodes: Option<Vec<AssignedEvent>>,
-    }
-
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct AssignedEvent {
-        assignee: Option<Assignee>,
-        createdAt: Option<String>,
-    }
-
-    let mut all_issues = Vec::new();
-    let mut after_cursor: Option<String> = None;
-
-    for _ in 0..1 {
-        let query_str = format!(
-            r#"
-                query {{
-                    search(query: "{}", type: ISSUE, first: 100, after: {}) {{
-                        issueCount
-                        nodes {{
-                            ... on Issue {{
-                                url
-                                timelineItems(first: 1, itemTypes: [ASSIGNED_EVENT]) {{
-                                    nodes {{
-                                      ... on AssignedEvent {{
-                                        assignee {{
-                                          ... on User {{
-                                            login
-                                          }}
-                                        }}
-                                        createdAt
-                                      }}
-                                    }}
-                                }}   
-                            }}
-                        }}
-                        pageInfo {{
-                            endCursor
-                            hasNextPage
-                        }}
-                    }}
-                }}
-                "#,
-            query.replace("\"", "\\\""),
-            after_cursor
-                .as_ref()
-                .map_or(String::from("null"), |c| format!("\"{}\"", c)),
-        );
-
-        let response_body = github_http_post_gql(&query_str)
-            .await
-            .map_err(|e| anyhow!("Failed to post GraphQL query: {}", e))?;
-
-        let response: GraphQLResponse = serde_json::from_slice(&response_body)
-            .map_err(|e| anyhow!("Failed to deserialize response: {}", e))?;
-
-        if let Some(data) = response.data {
-            if let Some(search) = data.search {
-                if let Some(nodes) = search.nodes {
-                    for issue in nodes {
-                        if let Some(timeline_items) = issue.timelineItems {
-                            if let Some(nodes) = timeline_items.nodes {
-                                for node in nodes {
-                                    let assignee = node
-                                        .assignee
-                                        .as_ref()
-                                        .and_then(|a| a.login.clone())
-                                        .unwrap_or_default();
-                                    let created_at = node.createdAt.clone().unwrap_or_default();
-
-                                    let date_assigned =
-                                        convert_datetime(&created_at).unwrap_or_default();
-                                    all_issues.push(IssueAssigned {
-                                        issue_id: issue.url.clone().unwrap_or_default(),
-                                        issue_assignee: assignee,
-                                        date_assigned,
-                                    });
-                                }
-                            }
-                        }
-                    }
-                }
-
-                if let Some(page_info) = search.pageInfo {
-                    if page_info.hasNextPage {
-                        after_cursor = page_info.endCursor
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(all_issues)
-}
-
-#[derive(Serialize, Deserialize, Clone, Debug, Default)]
 pub struct IssueUpdated {
     pub issue_id: String, // url of an issue
     pub node_id: String,
@@ -631,9 +487,9 @@ pub struct IssueAssignComment {
     pub issue_id: String,
     pub node_id: String,
     pub issue_assignees: Option<Vec<String>>,
-    pub comment_creator: String,
-    pub comment_date: String,
-    pub comment_body: String,
+    pub comment_creator: Option<String>,
+    pub comment_date: Option<String>,
+    pub comment_body: Option<String>,
 }
 
 pub async fn search_issues_assign_comment(
@@ -659,7 +515,7 @@ pub async fn search_issues_assign_comment(
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct AssigneeNodes {
-        nodes: Vec<Assignee>,
+        nodes: Option<Vec<Assignee>>,
     }
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -669,7 +525,7 @@ pub async fn search_issues_assign_comment(
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct CommentNodes {
-        nodes: Vec<Comment>,
+        nodes: Option<Vec<Comment>>,
     }
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
@@ -681,7 +537,7 @@ pub async fn search_issues_assign_comment(
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct Author {
-        login: String,
+        login: Option<String>,
     }
 
     let ids_query = node_ids
@@ -728,22 +584,26 @@ pub async fn search_issues_assign_comment(
     let mut all_comments = Vec::new();
     if let Some(data) = response.data {
         for issue in data.nodes {
-            if let Some(comments) = issue.comments {
-                for comment in comments.nodes {
-                    let comment_creator = comment.author.map_or(String::new(), |a| a.login);
-                    let comment_date = comment.updatedAt.unwrap_or_default();
-                    let comment_body = comment.body.unwrap_or_default();
+            if let Some(comments) = &issue.comments {
+                if let Some(comment_nodes) = &comments.nodes {
+                    for comment in comment_nodes {
+                        let comment_creator = comment.author.as_ref().and_then(|a| a.login.clone());
+                        let comment_date = comment.updatedAt.clone();
+                        let comment_body = comment.body.clone();
 
-                    all_comments.push(IssueAssignComment {
-                        issue_assignees: issue
-                .assignees.clone()
-                .map(|a| a.nodes.into_iter().map(|x| x.name).collect()),
-                        node_id: issue.id.clone(),
-                        issue_id: issue.url.clone(),
-                        comment_creator,
-                        comment_date,
-                        comment_body,
-                    });
+                        all_comments.push(IssueAssignComment {
+                            issue_id: issue.id.clone(),
+                            node_id: issue.id.clone(), // Assuming node_id and issue_id are the same
+                            issue_assignees: issue.assignees.as_ref().and_then(|a| {
+                                a.nodes
+                                    .as_ref()
+                                    .map(|nodes| nodes.iter().map(|x| x.name.clone()).collect())
+                            }),
+                            comment_creator,
+                            comment_date,
+                            comment_body,
+                        });
+                    }
                 }
             }
         }
@@ -751,7 +611,6 @@ pub async fn search_issues_assign_comment(
 
     Ok(all_comments)
 }
-
 
 pub fn extract_budget(body: &str) -> i32 {
     let re = regex::Regex::new(r"(?i)budget:?\s*(\d{2,3})").unwrap();
