@@ -1,0 +1,19 @@
+query ($query: String!) {
+  search(query: $query, type: ISSUE, first: 1, after: null) {
+    issueCount
+    nodes {
+      ... on Issue {
+        id
+        url
+        }
+    }
+    pageInfo {
+      endCursor
+      hasNextPage
+    }
+  }
+}
+
+{
+  "query": "label:hacktoberfest is:issue created:>2023-10-01 updated:2023-10-03T05:00:00..2023-10-03T09:00:00 -label:spam -label:invalid"
+}

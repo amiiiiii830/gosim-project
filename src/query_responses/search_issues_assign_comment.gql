@@ -1,4 +1,4 @@
-query GetMultipleIssues {
+query GetIssues {
     nodes(ids: ["I_kwDOKVEIrM51XBav", "I_kwDOKcZWFs51WphI"]) {
       ... on Issue {
         url
@@ -19,3 +19,8 @@ query GetMultipleIssues {
       }
     }
   }
+
+{
+ids: ["I_kwDOKVEIrM51XBav", "I_kwDOKcZWFs51WphI"]
+}
+

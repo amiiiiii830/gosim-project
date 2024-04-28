@@ -1,4 +1,4 @@
-query ($query: String!) {
+query SearchPr($query: String!) {
   search(query: $query, type: ISSUE, first: 100, after: null) {
     issueCount
     nodes {
@@ -7,17 +7,6 @@ query ($query: String!) {
         url
         author {
           login
-        }
-        timelineItems(first: 5, itemTypes: [REFERENCED_EVENT, CONNECTED_EVENT]) {
-          nodes {
-            ... on ConnectedEvent {
-              subject {
-                ... on Issue {
-                  url
-                }
-              }
-            }
-          }
         }
         labels(first: 10) {
           nodes {
@@ -44,64 +33,7 @@ query ($query: String!) {
     }
   }
 }
-
 
 {
-  "query": "label:hacktoberfest-accepted is:pr is:merged merged:2023-10-01..2023-10-01 review:approved -label:spam -label:invalid"
-}
-
-query ($query: String!) {
-  search(query: $query, type: ISSUE, first: 100, after: null) {
-    issueCount
-    nodes {
-      ... on PullRequest {
-        title
-        url
-        author {
-          login
-        }
-        timelineItems(first: 5, itemTypes: [CROSS_REFERENCED_EVENT, CONNECTED_EVENT]) {
-          nodes {
-            __typename
-            ... on ConnectedEvent {
-              subject {
-                ... on Issue {
-                  url
-                }
-              }
-            }
-            __typename
-            ... on CrossReferencedEvent {
-              source {
-                ... on Issue {
-                  url
-                }
-              }
-            }
-          }
-        }
-        labels(first: 10) {
-          nodes {
-            name
-          }
-        }
-        reviews(first: 5, states: [APPROVED]) {
-          nodes {
-            author {
-              login
-            }
-            state
-          }
-        }
-        mergedBy {
-          login
-        }
-        mergedAt
-      }
-    }
-    pageInfo {
-      endCursor
-      hasNextPage
-    }
-  }
+  "query": "label:hacktoberfest is:pr is:merged created:>2023-10-01 merged:2023-10-03T05:00:00..2023-10-03T09:00:00 -label:spam -label:invalid"
 }
