@@ -185,23 +185,20 @@ pub async fn add_issues_open(pool: &Pool, issue: &IssueOpen) -> Result<()> {
 
 pub async fn add_issues_assign_comment(pool: &Pool, issue: IssueAssignComment) -> Result<()> {
     let mut conn = pool.get_conn().await?;
-    let issue_assignees_json: Value = json!(issue.issue_assignees).into();
+    let issue_assignees_str = json!(issue.issue_assignees).to_string();
 
     let query = r"INSERT INTO issues_assign_comment (issue_id, node_id, issue_assignees, comment_creator, comment_date, comment_body)
-    SELECT :issue_id, :node_id, :issue_assignees_json, :comment_creator, :comment_date, :comment_body
-    FROM dual
-    WHERE NOT EXISTS (
-        SELECT 1 FROM issues_assign_comment
-        WHERE issue_id = :issue_id AND comment_date = :comment_date
-    );";
+    VALUES (:issue_id, :node_id, :issue_assignees_str, :comment_creator, :comment_date, :comment_body)
+    ON DUPLICATE KEY UPDATE
+    comment_creator = :comment_creator, comment_date = :comment_date, comment_body = :comment_body;";
 
-    if let Err(e) = conn
+    match conn
         .exec_drop(
             query,
             params! {
                 "issue_id" => &issue.issue_id,
                 "node_id" => &issue.node_id,
-                "issue_assignees_json" => &issue_assignees_json,
+                "issue_assignees_str" => &issue_assignees_str,
                 "comment_creator" => &issue.comment_creator,
                 "comment_date" => &issue.comment_date,
                 "comment_body" => &issue.comment_body,
@@ -209,19 +206,13 @@ pub async fn add_issues_assign_comment(pool: &Pool, issue: IssueAssignComment) -
         )
         .await
     {
-        if let mysql_async::Error::Server(server_error) = &e {
-            if server_error.code == 23000 {
-                log::info!("Skipping duplicate comment: {:?}", issue);
-                return Ok(());
-            }
+        Ok(_) => Ok(()),
+        Err(e) => {
+            log::error!("Error adding or updating issues_assign_comment: {:?}", e);
+            Err(e.into())
         }
-        log::error!("Error adding issues_assign_comment: {:?}", e);
-        return Err(e.into());
     }
-
-    Ok(())
 }
-
 pub async fn add_issues_closed(pool: &Pool, issue: IssueClosed) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
