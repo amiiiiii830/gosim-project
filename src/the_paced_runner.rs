@@ -41,7 +41,6 @@ pub fn inner_query_1_hour(
     //     format!("label:{pr_label} is:pr is:merged merged:{date_range} review:approved -label:spam -label:invalid")
     // };
 
-
     query
 }
 pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
@@ -49,9 +48,9 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
 
     let _ = open_master(pool).await?;
 
-    let _ = popuate_dbs_save_issues_assigned(pool).await?;
+    let _ = popuate_dbs_add_issues_updated(pool).await?;
 
-    let _ = assigned_master(pool).await?;
+    let _ = popuate_dbs_save_issues_assign_comment(pool).await?;
 
     let _ = popuate_dbs_save_issues_closed(pool).await?;
 
@@ -66,8 +65,6 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let _ = project_master_back_sync(&pool).await?;
 
     let _ = populate_vector_db(pool).await?;
-
-    let _ = popuate_dbs_save_issues_comment(pool).await?;
 
     let _ = sum_budget_to_project(&pool).await?;
 
@@ -134,18 +131,19 @@ pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
  */
-pub async fn popuate_dbs_save_issues_comment(pool: &Pool) -> anyhow::Result<()> {
-    let node_ids_updated = get_node_ids_as_list(pool).await?;
+pub async fn popuate_dbs_save_issues_assign_comment(pool: &Pool) -> anyhow::Result<()> {
+    let node_ids_updated = get_updated_approved_issues_node_ids(pool).await?;
 
-    let issue_comment_obj: Vec<IssueComment> = search_issues_comment(node_ids_updated).await?;
+    let issue_comment_obj: Vec<IssueAssignComment> =
+        search_issues_assign_comment(node_ids_updated).await?;
     let len = issue_comment_obj.len();
-    log::info!("Issues comment recorded: {:?}", len);
+    log::info!("Issues assign, comment recorded: {:?}", len);
     for issue in issue_comment_obj {
-        let _ = add_issues_comment(pool, issue).await;
+        let _ = add_issues_assign_comment(pool, issue).await;
     }
     Ok(())
 }
-pub async fn popuate_dbs_save_issues_assigned(pool: &Pool) -> anyhow::Result<()> {
+pub async fn popuate_dbs_add_issues_updated(pool: &Pool) -> anyhow::Result<()> {
     let _query_assigned = inner_query_1_hour(
         &START_DATE,
         &THIS_HOUR,
@@ -158,11 +156,11 @@ pub async fn popuate_dbs_save_issues_assigned(pool: &Pool) -> anyhow::Result<()>
     );
 
     log::info!("query_assigned: {:?}", _query_assigned);
-    let issues_assigned_obj: Vec<IssueAssigned> = search_issues_assigned(&_query_assigned).await?;
+    let issues_assigned_obj: Vec<IssueUpdated> = search_issues_updated(&_query_assigned).await?;
     let len = issues_assigned_obj.len();
-    log::info!("Assigned issues recorded: {:?}", len);
+    log::info!("Updated issues recorded: {:?}", len);
     for issue in issues_assigned_obj {
-        let _ = add_issues_assigned(pool, issue).await;
+        let _ = add_issues_updated(pool, issue).await;
     }
     Ok(())
 }

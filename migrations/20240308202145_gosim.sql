@@ -55,10 +55,11 @@ CREATE TABLE issues_repos_summarized (
 
 ALTER TABLE issues_repos_summarized ADD FULLTEXT (keyword_tags_text);
 
-CREATE TABLE issues_comment (
+CREATE TABLE issues_assign_comment (
     comment_id INT AUTO_INCREMENT PRIMARY KEY,  -- id of a comment
     issue_id VARCHAR(255) NOT NULL,  -- url of an issue
     node_id VARCHAR(20) NOT NULL,   
+    issue_assignees JSON,    
     comment_creator VARCHAR(50) NOT NULL, 
     comment_date DATETIME NOT NULL,  -- date of the comment
     comment_body TEXT NOT NULL  -- content of the comment

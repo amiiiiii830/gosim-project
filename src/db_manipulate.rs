@@ -291,7 +291,7 @@ pub async fn get_projects_as_repo_list(pool: &Pool, page: u32) -> Result<String>
     Ok(out)
 }
 
-pub async fn get_node_ids_as_list(pool: &Pool) -> Result<Vec<String>> {
+pub async fn get_updated_approved_issues_node_ids(pool: &Pool) -> Result<Vec<String>> {
     let mut conn = pool.get_conn().await?;
 
     let query = format!(
@@ -473,7 +473,7 @@ pub async fn get_issue_w_comments_by_id(
     );
 
     let comments_query = format!(
-        "SELECT comment_creator, comment_body FROM issues_comment WHERE issue_id = '{}' ORDER BY comment_date",
+        "SELECT comment_creator, comment_body FROM issues_assign_comment WHERE issue_id = '{}' ORDER BY comment_date",
         issue_id
     );
 
@@ -554,7 +554,7 @@ pub async fn get_comments_by_issue_id(
 ) -> anyhow::Result<Vec<(String, String)>> {
     let mut conn = pool.get_conn().await?;
 
-    let query_comments = r"SELECT comment_creator, comment_body FROM issues_comment WHERE issue_id = :issue_id ORDER BY comment_date";
+    let query_comments = r"SELECT comment_creator, comment_body FROM issues_assign_comment WHERE issue_id = :issue_id ORDER BY comment_date";
 
     match conn
         .exec(

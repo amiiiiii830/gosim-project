@@ -6,7 +6,6 @@ pub mod issue_paced_tracker;
 pub mod llm_utils;
 pub mod llm_utils_together;
 pub mod the_paced_runner;
-pub mod the_runner;
 pub mod vector_search;
 use chrono::{NaiveDate, Timelike, Utc};
 use lazy_static::lazy_static;

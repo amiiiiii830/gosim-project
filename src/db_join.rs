@@ -81,14 +81,14 @@ pub async fn comment_master(pool: &mysql_async::Pool) -> Result<()> {
 
     let query = r"
     UPDATE issues_master im
-    JOIN issues_comment ic ON im.issue_id = ic.issue_id
+    JOIN issues_assign_comment ic ON im.issue_id = ic.issue_id
     SET
         im.issue_comment = CONCAT_WS('\n', im.issue_comment, ic.issue_comment);
     ";
 
     if let Err(e) = conn.query_drop(query).await {
         log::error!(
-            "Error consolidating issues_comment into issues_master: {:?}",
+            "Error consolidating issues_assign_comment into issues_master: {:?}",
             e
         );
     };

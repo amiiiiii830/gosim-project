@@ -183,22 +183,25 @@ pub async fn add_issues_open(pool: &Pool, issue: &IssueOpen) -> Result<()> {
     Ok(())
 }
 
-pub async fn add_issues_comment(pool: &Pool, issue: IssueComment) -> Result<()> {
+pub async fn add_issues_assign_comment(pool: &Pool, issue: IssueAssignComment) -> Result<()> {
     let mut conn = pool.get_conn().await?;
+    let issue_assignees_json: Value = json!(issue.issue_assignees).into();
 
-    let query = r"INSERT INTO issues_comment (issue_id, comment_creator, comment_date, comment_body)
-    SELECT :issue_id, :comment_creator, :comment_date, :comment_body
+    let query = r"INSERT INTO issues_assign_comment (issue_id, node_id, issue_assignees, comment_creator, comment_date, comment_body)
+    SELECT :issue_id, :node_id, :issue_assignees_json, :comment_creator, :comment_date, :comment_body
     FROM dual
     WHERE NOT EXISTS (
-        SELECT 1 FROM issues_comment
+        SELECT 1 FROM issues_assign_comment
         WHERE issue_id = :issue_id AND comment_date = :comment_date
-    ) LIMIT 1;";
+    );";
 
     if let Err(e) = conn
         .exec_drop(
             query,
             params! {
                 "issue_id" => &issue.issue_id,
+                "node_id" => &issue.node_id,
+                "issue_assignees_json" => &issue_assignees_json,
                 "comment_creator" => &issue.comment_creator,
                 "comment_date" => &issue.comment_date,
                 "comment_body" => &issue.comment_body,
@@ -212,33 +215,9 @@ pub async fn add_issues_comment(pool: &Pool, issue: IssueComment) -> Result<()> 
                 return Ok(());
             }
         }
-        log::error!("Error add issues_comment: {:?}", e);
+        log::error!("Error adding issues_assign_comment: {:?}", e);
         return Err(e.into());
     }
-
-    Ok(())
-}
-pub async fn add_issues_open_batch(pool: &Pool, issues: Vec<IssueOpen>) -> Result<()> {
-    let mut conn = pool.get_conn().await?;
-
-    let query = r"INSERT INTO issues_open (issue_id, project_id, issue_title, issue_budget, issue_description)
-                  VALUES (:issue_id, :project_id, :issue_title, :issue_budget, :issue_description)";
-
-    if let Err(e) = query
-        .with(issues.iter().map(|issue| {
-            params! {
-                "issue_id" => &issue.issue_id,
-                "project_id" => &issue.project_id,
-                "issue_title" => &issue.issue_title,
-                "issue_budget" => &issue.issue_budget,
-                "issue_description" => &issue.issue_description,
-            }
-        }))
-        .batch(&mut conn)
-        .await
-    {
-        log::error!("Error add issues_open in batch: {:?}", e);
-    };
 
     Ok(())
 }
@@ -268,30 +247,23 @@ pub async fn add_issues_closed(pool: &Pool, issue: IssueClosed) -> Result<()> {
     Ok(())
 }
 
-pub async fn add_issues_assigned(pool: &Pool, issue_assigned: IssueAssigned) -> Result<()> {
+pub async fn add_issues_updated(pool: &Pool, issue_updated: IssueUpdated) -> Result<()> {
     let mut conn = pool.get_conn().await?;
 
-    let issue_assignee = if issue_assigned.issue_assignee.is_empty() {
-        None
-    } else {
-        Some(issue_assigned.issue_assignee)
-    };
-
-    let query = r"INSERT INTO issues_assigned (issue_id, issue_assignee, date_assigned)
-                  VALUES (:issue_id, :issue_assignee, :date_assigned)";
+    let query = r"INSERT INTO issues_updated (issue_id, node_id)
+                  VALUES (:issue_id, :node_id)";
 
     if let Err(e) = conn
         .exec_drop(
             query,
             params! {
-                "issue_id" => &issue_assigned.issue_id,
-                "issue_assignee" => &issue_assignee,
-                "date_assigned" => &issue_assigned.date_assigned,
+                "issue_id" => &issue_updated.issue_id,
+                "node_id" => &issue_updated.node_id,
             },
         )
         .await
     {
-        log::error!("Error add issues_assigned: {:?}", e);
+        log::error!("Error add issues_updated: {:?}", e);
     };
 
     Ok(())

@@ -627,15 +627,18 @@ pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct IssueComment {
+pub struct IssueAssignComment {
     pub issue_id: String,
-    pub assignees: Option<Vec<String>>,
+    pub node_id: String,
+    pub issue_assignees: Option<Vec<String>>,
     pub comment_creator: String,
     pub comment_date: String,
     pub comment_body: String,
 }
 
-pub async fn search_issues_comment(node_ids: Vec<String>) -> anyhow::Result<Vec<IssueComment>> {
+pub async fn search_issues_assign_comment(
+    node_ids: Vec<String>,
+) -> anyhow::Result<Vec<IssueAssignComment>> {
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct GraphQLResponse {
         data: Option<Data>,
@@ -648,6 +651,7 @@ pub async fn search_issues_comment(node_ids: Vec<String>) -> anyhow::Result<Vec<
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct Issue {
+        id: String,
         url: String,
         assignees: Option<AssigneeNodes>,
         comments: Option<CommentNodes>,
@@ -680,12 +684,17 @@ pub async fn search_issues_comment(node_ids: Vec<String>) -> anyhow::Result<Vec<
         login: String,
     }
 
-    let ids_query = node_ids.iter().map(|id| format!("\"{}\"", id)).collect::<Vec<_>>().join(", ");
+    let ids_query = node_ids
+        .iter()
+        .map(|id| format!("\"{}\"", id))
+        .collect::<Vec<_>>()
+        .join(", ");
     let query_str = format!(
         r#"
         query GetIssues {{
             nodes(ids: [{}]) {{
                 ... on Issue {{
+                    id
                     url
                     assignees(first: 5) {{
                         nodes {{
@@ -718,17 +727,18 @@ pub async fn search_issues_comment(node_ids: Vec<String>) -> anyhow::Result<Vec<
     let mut all_comments = Vec::new();
     if let Some(data) = response.data {
         for issue in data.nodes {
-            let assignees = issue.assignees.map(|a| a.nodes.into_iter().map(|x| x.name).collect());
-
             if let Some(comments) = issue.comments {
                 for comment in comments.nodes {
                     let comment_creator = comment.author.map_or(String::new(), |a| a.login);
                     let comment_date = comment.updatedAt.unwrap_or_default();
                     let comment_body = comment.body.unwrap_or_default();
 
-                    all_comments.push(IssueComment {
+                    all_comments.push(IssueAssignComment {
+                        issue_assignees: issue
+                .assignees.clone()
+                .map(|a| a.nodes.into_iter().map(|x| x.name).collect()),
+                        node_id: issue.id.clone(),
                         issue_id: issue.url.clone(),
-                        assignees: assignees.clone(),
                         comment_creator,
                         comment_date,
                         comment_body,
@@ -741,167 +751,6 @@ pub async fn search_issues_comment(node_ids: Vec<String>) -> anyhow::Result<Vec<
     Ok(all_comments)
 }
 
-
-
-/* #[derive(Serialize, Deserialize, Clone, Debug, Default)]
-pub struct IssueComment {
-    pub issue_id: String,        // url of an issue
-    pub comment_creator: String, // url of an issue
-    pub comment_date: String,
-    pub comment_body: String,
-}
- */
-/* pub async fn search_issues_comment(query: &str) -> anyhow::Result<Vec<IssueComment>> {
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct GraphQLResponse {
-        data: Option<Data>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Data {
-        search: Option<Search>,
-    }
-
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Search {
-        issueCount: Option<i32>,
-        nodes: Option<Vec<Issue>>,
-        pageInfo: Option<PageInfo>,
-    }
-
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct PageInfo {
-        endCursor: Option<String>,
-        hasNextPage: bool,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Issue {
-        url: String,
-        comments: Option<CommentNodes>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct CommentNodes {
-        nodes: Option<Vec<Comment>>,
-    }
-
-    #[allow(non_snake_case)]
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Comment {
-        author: Option<Author>,
-        body: Option<String>,
-        updatedAt: Option<String>,
-    }
-
-    #[derive(Serialize, Deserialize, Clone, Default, Debug)]
-    struct Author {
-        login: Option<String>,
-    }
-
-    let mut all_issues = Vec::new();
-    let mut after_cursor: Option<String> = None;
-    // let last_hour = Utc::now() - Duration::try_hours(1).unwrap();
-    let last_hour = Utc::now() - Duration::try_days(5).unwrap();
-
-    for _ in 0..1 {
-        let query_str = format!(
-            r#"
-            query {{
-                search(query: "{}", type: ISSUE, first: 100, after: {}) {{
-                    issueCount
-                    nodes {{
-                        ... on Issue {{
-                            url
-                            comments (first: 100, orderBy: {{field: UPDATED_AT, direction: DESC}}) {{
-                                nodes {{
-                                  author {{
-                                    login
-                                  }}
-                                  body
-                                  updatedAt
-                                }}
-                            }}
-                        }}
-                    }}
-                    pageInfo {{
-                        endCursor
-                        hasNextPage
-                    }}
-                }}
-            }}
-            "#,
-            query.replace("\"", "\\\""),
-            after_cursor
-                .as_ref()
-                .map_or(String::from("null"), |c| format!("\"{}\"", c)),
-        );
-
-        let response_body = github_http_post_gql(&query_str)
-            .await
-            .map_err(|e| anyhow!("Failed to post GraphQL query: {}", e))?;
-
-        let response: GraphQLResponse = serde_json::from_slice(&response_body)
-            .map_err(|e| anyhow!("Failed to deserialize response: {}", e))?;
-        // let test = String::from_utf8_lossy(&response_body)
-        //     .chars()
-        //     .take(100)
-        //     .collect::<String>();
-        // log::info!("search issue comment response head: {test}");
-
-        if let Some(data) = response.data {
-            if let Some(search) = data.search {
-                if let Some(nodes) = search.nodes {
-                    for issue in nodes {
-                        let mut inner_comments_vec = Vec::new();
-                        if let Some(comments) = &issue.comments {
-                            if let Some(nodes) = &comments.nodes {
-                                for comment in nodes {
-                                    if let Some(updated_at) = &comment.updatedAt {
-                                        let updated_at = DateTime::parse_from_rfc3339(updated_at)
-                                            .unwrap()
-                                            .with_timezone(&Utc);
-                                        if updated_at > last_hour {
-                                            let comment_creator = comment
-                                                .author
-                                                .as_ref()
-                                                .and_then(|author| author.login.clone())
-                                                .unwrap_or_default();
-                                            inner_comments_vec.push(IssueComment {
-                                                issue_id: issue.url.clone(),
-                                                comment_creator,
-                                                comment_date: updated_at
-                                                    .format("%Y-%m-%d %H:%M:%S")
-                                                    .to_string(),
-                                                comment_body: comment
-                                                    .body
-                                                    .clone()
-                                                    .unwrap_or_default(),
-                                            });
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        all_issues.extend(inner_comments_vec);
-                    }
-                }
-
-                if let Some(page_info) = search.pageInfo {
-                    if page_info.hasNextPage {
-                        after_cursor = page_info.endCursor;
-                    } else {
-                        break;
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(all_issues)
-} */
 
 pub fn extract_budget(body: &str) -> i32 {
     let re = regex::Regex::new(r"(?i)budget:?\s*(\d{2,3})").unwrap();
