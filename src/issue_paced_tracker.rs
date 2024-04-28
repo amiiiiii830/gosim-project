@@ -507,8 +507,8 @@ pub async fn search_issues_assign_comment(
 
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct Issue {
-        id: String,
-        url: String,
+        id: Option<String>,
+        url: Option<String>,
         assignees: Option<AssigneeNodes>,
         comments: Option<CommentNodes>,
     }
@@ -572,11 +572,14 @@ pub async fn search_issues_assign_comment(
         "#,
         ids_query
     );
-    log::info!("Issues assign, comment query: {:?}", &query_str);
 
     let response_body = github_http_post_gql(&query_str)
         .await
         .map_err(|e| anyhow!("Failed to post GraphQL query: {}", e))?;
+
+    let text = String::from_utf8_lossy(&response_body);
+
+    log::info!("Issues assign, comment query Response: {:?}", text);
 
     let response: GraphQLResponse = serde_json::from_slice(&response_body)
         .map_err(|e| anyhow!("Failed to deserialize response: {}", e))?;
@@ -590,10 +593,18 @@ pub async fn search_issues_assign_comment(
                         let comment_creator = comment.author.as_ref().and_then(|a| a.login.clone());
                         let comment_date = comment.updatedAt.clone();
                         let comment_body = comment.body.clone();
+                        let issue_id = match issue.url {
+                            Some(ref u) => u.clone(),
+                            None => continue,
+                        };
+                        let node_id = match issue.id {
+                            Some(ref id) => id.clone(),
+                            None => continue,
+                        };
 
                         all_comments.push(IssueAssignComment {
-                            issue_id: issue.id.clone(),
-                            node_id: issue.id.clone(), // Assuming node_id and issue_id are the same
+                            issue_id,
+                            node_id, // Assuming node_id and issue_id are the same
                             issue_assignees: issue.assignees.as_ref().and_then(|a| {
                                 a.nodes
                                     .as_ref()
