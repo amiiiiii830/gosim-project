@@ -48,28 +48,30 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
 
     let _ = open_master(pool).await?;
 
-    let _ = popuate_dbs_add_issues_updated(pool).await?;
+    let _ = open_project(pool).await?;
 
-    let _ = popuate_dbs_save_issues_assign_comment(pool).await?;
+    let _ = popuate_dbs_fill_projects(pool).await?;
+
+    let _ = project_master_back_sync(&pool).await?;
 
     let _ = popuate_dbs_save_issues_closed(pool).await?;
 
     let _ = closed_master(pool).await?;
 
-    let _ = popuate_dbs_fill_projects(pool).await?;
-
-    let _ = master_project(&pool).await?;
-
-    let _ = popuate_dbs_save_pull_requests(pool).await?;
-
-    let _ = project_master_back_sync(&pool).await?;
-
     let _ = populate_vector_db(pool).await?;
 
     let _ = sum_budget_to_project(&pool).await?;
 
+    let _ = popuate_dbs_add_issues_updated(pool).await?;
+
+    let _ = popuate_dbs_save_issues_assign_comment(pool).await?;
+
+    let _ = add_possible_assignees_to_master(pool).await?;
+    
+    let _ = popuate_dbs_save_pull_requests(pool).await?;
+
     let _ = remove_pull_by_issued_linked_pr(&pool).await?;
-    let _ = delete_issues_open_assigned_closed(&pool).await?;
+    let _ = delete_issues_open_update_closed(&pool).await?;
 
     // let _ = note_issues(pool).await?;
 

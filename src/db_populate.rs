@@ -156,7 +156,7 @@ pub async fn pull_request_exists(pool: &mysql_async::Pool, pull_id: &str) -> any
     }
 }
 
-pub async fn add_issues_open(pool: &Pool, issue: &IssueOpen) -> Result<()> {
+pub async fn add_issues_open(pool: &Pool, issue: &IssueOpen) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let query = r"INSERT INTO issues_open (node_id, issue_id, project_id, issue_title, issue_creator, issue_budget, issue_description)
@@ -213,7 +213,44 @@ pub async fn add_issues_assign_comment(pool: &Pool, issue: IssueAssignComment) -
         }
     }
 }
-pub async fn add_issues_closed(pool: &Pool, issue: IssueClosed) -> Result<()> {
+
+pub async fn add_possible_assignees_to_master(pool: &Pool) -> anyhow::Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
+
+    let query = r"
+    INSERT INTO issues_master (issue_id, issue_assignees, date_issue_assigned)
+    SELECT issue_id, issue_assignees, :date_assigned
+    FROM issues_assign_comment
+    WHERE NOT EXISTS (
+        SELECT 1 FROM issues_master WHERE issue_id = issues_assign_comment.issue_id AND issue_assignees IS NOT NULL
+    );
+    ";
+
+    match conn
+        .exec_drop(
+            query,
+            params! {
+                "date_assigned" => &now,
+            },
+        )
+        .await
+    {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            log::error!(
+                "Error adding issue_assignees to issues_master from issues_assign_comment {:?}",
+                e
+            );
+            Err(anyhow::Error::msg(
+                "Error adding issue_assignees to issues_master from issues_assign_comment ",
+            ))
+        }
+    }
+}
+
+pub async fn add_issues_closed(pool: &Pool, issue: IssueClosed) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let issue_assignees_json: Value = json!(issue.issue_assignees).into();

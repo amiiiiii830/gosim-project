@@ -1,4 +1,5 @@
 use flowsnet_platform_sdk::logger;
+use gosim_project::db_join::sum_budget_to_project;
 use gosim_project::db_manipulate::*;
 use gosim_project::db_populate::*;
 use gosim_project::vector_search::*;
@@ -464,4 +465,11 @@ async fn list_issues_multi_by_post_handler(
         ],
         issues_str.as_bytes().to_vec(),
     );
+}
+
+pub async fn trigger_db_update() -> anyhow::Result<()> {
+    let pool = get_pool().await;
+
+    let _ = sum_budget_to_project(&pool).await;
+    Ok(())
 }

@@ -7,7 +7,7 @@ use http_req::{
 use serde::{Deserialize, Serialize};
 use std::env;
 
-fn convert_datetime(merged_at: &str) -> Result<String, ParseError> {
+pub fn convert_datetime(merged_at: &str) -> Result<String, ParseError> {
     let datetime: DateTime<Utc> = merged_at.parse()?;
     Ok(datetime.format("%Y-%m-%d %H:%M:%S").to_string())
 }

@@ -303,21 +303,21 @@ async fn trigger(_headers: Vec<(String, String)>, _qry: HashMap<String, Value>, 
         let _ = match func_id.as_str() {
             "1" => popuate_dbs_save_issues_open(&pool).await,
             "2" => open_master(&pool).await,
-            "3" => popuate_dbs_add_issues_updated(&pool).await,
-            "12" => popuate_dbs_save_issues_assign_comment(&pool).await,
-            "4" => assigned_master(&pool).await,
+            "3" => open_project(&pool).await,
+            "4" => popuate_dbs_fill_projects(&pool).await,
             "5" => popuate_dbs_save_issues_closed(&pool).await,
             "6" => closed_master(&pool).await,
-            "7" => popuate_dbs_fill_projects(&pool).await,
-            "8" => master_project(&pool).await,
-            "9" => popuate_dbs_save_pull_requests(&pool).await,
-            "10" => project_master_back_sync(&&pool).await,
-            "11" => populate_vector_db(&pool).await,
-            "13" => sum_budget_to_project(&pool).await,
+            "7" => project_master_back_sync(&pool).await,
+            "8" => populate_vector_db(&pool).await,
+            "9" => sum_budget_to_project(&pool).await,
+            "10" => popuate_dbs_add_issues_updated(&pool).await,
+            "11" => popuate_dbs_save_issues_assign_comment(&pool).await,
+            "12" => add_possible_assignees_to_master(&pool).await,
+            "13" => popuate_dbs_save_pull_requests(&pool).await,
             "14" => remove_pull_by_issued_linked_pr(&pool).await,
-            "15" => delete_issues_open_assigned_closed(&pool).await,
-            // "16" => force_issue_to_summary_update_db(&pool).await,
-            _ => panic!(),
+            "15" => delete_issues_open_update_closed(&pool).await,
+            // "16" => note_issues(&pool).await, // Uncomment if needed
+            _ => panic!("Unhandled function ID: {}", func_id),
         };
     }
 }
@@ -391,7 +391,7 @@ pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
 
     let _ = closed_master(&pool).await?;
 
-    let _ = master_project(&pool).await?;
+    let _ = add_possible_assignees_to_master(&pool).await?;
     // let _ = sum_budget_to_project(&pool).await?;
 
     let query_repos: String = get_projects_as_repo_list(pool, 1).await?;
@@ -411,7 +411,7 @@ pub async fn join_ops(pool: &Pool) -> anyhow::Result<()> {
 
 pub async fn cleanup_ops(pool: &Pool) -> anyhow::Result<()> {
     let _ = remove_pull_by_issued_linked_pr(&pool).await?;
-    let _ = delete_issues_open_assigned_closed(&pool).await?;
+    let _ = delete_issues_open_update_closed(&pool).await?;
 
     Ok(())
 }

@@ -36,6 +36,32 @@ pub async fn open_master(pool: &mysql_async::Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
+pub async fn open_project(pool: &mysql_async::Pool) -> anyhow::Result<()> {
+    let mut conn = pool.get_conn().await?;
+
+    let query = r"
+    INSERT INTO projects (project_id, issues_list)
+    SELECT 
+        project_id,
+        JSON_ARRAYAGG(issue_id)
+    FROM 
+        (SELECT DISTINCT project_id, issue_id FROM issues_open) AS distinct_issues
+    GROUP BY 
+        project_id
+    ON DUPLICATE KEY UPDATE
+        issues_list = VALUES(issues_list);
+        ";
+
+    if let Err(e) = conn.query_drop(query).await {
+        log::error!(
+            "Error consolidating issues_open into projects: {:?}",
+            e
+        );
+    };
+
+    Ok(())
+}
+
 pub async fn assigned_master(pool: &mysql_async::Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
@@ -137,7 +163,7 @@ pub async fn remove_pull_by_issued_linked_pr(pool: &mysql_async::Pool) -> anyhow
     Ok(())
 }
 
-pub async fn delete_issues_open_assigned_closed(pool: &mysql_async::Pool) -> anyhow::Result<()> {
+pub async fn delete_issues_open_update_closed(pool: &mysql_async::Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
     let queries = vec![
@@ -145,22 +171,17 @@ pub async fn delete_issues_open_assigned_closed(pool: &mysql_async::Pool) -> any
         DELETE FROM issues_open;
         "#,
         r#"
-        DELETE FROM issues_assigned
-        WHERE issue_id IN (
-            SELECT issue_id FROM issues_master WHERE issue_id IS NOT NULL
-        );
+        DELETE FROM issues_updated;
         "#,
         r#"
         DELETE FROM issues_closed
-        WHERE issue_id IN (
-            SELECT issue_id FROM issues_master WHERE issue_id IS NOT NULL
-        );
+        WHERE issue_id IN (SELECT issue_id FROM issues_master);
         "#,
     ];
 
     let msgs = vec![
         "Error deleting from issues_open",
-        "Error deleting from issues_assigned",
+        "Error deleting from issues_updated",
         "Error deleting from issues_closed",
     ];
 
@@ -169,28 +190,6 @@ pub async fn delete_issues_open_assigned_closed(pool: &mysql_async::Pool) -> any
             log::error!("{:?}: {:?}", msg, e);
         };
     }
-
-    Ok(())
-}
-pub async fn master_project(pool: &mysql_async::Pool) -> anyhow::Result<()> {
-    let mut conn = pool.get_conn().await?;
-
-    let query = r"
-    INSERT INTO projects (project_id, issues_list)
-    SELECT 
-        project_id,
-        JSON_ARRAYAGG(issue_id)
-    FROM 
-        (SELECT DISTINCT project_id, issue_id FROM issues_master) AS distinct_issues
-    GROUP BY 
-        project_id
-    ON DUPLICATE KEY UPDATE
-        issues_list = VALUES(issues_list);
-        ";
-
-    if let Err(e) = conn.query_drop(query).await {
-        log::error!("Error building project from issues_master: {:?}", e);
-    };
 
     Ok(())
 }
