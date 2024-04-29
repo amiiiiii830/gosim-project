@@ -224,7 +224,7 @@ pub async fn add_possible_assignees_to_master(pool: &Pool) -> anyhow::Result<()>
     SELECT issue_id, issue_assignees, :date_assigned
     FROM issues_assign_comment
     WHERE NOT EXISTS (
-        SELECT 1 FROM issues_master WHERE issue_id = issues_assign_comment.issue_id AND issue_assignees IS NOT NULL
+        SELECT 1 FROM issues_master WHERE issue_id = issues_assign_comment.issue_id AND issue_assignees IS NOT NULL AND node_id IS NOT NULL
     );
     ";
 
