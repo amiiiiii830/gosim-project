@@ -230,36 +230,6 @@ pub async fn add_issues_assign_comment(pool: &Pool, issue: IssueAssignComment) -
     Ok(())
 }
 
-/* pub async fn add_issues_assign_comment(pool: &Pool, issue: IssueAssignComment) -> Result<()> {
-    let mut conn = pool.get_conn().await?;
-    let issue_assignees_str = json!(issue.issue_assignees).to_string();
-
-    let query = r"INSERT INTO issues_assign_comment (issue_id, node_id, issue_assignees, comment_creator, comment_date, comment_body)
-    VALUES (:issue_id, :node_id, :issue_assignees_str, :comment_creator, :comment_date, :comment_body)
-    ON DUPLICATE KEY UPDATE
-    comment_creator = :comment_creator, comment_date = :comment_date, comment_body = :comment_body;";
-
-    match conn
-        .exec_drop(
-            query,
-            params! {
-                "issue_id" => &issue.issue_id,
-                "node_id" => &issue.node_id,
-                "issue_assignees_str" => &issue_assignees_str,
-                "comment_creator" => &issue.comment_creator,
-                "comment_date" => &issue.comment_date,
-                "comment_body" => &issue.comment_body,
-            },
-        )
-        .await
-    {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            log::error!("Error adding or updating issues_assign_comment: {:?}", e);
-            Err(e.into())
-        }
-    }
-} */
 
 pub async fn add_possible_assignees_to_master(pool: &Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;

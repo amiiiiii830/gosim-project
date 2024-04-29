@@ -189,3 +189,18 @@ SELECT COUNT(DISTINCT issue_id) FROM issues_comment;
 COUNT(*) OVER() AS total_count
 
 ALTER TABLE issues_master MODIFY COLUMN node_id VARCHAR(20) NOT NULL DEFAULT ''
+
+SELECT keyword, COUNT(*) AS frequency
+FROM (
+    SELECT JSON_UNQUOTE(JSON_EXTRACT(keyword_tags, CONCAT('$[', idx, ']'))) AS keyword
+    FROM issues_repos_summarized
+    JOIN JSON_TABLE(
+        keyword_tags,
+        '$[*]' COLUMNS (
+            idx FOR ORDINALITY,
+            tag VARCHAR(255) PATH '$'
+        )
+    ) AS jt
+) AS keywords
+GROUP BY keyword
+ORDER BY frequency DESC;
