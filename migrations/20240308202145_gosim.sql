@@ -10,7 +10,7 @@ CREATE TABLE projects (
 
 CREATE TABLE issues_master (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
-    node_id VARCHAR(20) NOT NULL,   
+    node_id VARCHAR(20) NOT NULL DEFAULT '',   
     project_id VARCHAR(255) NOT NULL,   
     project_logo VARCHAR(255) NOT NULL,
     main_language VARCHAR(50),
@@ -32,7 +32,7 @@ CREATE TABLE issues_master (
 
 CREATE TABLE issues_open (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
-    node_id VARCHAR(20) NOT NULL,   
+    node_id VARCHAR(20) NOT NULL DEFAULT '',   
     project_id VARCHAR(255) NOT NULL,
     issue_creator VARCHAR(50) NOT NULL,
     issue_title VARCHAR(255) NOT NULL,
@@ -42,7 +42,7 @@ CREATE TABLE issues_open (
 
 CREATE TABLE issues_updated (
     issue_id VARCHAR(255) PRIMARY KEY,  -- url of an issue
-    node_id VARCHAR(20) NOT NULL
+    node_id VARCHAR(20) NOT NULL DEFAULT ''  
 ) DEFAULT CHARSET=utf8mb4 COLLATE utf8mb4_unicode_ci;
 
 CREATE TABLE issues_repos_summarized (
@@ -58,7 +58,7 @@ ALTER TABLE issues_repos_summarized ADD FULLTEXT (keyword_tags_text);
 CREATE TABLE issues_assign_comment (
     comment_id INT AUTO_INCREMENT PRIMARY KEY,  -- id of a comment
     issue_id VARCHAR(255) NOT NULL,  -- url of an issue
-    node_id VARCHAR(20) NOT NULL,   
+    node_id VARCHAR(20) NOT NULL DEFAULT '',   
     issue_assignees JSON,    
     comment_creator VARCHAR(50) NOT NULL, 
     comment_date DATETIME NOT NULL,  -- date of the comment

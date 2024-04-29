@@ -187,3 +187,5 @@ SELECT COUNT(DISTINCT issue_id) FROM issues_comment;
 
 
 COUNT(*) OVER() AS total_count
+
+ALTER TABLE issues_master MODIFY COLUMN node_id VARCHAR(20) NOT NULL DEFAULT ''
