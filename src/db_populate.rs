@@ -220,15 +220,24 @@ pub async fn add_possible_assignees_to_master(pool: &Pool) -> anyhow::Result<()>
     let now = chrono::Utc::now().format("%Y-%m-%d %H:%M:%S").to_string();
 
     let query = r"
-    INSERT INTO issues_master (issue_id, issue_assignees, date_issue_assigned)
-    SELECT issue_id, issue_assignees, :date_assigned
-    FROM issues_assign_comment
-    WHERE NOT EXISTS (
-        SELECT 1 FROM issues_master WHERE issue_id = issues_assign_comment.issue_id AND issue_assignees IS NOT NULL
-    );
+    UPDATE issues_master im
+    SET im.issue_assignees = (
+        SELECT iac.issue_assignees
+        FROM issues_assign_comment iac
+        WHERE iac.issue_id = im.issue_id
+          AND iac.issue_assignees IS NOT NULL
+    ),
+    im.date_issue_assigned = :date_assigned
+    WHERE EXISTS (
+        SELECT 1
+        FROM issues_assign_comment iac
+        WHERE iac.issue_id = im.issue_id
+          AND (iac.issue_assignees IS NOT NULL)
+    )
+    AND (im.issue_assignees IS NULL);
     ";
 
-    match conn
+    if let Err(e) = conn
         .exec_drop(
             query,
             params! {
@@ -237,17 +246,12 @@ pub async fn add_possible_assignees_to_master(pool: &Pool) -> anyhow::Result<()>
         )
         .await
     {
-        Ok(_) => Ok(()),
-        Err(e) => {
-            log::error!(
-                "Error adding issue_assignees to issues_master from issues_assign_comment {:?}",
-                e
-            );
-            Err(anyhow::Error::msg(
-                "Error adding issue_assignees to issues_master from issues_assign_comment ",
-            ))
-        }
+        log::error!(
+            "Error updating issues_master from issues_assign_comment: {:?}",
+            e
+        );
     }
+    Ok(())
 }
 
 pub async fn add_issues_closed(pool: &Pool, issue: IssueClosed) -> anyhow::Result<()> {
