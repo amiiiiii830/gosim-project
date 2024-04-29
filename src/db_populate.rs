@@ -226,15 +226,16 @@ pub async fn add_possible_assignees_to_master(pool: &Pool) -> anyhow::Result<()>
         FROM issues_assign_comment iac
         WHERE iac.issue_id = im.issue_id
           AND iac.issue_assignees IS NOT NULL
+        LIMIT 1
     ),
     im.date_issue_assigned = :date_assigned
     WHERE EXISTS (
         SELECT 1
         FROM issues_assign_comment iac
         WHERE iac.issue_id = im.issue_id
-          AND (iac.issue_assignees IS NOT NULL)
+          AND iac.issue_assignees IS NOT NULL
     )
-    AND (im.issue_assignees IS NULL);
+    AND im.issue_assignees IS NULL;
     ";
 
     if let Err(e) = conn
