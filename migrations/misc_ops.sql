@@ -208,8 +208,5 @@ ORDER BY frequency DESC;
 
 INSERT INTO issues_updated (issue_id, node_id)
 SELECT issue_id, node_id FROM issues_master
-WHERE issue_id NOT IN (SELECT issue_id FROM issues_updated);
+WHERE issue_id NOT IN (SELECT issue_id FROM issues_updated) limit 50;
 
-INSERT INTO issues_updated (issue_id)
-SELECT node_id FROM issues_master
-WHERE issue_id NOT IN (SELECT issue_id FROM issues_updated);

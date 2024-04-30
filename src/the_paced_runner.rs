@@ -67,7 +67,7 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
     let _ = popuate_dbs_save_issues_assign_comment(pool).await?;
 
     let _ = add_possible_assignees_to_master(pool).await?;
-    
+
     let _ = popuate_dbs_save_pull_requests(pool).await?;
 
     let _ = remove_pull_by_issued_linked_pr(&pool).await?;
@@ -135,15 +135,20 @@ pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
  */
 pub async fn popuate_dbs_save_issues_assign_comment(pool: &Pool) -> anyhow::Result<()> {
     let node_ids_updated = get_updated_approved_issues_node_ids(pool).await?;
-    log::info!("node ids updated: {:?}", node_ids_updated);
 
-    let issue_comment_obj: Vec<IssueAssignComment> =
-        search_issues_assign_comment(node_ids_updated).await?;
-    let len = issue_comment_obj.len();
-    log::info!("Issues assign, comment recorded: {:?}", len);
-    for issue in issue_comment_obj {
-        let _ = add_issues_assign_comment(pool, issue).await;
+    for node_ids in node_ids_updated.chunks(30) {
+        let node_ids = node_ids.to_vec();
+        log::info!("node ids updated: {:?}", node_ids.clone());
+
+        let issue_comment_obj: Vec<IssueAssignComment> =
+            search_issues_assign_comment(node_ids).await?;
+        let len = issue_comment_obj.len();
+        log::info!("Issues assign, comment recorded: {:?}", len);
+        for issue in issue_comment_obj {
+            let _ = add_issues_assign_comment(pool, issue).await;
+        }
     }
+
     Ok(())
 }
 pub async fn popuate_dbs_add_issues_updated(pool: &Pool) -> anyhow::Result<()> {
