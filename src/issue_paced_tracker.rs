@@ -579,10 +579,10 @@ pub async fn search_issues_assign_comment(
 
     let response: GraphQLResponse = serde_json::from_slice(&response_body)
         .map_err(|e| anyhow!("Failed to deserialize response: {}", e))?;
-    log::info!(
-        "Issues assign, comment query Response data: {:?}",
-        response.data
-    );
+    // log::info!(
+    //     "Issues assign, comment query Response data: {:?}",
+    //     response.data
+    // );
     let mut all_comments = Vec::new();
     if let Some(data) = response.data {
         for issue in data.nodes {
