@@ -18,14 +18,14 @@ pub static END_DATE: &str = "2023-10-30";
 
 lazy_static! {
     pub static ref THIS_HOUR: String = {
-        let date = NaiveDate::parse_from_str("2023-10-6", "%Y-%m-%d").unwrap();
+        let date = NaiveDate::parse_from_str("2023-10-7", "%Y-%m-%d").unwrap();
         let datetime = date
             .and_hms_opt(Utc::now().hour(), 0, 0)
             .expect("Invalid time");
         datetime.format("%Y-%m-%dT%H:%M:%SZ").to_string()
     };
     pub static ref NEXT_HOUR: String = {
-        let date = NaiveDate::parse_from_str("2023-10-6", "%Y-%m-%d").unwrap();
+        let date = NaiveDate::parse_from_str("2023-10-7", "%Y-%m-%d").unwrap();
         let datetime = date
             .and_hms_opt((Utc::now().hour() + 1) % 24, 0, 0)
             .expect("Invalid time");

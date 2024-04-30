@@ -297,7 +297,7 @@ pub async fn get_updated_approved_issues_node_ids(pool: &Pool) -> Result<Vec<Str
     let query = format!(
         "SELECT node_id FROM issues_master 
         WHERE review_status='approve' AND node_id IN (SELECT node_id FROM issues_updated) 
-        ORDER BY issue_id ASC;"
+        ORDER BY issue_id ASC limit 30;"
     );
 
     let out: Vec<String> = conn.query_map(query, |node_id: String| node_id).await?;

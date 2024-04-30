@@ -90,10 +90,10 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- assign 30% of the issues to a decline
+-- assign 30% of the issues to a approve
 SET @total_rows = (SELECT COUNT(*) FROM issues_master);
 SET @rows_to_update = ROUND(@total_rows * 0.3);
-SET @sql = CONCAT('UPDATE issues_master SET review_status = \'decline\' ORDER BY RAND() LIMIT ', @rows_to_update);
+SET @sql = CONCAT('UPDATE issues_master SET review_status = \'approve\' ORDER BY RAND() LIMIT ', @rows_to_update);
 
 PREPARE stmt FROM @sql;
 EXECUTE stmt;
@@ -119,9 +119,9 @@ PREPARE stmt FROM @sql;
 EXECUTE stmt;
 DEALLOCATE PREPARE stmt;
 
--- assign 20% to be budget approved
+-- assign 30% to be budget approved
 SET @total_rows = (SELECT COUNT(*) FROM issues_master);
-SET @rows_to_update = ROUND(@total_rows * 0.2);
+SET @rows_to_update = ROUND(@total_rows * 0.3);
 SET @sql = CONCAT('UPDATE issues_master SET issue_budget_approved = TRUE ORDER BY RAND() LIMIT ', @rows_to_update);
 
 PREPARE stmt FROM @sql;
@@ -204,3 +204,12 @@ FROM (
 ) AS keywords
 GROUP BY keyword
 ORDER BY frequency DESC;
+
+
+INSERT INTO issues_updated (issue_id, node_id)
+SELECT issue_id, node_id FROM issues_master
+WHERE issue_id NOT IN (SELECT issue_id FROM issues_updated);
+
+INSERT INTO issues_updated (issue_id)
+SELECT node_id FROM issues_master
+WHERE issue_id NOT IN (SELECT issue_id FROM issues_updated);
