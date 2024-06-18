@@ -11,21 +11,21 @@ use chrono::{NaiveDate, Timelike, Utc};
 use lazy_static::lazy_static;
 
 pub static TOTAL_BUDGET: i32 = 50_000;
-pub static ISSUE_LABEL: &str = "hacktoberfest";
-pub static PR_LABEL: &str = "hacktoberfest-accepted";
-pub static START_DATE: &str = "2023-10-01";
-pub static END_DATE: &str = "2023-10-30";
+pub static ISSUE_LABEL: &str = "gosim-bounty";
+pub static PR_LABEL: &str = "gosim-bounty-accepted";
+pub static START_DATE: &str = "2024-06-17";
+pub static END_DATE: &str = "2024-07-17";
 
 lazy_static! {
     pub static ref THIS_HOUR: String = {
-        let date = NaiveDate::parse_from_str("2023-10-15", "%Y-%m-%d").unwrap();
+        let date = Utc::now().date_naive(); 
         let datetime = date
             .and_hms_opt(Utc::now().hour(), 0, 0)
             .expect("Invalid time");
         datetime.format("%Y-%m-%dT%H:%M:%SZ").to_string()
     };
     pub static ref NEXT_HOUR: String = {
-        let date = NaiveDate::parse_from_str("2023-10-15", "%Y-%m-%d").unwrap();
+        let date = Utc::now().date_naive(); 
         let datetime = date
             .and_hms_opt((Utc::now().hour() + 1) % 24, 0, 0)
             .expect("Invalid time");
