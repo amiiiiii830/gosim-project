@@ -22,24 +22,14 @@ pub fn inner_query_1_hour(
         std::env::var("SIGNATURE_SWITCH").unwrap_or_else(|_| "signature_switch".to_string());
 
     let query = if is_issue && is_start {
-        format!("label:{issue_label} is:issue is:closed created:>{start_date} closed:{date_range} -label:spam -label:invalid")
+        format!("label:{issue_label} is:issue is:open no:assignee created:{date_range} -label:spam -label:invalid")
     } else if is_assigned_issue {
-        format!("label:{issue_label} is:issue is:closed created:>{start_date} updated:{date_range} -label:spam -label:invalid")
+        format!("label:{issue_label} is:issue is:open created:>{start_date} updated:{date_range} -label:spam -label:invalid")
     } else if is_issue && !is_start {
         format!("label:{issue_label} is:issue is:closed created:>{start_date} closed:{date_range} -label:spam -label:invalid")
     } else {
         format!("label:{pr_label} is:pr is:merged merged:{date_range} review:approved -label:spam -label:invalid")
     };
-
-    // let query = if is_issue && is_start {
-    //     format!("label:{issue_label} is:issue is:open no:assignee created:{date_range} -label:spam -label:invalid")
-    // } else if is_assigned_issue {
-    //     format!("label:{issue_label} is:issue is:open created:>{start_date} updated:{date_range} -label:spam -label:invalid")
-    // } else if is_issue && !is_start {
-    //     format!("label:{issue_label} is:issue is:closed created:>{start_date} closed:{date_range} -label:spam -label:invalid")
-    // } else {
-    //     format!("label:{pr_label} is:pr is:merged merged:{date_range} review:approved -label:spam -label:invalid")
-    // };
 
     query
 }
