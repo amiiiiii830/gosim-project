@@ -22,7 +22,6 @@ async fn handler(body: Vec<u8>) {
 }
 
 pub async fn inner(_body: Vec<u8>) -> anyhow::Result<()> {
-
     logger::init();
     let pool = get_pool().await;
     let _ = run_hourly(&pool).await;

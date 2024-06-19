@@ -53,10 +53,7 @@ pub async fn open_project(pool: &mysql_async::Pool) -> anyhow::Result<()> {
         ";
 
     if let Err(e) = conn.query_drop(query).await {
-        log::error!(
-            "Error consolidating issues_open into projects: {:?}",
-            e
-        );
+        log::error!("Error consolidating issues_open into projects: {:?}", e);
     };
 
     Ok(())

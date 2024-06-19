@@ -82,7 +82,6 @@ pub async fn chat_inner_async(
                 return Ok(content.to_string());
             }
         }
-
     } else {
         log::info!("LLM generation failed in first round, now retrying");
 

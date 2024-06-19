@@ -230,7 +230,6 @@ pub async fn add_issues_assign_comment(pool: &Pool, issue: IssueAssignComment) -
     Ok(())
 }
 
-
 pub async fn add_possible_assignees_to_master(pool: &Pool) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
 
