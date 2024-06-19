@@ -158,6 +158,7 @@ pub async fn pull_request_exists(pool: &mysql_async::Pool, pull_id: &str) -> any
 
 pub async fn add_issues_open(pool: &Pool, issue: &IssueOpen) -> anyhow::Result<()> {
     let mut conn = pool.get_conn().await?;
+    log::info!("add issues open func: {:?}", issue.issue_id.clone());
 
     let query = r"INSERT INTO issues_open (node_id, issue_id, project_id, issue_title, issue_creator, issue_budget, issue_description)
                   VALUES (:node_id, :issue_id, :project_id, :issue_title, :issue_creator, :issue_budget, :issue_description)";
@@ -177,7 +178,7 @@ pub async fn add_issues_open(pool: &Pool, issue: &IssueOpen) -> anyhow::Result<(
         )
         .await
     {
-        // log::error!("Error add issues_open: {:?}", e);
+        log::error!("Error add issues_open: {:?}", e);
     };
 
     Ok(())
