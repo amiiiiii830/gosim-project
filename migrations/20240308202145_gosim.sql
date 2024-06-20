@@ -60,9 +60,9 @@ CREATE TABLE issues_assign_comment (
     issue_id VARCHAR(255) ,  -- url of an issue
     node_id VARCHAR(20) ,   
     issue_assignees JSON,    
-    comment_creator VARCHAR(50) , 
-    comment_date DATETIME ,  -- date of the comment
-    comment_body TEXT   -- content of the comment
+    comment_creator VARCHAR(50)  NOT NULL, 
+    comment_date DATETIME  NOT NULL,  -- date of the comment
+    comment_body TEXT  NOT NULL,  -- content of the comment
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE issues_closed (

@@ -472,10 +472,10 @@ pub async fn get_issue_w_comments_by_id(
         issue_id
     );
 
-    let comments_query = format!(
-        "SELECT comment_creator, comment_body FROM issues_assign_comment WHERE issue_id = '{}' ORDER BY comment_date",
-        issue_id
-    );
+    // let comments_query = format!(
+    //     "SELECT comment_creator, comment_body FROM issues_assign_comment WHERE issue_id = '{}' ORDER BY comment_date",
+    //     issue_id
+    // );
 
     // Fetch the issue
     let issue_rows: Vec<mysql_async::Row> = conn.query(issue_query).await?;
@@ -515,17 +515,18 @@ pub async fn get_issue_w_comments_by_id(
     };
 
     // Fetch the comments
-    let comments_rows: Vec<mysql_async::Row> = conn.query(comments_query).await?;
-    let comments: Vec<(String, String)> = comments_rows
-        .into_iter()
-        .map(|row| {
-            (
-                row.get("comment_creator").unwrap_or_default(),
-                row.get("comment_body").unwrap_or_default(),
-            )
-        })
-        .collect();
+    // let comments_rows: Vec<mysql_async::Row> = conn.query(comments_query).await?;
+    // let comments: Vec<(String, String)> = comments_rows
+    //     .into_iter()
+    //     .map(|row| {
+    //         (
+    //             row.get("comment_creator").unwrap_or_default(),
+    //             row.get("comment_body").unwrap_or_default(),
+    //         )
+    //     })
+    //     .collect();
 
+    let comments = vec![];
     Ok(IssueAndComments {
         issue_id: issue.issue_id,
         project_id: issue.project_id,
