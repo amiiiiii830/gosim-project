@@ -14,18 +14,3 @@ pub async fn comment_on_issue(issue_id: &str, comment: &str) -> anyhow::Result<(
     Ok(())
 }
 
-pub async fn mock_comment_on_issue(issue_number: i32, comment: &str) -> anyhow::Result<()> {
-    // let issue_id = "https://github.com/alabulei1/a-test/issues/87";
-    // let project_id = "https://github.com/KwickerHub/WebCraftifyAI";
-    let (owner, repo) = ("jaykchen", "stt");
-
-    let url = format!("https://api.github.com/repos/{owner}/{repo}/issues/{issue_number}/comments");
-
-    match github_http_post(&url, comment).await {
-        Ok(_) => (),
-
-        Err(e) => log::error!("Error commenting on issue: {:?}", e),
-    }
-
-    Ok(())
-}
