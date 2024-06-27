@@ -191,7 +191,41 @@ async fn conclude_issue_handler(
 
     let pool = get_pool().await;
     if approve {
-        let _ = conclude_issue_in_db(&pool, &issue_id).await;
+        match conclude_issue_in_db(&pool, &issue_id).await {
+            Ok(_) => {
+                send_response(
+                    200,
+                    vec![
+                        (String::from("content-type"), String::from("plain/text")),
+                        (
+                            String::from("Access-Control-Allow-Origin"),
+                            String::from("*"),
+                        ),
+                    ],
+                    "issue sccessfully concluded".as_bytes().to_vec(),
+                );
+            }
+            Err(e) => {
+                let fail_str =
+                    format!("Failed concludng: {:?} with error: {}", issue_id.clone(), e);
+                log::error!("{:?}", fail_str.clone());
+                let fail_str = json!(fail_str).to_string();
+                send_response(
+                    500,
+                    vec![
+                        (
+                            String::from("content-type"),
+                            String::from("application/json"),
+                        ),
+                        (
+                            String::from("Access-Control-Allow-Origin"),
+                            String::from("*"),
+                        ),
+                    ],
+                    fail_str.as_bytes().to_vec(),
+                );
+            }
+        }
     }
 }
 
