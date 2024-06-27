@@ -747,7 +747,7 @@ pub async fn conclude_issue_in_db(pool: &mysql_async::Pool, issue_id: &str) -> R
 
     let query = r"UPDATE issues_master 
                   SET issue_budget_approved = True,
-                  date_budget_approved = NOW()
+                  date_budget_approved = COALESCE(date_budget_approved, now())
                   WHERE issue_id = :issue_id";
 
     match conn
@@ -779,7 +779,7 @@ pub async fn conclude_issues_batch_in_db(
 
     let query = r"UPDATE issues_master 
                   SET issue_budget_approved = True,
-                  date_budget_approved = NOW()
+                  date_budget_approved = COALESCE(date_budget_approved, now())
                   WHERE issue_id = :issue_id";
 
     for issue_id in issue_ids {
