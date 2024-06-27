@@ -746,7 +746,8 @@ pub async fn conclude_issue_in_db(pool: &mysql_async::Pool, issue_id: &str) -> R
     let mut conn = pool.get_conn().await?;
 
     let query = r"UPDATE issues_master 
-                  SET issue_budget_approved = True
+                  SET issue_budget_approved = True,
+                  date_budget_approved = now()
                   WHERE issue_id = :issue_id";
 
     if let Err(e) = conn
@@ -771,7 +772,8 @@ pub async fn conclude_issues_batch_in_db(
     let mut conn = pool.get_conn().await?;
 
     let query = r"UPDATE issues_master 
-                  SET issue_budget_approved = True
+                  SET issue_budget_approved = True,
+                  date_budget_approved = now()
                   WHERE issue_id = :issue_id";
 
     for issue_id in issue_ids {
