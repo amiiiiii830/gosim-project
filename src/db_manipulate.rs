@@ -747,10 +747,10 @@ pub async fn conclude_issue_in_db(pool: &mysql_async::Pool, issue_id: &str) -> R
 
     let query = r"UPDATE issues_master 
                   SET issue_budget_approved = True,
-                  date_budget_approved = now()
+                  date_budget_approved = NOW()
                   WHERE issue_id = :issue_id";
 
-    if let Err(e) = conn
+    match conn
         .exec_drop(
             query,
             params! {
@@ -759,8 +759,14 @@ pub async fn conclude_issue_in_db(pool: &mysql_async::Pool, issue_id: &str) -> R
         )
         .await
     {
-        log::error!("Error concluding issue: {:?}", e);
-    };
+        Ok(_) => {
+            log::info!("Successfully concluded issue with ID: {}", issue_id);
+        }
+        Err(e) => {
+            log::error!("Error concluding issue: {:?}", e);
+            return Err(e.into());
+        }
+    }
 
     Ok(())
 }
@@ -773,7 +779,7 @@ pub async fn conclude_issues_batch_in_db(
 
     let query = r"UPDATE issues_master 
                   SET issue_budget_approved = True,
-                  date_budget_approved = now()
+                  date_budget_approved = NOW()
                   WHERE issue_id = :issue_id";
 
     for issue_id in issue_ids {
