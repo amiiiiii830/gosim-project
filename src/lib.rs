@@ -19,17 +19,19 @@ pub static END_DATE: &str = "2024-07-17";
 lazy_static! {
     pub static ref THIS_HOUR: String = {
         // let date = Utc::now().date_naive();
-        let datetime = Utc::now().with_minute(0)
-        .and_then(|dt| dt.with_second(0))
-        .expect("Invalid time");
+        let datetime = Utc::now();
+        // .with_minute(0)
+        // .and_then(|dt| dt.with_second(0))
+        // .expect("Invalid time");
         datetime.format("%Y-%m-%dT%H:%M:%SZ").to_string()
     };
-    pub static ref NEXT_HOUR: String = {
+    pub static ref PREV_HOUR: String = {
         // let date = Utc::now().date_naive();
-        let datetime = Utc::now().with_minute(0)
-        .and_then(|dt| dt.with_second(0))
-        .expect("Invalid time");
-   let previous_hour= datetime + Duration::hours(1);
+        let datetime = Utc::now();
+        // .with_minute(0)
+        // .and_then(|dt| dt.with_second(0))
+        // .expect("Invalid time");
+   let previous_hour= datetime - Duration::hours(1);
 
     previous_hour.format("%Y-%m-%dT%H:%M:%SZ").to_string()
     };

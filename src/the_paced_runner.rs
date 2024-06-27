@@ -1,7 +1,7 @@
 use crate::{
     db_join::*, db_manipulate::*, db_populate::*, issue_paced_tracker::*, vector_search::*,
 };
-use crate::{ISSUE_LABEL, NEXT_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
+use crate::{ISSUE_LABEL, PREV_HOUR, PR_LABEL, START_DATE, THIS_HOUR};
 
 use anyhow::Ok;
 use mysql_async::Pool;
@@ -70,8 +70,8 @@ pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
 pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
     let query_open = inner_query_1_hour(
         &START_DATE,
+        &PREV_HOUR,
         &THIS_HOUR,
-        &NEXT_HOUR,
         ISSUE_LABEL,
         PR_LABEL,
         true,  // is_issue
@@ -144,8 +144,8 @@ pub async fn popuate_dbs_save_issues_assign_comment(pool: &Pool) -> anyhow::Resu
 pub async fn popuate_dbs_add_issues_updated(pool: &Pool) -> anyhow::Result<()> {
     let _query_assigned = inner_query_1_hour(
         &START_DATE,
+        &PREV_HOUR,
         &THIS_HOUR,
-        &NEXT_HOUR,
         ISSUE_LABEL,
         PR_LABEL,
         false,
@@ -165,8 +165,8 @@ pub async fn popuate_dbs_add_issues_updated(pool: &Pool) -> anyhow::Result<()> {
 pub async fn popuate_dbs_save_issues_closed(pool: &Pool) -> anyhow::Result<()> {
     let query_closed = inner_query_1_hour(
         &START_DATE,
+        &PREV_HOUR,
         &THIS_HOUR,
-        &NEXT_HOUR,
         ISSUE_LABEL,
         PR_LABEL,
         true,
@@ -187,8 +187,8 @@ pub async fn popuate_dbs_save_issues_closed(pool: &Pool) -> anyhow::Result<()> {
 pub async fn popuate_dbs_save_pull_requests(pool: &Pool) -> anyhow::Result<()> {
     let query_pull_request = inner_query_1_hour(
         &START_DATE,
+        &PREV_HOUR,
         &THIS_HOUR,
-        &NEXT_HOUR,
         ISSUE_LABEL,
         PR_LABEL,
         false,

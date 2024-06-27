@@ -21,3 +21,4 @@ backend_hook/.env
 issue_bot/target
 issue_bot/Cargo.lock
 issue_bot/.env
+.DS_Store
