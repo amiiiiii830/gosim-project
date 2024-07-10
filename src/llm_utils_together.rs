@@ -1,3 +1,4 @@
+//use hosted Llama model to summarize project description, issues body text etc.
 use reqwest::{
     header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE, USER_AGENT},
     ClientBuilder,

@@ -1,3 +1,4 @@
+//search GitHub with graphql queries for issues with specific conditions/patterns
 use anyhow::anyhow;
 use chrono::{DateTime, ParseError, Utc};
 use http_req::{
@@ -109,6 +110,9 @@ pub struct RepoData {
     pub project_logo: String,
 }
 
+
+//search detailed info about repos with their identifiers
+//search several dozens at one time to reduce the number of graphql calls to GitHub, try to avoid rate limit
 pub async fn search_repos_in_batch(query: &str) -> anyhow::Result<Vec<RepoData>> {
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct GraphQLResponse {
@@ -236,6 +240,7 @@ pub struct IssueUpdated {
     pub node_id: String,
 }
 
+//search for issues that have been updated in given time window, say, the past one hour
 pub async fn search_issues_updated(query: &str) -> anyhow::Result<Vec<IssueUpdated>> {
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct GraphQLResponse {
@@ -347,6 +352,8 @@ pub struct IssueOpen {
     pub project_id: String,        // url of the repo
 }
 
+
+//search for issues that have been newly openned in the past hour, with additional conditions, i.e., no assignees
 pub async fn search_issues_open(query: &str) -> anyhow::Result<Vec<IssueOpen>> {
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct GraphQLResponse {
@@ -492,6 +499,8 @@ pub struct IssueAssignComment {
     pub comment_body: Option<String>,
 }
 
+
+//search issues tracked in database for new comments, or assignees status changed in the past hour 
 pub async fn search_issues_assign_comment(
     node_ids: Vec<String>,
 ) -> anyhow::Result<Vec<IssueAssignComment>> {
@@ -657,6 +666,8 @@ pub struct IssueClosed {
     pub issue_linked_pr: Option<String>,
 }
 
+
+//search for issues that have been closed in the past hour
 pub async fn search_issues_closed(query: &str) -> anyhow::Result<Vec<IssueClosed>> {
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct GraphQLResponse {
@@ -895,6 +906,7 @@ pub struct OuterPull {
     pub merged_at: String,
 }
 
+//search for pull_requests that fits project critieria in the past hour
 pub async fn search_pull_requests(query: &str) -> anyhow::Result<Vec<OuterPull>> {
     #[derive(Serialize, Deserialize, Clone, Default, Debug)]
     struct GraphQLResponse {

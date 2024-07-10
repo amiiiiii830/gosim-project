@@ -1,3 +1,5 @@
+//functions that upload records to vector db, search for records in db
+
 use openai_flows::{embeddings::EmbeddingsInput, OpenAIFlows};
 use serde_json::json;
 use std::env;

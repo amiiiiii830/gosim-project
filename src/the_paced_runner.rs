@@ -1,3 +1,6 @@
+//in this iteration of the module, key functions that searches GitHub, summarizes content, populate databases, etc.
+//are scheduled to run in a more granular fashsion, so that one task won't jam the other
+//so that each function can handle an anticipated amount of work quickly, keeping the total run time far below one hour 
 use crate::{
     db_join::*, db_manipulate::*, db_populate::*, issue_bot::comment_on_issue,
     issue_paced_tracker::*, vector_search::*,
@@ -35,40 +38,62 @@ pub fn inner_query_1_hour(
     query
 }
 pub async fn run_hourly(pool: &Pool) -> anyhow::Result<()> {
+
+    //search issues newly opened in the past hour, save them to issues_open table in db, this table holds data temporarily 
     let _ = popuate_dbs_save_issues_open(pool).await?;
 
+    //replicate issue entries in issues_open table to the issues_master table, which serves as long term record 
+    //the task is done directly on db, in a batch transaction fashion, intended to avoid db transactions slowing down other tasks
     let _ = open_master(pool).await?;
 
+    //replicate issues data in issues_open table to projects table
     let _ = open_project(pool).await?;
 
+    //search for detailed info of projects(repos) in batch, save data to the projects table to make it richer
     let _ = popuate_dbs_fill_projects(pool).await?;
 
+    //now that the projects table has more detailed info, we replicate several fields to the issues_master table
     let _ = project_master_back_sync(&pool).await?;
 
+    //search for issues closed in past hour, save them in issues_closed table, which holds data temporariliy
     let _ = popuate_dbs_save_issues_closed(pool).await?;
 
+    //replicate issue entries in issues_closed table to issues_master table
     let _ = closed_master(pool).await?;
 
+    //now that we have detailed info like project descriptions, issue body text, etc. we upload them to vector db for future querying
     let _ = populate_vector_db(pool).await?;
 
+    //issues may have updated budget info in the past hour, we run through the issues_master table and update the data in projects table
     let _ = sum_budget_to_project(&pool).await?;
 
+    //search for issues updated in the past hour, save them to issues_updated table
     let _ = popuate_dbs_add_issues_updated(pool).await?;
 
+    //search for issues with new comments, changed assignee status in the past hour, save them to issues_assign_comment table
     let _ = popuate_dbs_save_issues_assign_comment(pool).await?;
 
+    //issues may have assignees in the past hour, we use data in issues_assign_comment table to update issues_master table
     let _ = add_possible_assignees_to_master(pool).await?;
 
+    //search for pull_requests in the past hour, save them in pull_requests table
     let _ = popuate_dbs_save_pull_requests(pool).await?;
 
+    //in pull_requests table, some of them now has linked issue, we update issues_master table, remove these entries from pull_request table
     let _ = remove_pull_by_issued_linked_pr(&pool).await?;
+
+    //approaching the end of the hourly project run, we empty temporary tables issues_open, issues_updated, and issues_closed
     let _ = delete_issues_open_update_closed(&pool).await?;
 
+    //run through the issues_master table, identify those needing follow-up messages, post messages to those issues
     let _ = note_issues(pool).await?;
 
     Ok(())
 }
+
+//search for issues opened in past hour
 pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
+    //we build a query that searches for issues opened in the past hour, with additonal conditions, i.e. no assignees
     let query_open = inner_query_1_hour(
         &START_DATE,
         &PREV_HOUR,
@@ -87,6 +112,7 @@ pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
     for issue in open_issue_obj {
         let _ = add_issues_open(pool, &issue).await;
 
+        //issues may have long descriptions, we summarize them and save them to issues_repos_summarized table
         let _ = summarize_issue_add_in_db(pool, &issue).await;
     }
     Ok(())
@@ -124,6 +150,9 @@ pub async fn popuate_dbs_save_issues_open(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
  */
+
+
+//search for issues with new comments, or changed assignee status in the past hour
 pub async fn popuate_dbs_save_issues_assign_comment(pool: &Pool) -> anyhow::Result<()> {
     let node_ids_updated = get_updated_approved_issues_node_ids(pool).await?;
 
@@ -142,6 +171,8 @@ pub async fn popuate_dbs_save_issues_assign_comment(pool: &Pool) -> anyhow::Resu
 
     Ok(())
 }
+
+//search for issues updated in the past hour, save them to issues_udpated table
 pub async fn popuate_dbs_add_issues_updated(pool: &Pool) -> anyhow::Result<()> {
     let _query_assigned = inner_query_1_hour(
         &START_DATE,
@@ -163,6 +194,8 @@ pub async fn popuate_dbs_add_issues_updated(pool: &Pool) -> anyhow::Result<()> {
     }
     Ok(())
 }
+
+//search for issues closed in the past hour, save them to issues_closed table
 pub async fn popuate_dbs_save_issues_closed(pool: &Pool) -> anyhow::Result<()> {
     let query_closed = inner_query_1_hour(
         &START_DATE,
@@ -185,6 +218,8 @@ pub async fn popuate_dbs_save_issues_closed(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
+
+//search for pull_requests in the past hour, save them to pull_requests table 
 pub async fn popuate_dbs_save_pull_requests(pool: &Pool) -> anyhow::Result<()> {
     let query_pull_request = inner_query_1_hour(
         &START_DATE,
@@ -207,6 +242,7 @@ pub async fn popuate_dbs_save_pull_requests(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
+//search for detailed info about projects(repos) with their identifiers, save them to the projects table
 pub async fn popuate_dbs_fill_projects(pool: &Pool) -> anyhow::Result<()> {
     let query_repos: String = get_projects_as_repo_list(pool, 1).await?;
     let repo_data_vec: Vec<RepoData> = search_repos_in_batch(&query_repos).await?;
@@ -218,6 +254,9 @@ pub async fn popuate_dbs_fill_projects(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
+
+//issues and projects have been summarized previously and saved in the issues_repos_summarized table
+//now we use these clean texts to populate the vector db 
 pub async fn populate_vector_db(pool: &Pool) -> anyhow::Result<()> {
     for item in get_issues_repos_from_db().await.expect("msg") {
         log::info!("uploading to vector_db: {:?}", item.0);
@@ -229,6 +268,7 @@ pub async fn populate_vector_db(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
+
 pub async fn note_issues(pool: &Pool) -> anyhow::Result<()> {
     let _ = note_budget_allocated(pool).await?;
     let _ = note_issue_declined(pool).await?;
@@ -237,6 +277,9 @@ pub async fn note_issues(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
+
+//run through the issues_master table, locate issues that have seen budget allocation the past hour
+//post comments on these issues to notify project participants
 pub async fn note_budget_allocated(pool: &Pool) -> anyhow::Result<()> {
     let issue_ids = get_issue_ids_with_budget(pool).await?;
     log::info!(
@@ -251,6 +294,8 @@ pub async fn note_budget_allocated(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
+//run through the issues_master table, locate issues that have been declined in the past hour
+//post comments on these issues to notify project participants
 pub async fn note_issue_declined(pool: &Pool) -> anyhow::Result<()> {
     let issue_ids = get_issue_ids_declined(pool).await?;
     log::info!(
@@ -265,6 +310,8 @@ pub async fn note_issue_declined(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
+//run through the issues_master table, locate issues that have been flagged issue_budget_approved in the past hour
+//post comments on these issues to notify project participants
 pub async fn note_distribute_fund(pool: &Pool) -> anyhow::Result<()> {
     let issue_ids: Vec<(Option<String>, String, i32)> = get_issue_ids_distribute_fund(pool).await?;
     log::info!("Issue_ids to split fund, count: {:?}", issue_ids.len());
@@ -276,6 +323,8 @@ pub async fn note_distribute_fund(pool: &Pool) -> anyhow::Result<()> {
     Ok(())
 }
 
+//run through the issues_master table, locate issues that have been allocated budget but saw no activity in the past month
+//post comments on these issues to notify project participants
 pub async fn note_one_months_no_pr(pool: &Pool) -> anyhow::Result<()> {
     let issue_ids = get_issue_ids_one_month_no_activity(pool).await?;
     log::info!("Issue_ids no activity, count: {:?}", issue_ids.len());

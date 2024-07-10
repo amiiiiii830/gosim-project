@@ -16,6 +16,11 @@ pub static PR_LABEL: &str = "gosim-bounty-accepted";
 pub static START_DATE: &str = "2024-06-17";
 pub static END_DATE: &str = "2024-07-17";
 
+
+//project is invoked hourly via chron job
+//this sets the point of time of invocation and 1 hour exactly before that
+//sub-modules tracks issues on GitHub that changed status in the one hour window
+// or upload, search, compact database entries accordingly
 lazy_static! {
     pub static ref THIS_HOUR: String = {
         // let date = Utc::now().date_naive();

@@ -1,3 +1,5 @@
+//functions that replicate entries, move entries, process entries in batches 
+
 use mysql_async::prelude::*;
 use mysql_async::*;
 

@@ -1,3 +1,6 @@
+//functions that changes entries in db
+//entries are searched, changed according to rules when administrating over the records
+
 use std::collections::HashMap;
 
 use crate::db_populate::*;

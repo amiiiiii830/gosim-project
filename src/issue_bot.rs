@@ -1,3 +1,5 @@
+//function that post comments to issues
+
 use crate::issue_paced_tracker::*;
 
 pub async fn comment_on_issue(issue_id: &str, comment: &str) -> anyhow::Result<()> {

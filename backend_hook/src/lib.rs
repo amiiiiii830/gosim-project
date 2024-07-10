@@ -1,3 +1,5 @@
+//project administrator interacts with db via webhooks
+
 use flowsnet_platform_sdk::logger;
 use gosim_project::db_join::sum_budget_to_project;
 use gosim_project::db_manipulate::*;
