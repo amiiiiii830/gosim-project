@@ -62,7 +62,7 @@ CREATE TABLE issues_assign_comment (
     issue_assignees JSON,    
     comment_creator VARCHAR(50)  NOT NULL, 
     comment_date DATETIME  NOT NULL,  -- date of the comment
-    comment_body TEXT  NOT NULL,  -- content of the comment
+    comment_body TEXT  NOT NULL
 ) DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE issues_closed (
